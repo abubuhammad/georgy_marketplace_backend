@@ -38,7 +38,7 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Product is not available' });
     }
 
-    const totalAmount = product.price * quantity;
+    const totalAmount = Number(product.price) * quantity;
 
     // Create order
     const order = await prisma.order.create({
@@ -86,7 +86,7 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
       }
     });
 
-    const platformCut = totalAmount * (commissionScheme?.platformPercentage || 0.05);
+    const platformCut = totalAmount * Number(commissionScheme?.platformPercentage || 0.05);
     const sellerNet = totalAmount - platformCut;
 
     await prisma.payment.create({

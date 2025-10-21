@@ -114,3 +114,16 @@ export const optionalAuth = async (
     next();
   }
 };
+
+// Export alias for backward compatibility
+export const authMiddleware = authenticateToken;
+
+// Export AuthRequest interface
+export interface AuthRequest extends Request {
+  user?: {
+    id: string;
+    userId: string;
+    email: string;
+    role: string;
+  };
+}

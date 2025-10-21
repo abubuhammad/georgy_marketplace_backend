@@ -26,3 +26,6 @@ export const requireRole = (requiredRole: string | string[]) => {
 export const requireAdmin = requireRole('admin');
 export const requireDeliveryAgent = requireRole('delivery_agent');
 export const requireAdminOrAgent = requireRole(['admin', 'delivery_agent']);
+
+// Export alias for backward compatibility
+export const roleAuth = requireRole;

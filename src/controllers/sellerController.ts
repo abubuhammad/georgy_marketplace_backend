@@ -92,7 +92,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
         totalOrders,
         totalEarnings: earnings._sum.sellerNet || 0,
         pendingWithdrawals: pendingWithdrawals._sum.totalAmount || 0,
-        availableBalance: (earnings._sum.sellerNet || 0) - (pendingWithdrawals._sum.totalAmount || 0)
+        availableBalance: Number(earnings._sum.sellerNet || 0) - Number(pendingWithdrawals._sum.totalAmount || 0)
       },
       recentOrders,
       monthlyStats,
@@ -501,7 +501,7 @@ export const getEarnings = async (req: AuthRequest, res: Response) => {
     });
 
     // Calculate available balance
-    const availableBalance = (totalEarnings._sum.sellerNet || 0) - (pendingPayouts._sum.totalAmount || 0);
+    const availableBalance = Number(totalEarnings._sum.sellerNet || 0) - Number(pendingPayouts._sum.totalAmount || 0);
 
     res.json({
       summary: {
@@ -550,7 +550,7 @@ export const requestWithdrawal = async (req: AuthRequest, res: Response) => {
       }
     });
 
-    const availableBalance = (earnings._sum.sellerNet || 0) - (pendingWithdrawals._sum.totalAmount || 0);
+    const availableBalance = Number(earnings._sum.sellerNet || 0) - Number(pendingWithdrawals._sum.totalAmount || 0);
 
     if (amount > availableBalance) {
       return res.status(400).json({ 

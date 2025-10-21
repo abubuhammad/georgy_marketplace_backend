@@ -231,11 +231,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
       });
     }
 
-    // Increment view count
-    await prisma.job.update({
-      where: { id },
-      data: { viewCount: { increment: 1 } },
-    });
+    // Note: viewCount field doesn't exist in current schema, skipping increment
 
     const formattedJob = {
       ...job,
@@ -315,7 +311,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Validation failed',
-        details: error.errors,
+        details: error.issues,
       });
     }
     res.status(500).json({
@@ -435,7 +431,7 @@ router.post('/:id/apply', async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Validation failed',
-        details: error.errors,
+        details: error.issues,
       });
     }
     res.status(500).json({
