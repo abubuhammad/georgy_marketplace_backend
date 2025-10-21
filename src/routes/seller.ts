@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import { authMiddleware } from '../middleware/auth';
+import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { roleAuth } from '../middleware/roleAuth';
+import { Response } from 'express';
 import {
   getDashboardStats,
   getSellerProducts,
