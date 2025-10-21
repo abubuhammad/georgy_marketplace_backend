@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "buildCommand": "echo 'Skipping build - using API directory'",
+  "installCommand": "npm ci --only=production",
   "rewrites": [
     {
       "source": "/api/(.*)",

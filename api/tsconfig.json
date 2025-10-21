@@ -1,0 +1,22 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2020"],
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": false,
+    "resolveJsonModule": true,
+    "noEmitOnError": false
+  },
+  "include": [
+    "./**/*"
+  ],
+  "exclude": [
+    "../src/",
+    "../dist/",
+    "../node_modules"
+  ]
+}
