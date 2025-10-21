@@ -1,15 +1,10 @@
 {
   "version": 2,
-  "buildCommand": "echo 'Skipping build - using API directory'",
-  "installCommand": "npm ci --only=production",
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/api"
+  "buildCommand": "echo 'No build needed - using JavaScript API'",
+  "installCommand": "npm install --only=production",
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 30
     }
-  ]
+  }
 }

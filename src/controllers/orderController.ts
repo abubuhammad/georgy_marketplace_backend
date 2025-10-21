@@ -25,7 +25,7 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
       where: { id: productId },
       include: {
         seller: {
-          select: { id: true, firstName: true, lastName: true }
+          select: { id: true }
         }
       }
     });
@@ -141,13 +141,7 @@ export const getBuyerOrders = async (req: AuthRequest, res: Response) => {
             category: true
           }
         },
-        seller: {
-          select: {
-            firstName: true,
-            lastName: true,
-            email: true
-          }
-        },
+        // seller info not directly available in Order model
         shipments: {
           select: {
             trackingNumber: true,
@@ -193,10 +187,7 @@ export const getOrderDetails = async (req: AuthRequest, res: Response) => {
           include: {
             seller: {
               select: {
-                firstName: true,
-                lastName: true,
-                email: true,
-                phone: true
+                id: true
               }
             }
           }
@@ -234,7 +225,7 @@ export const getOrderDetails = async (req: AuthRequest, res: Response) => {
       userRole === 'admin' ||
       order.buyerId === userId ||
       order.sellerId === userId ||
-      (userRole === 'delivery_agent' && order.shipments.some(s => s.agent?.userId === userId));
+      (userRole === 'delivery_agent' && order.shipments?.some((s: any) => s.agent?.userId === userId));
 
     if (!isAuthorized) {
       return res.status(403).json({ error: 'Not authorized to view this order' });
@@ -308,8 +299,8 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response) => {
       }
     });
 
-    // Create shipment if order is shipped
-    if (status === 'shipped' && !order.shipments?.length) {
+    // Create shipment if order is shipped (shipments relation may not be loaded)
+    if (status === 'shipped') {
       await createShipmentForOrder(order.id, order.shippingAddress);
     }
 
@@ -518,7 +509,7 @@ export const trackOrder = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    if (order.status === 'shipped' && order.shipments.length > 0) {
+    if (order.status === 'shipped' && order.shipments && order.shipments.length > 0) {
       const shipment = order.shipments[0];
       trackingEvents.push({
         status: 'Order Shipped',
@@ -562,7 +553,7 @@ export const trackOrder = async (req: AuthRequest, res: Response) => {
       },
       shipments: order.shipments,
       trackingEvents: trackingEvents.sort((a, b) => 
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime()
       )
     });
   } catch (error) {

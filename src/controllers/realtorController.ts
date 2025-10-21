@@ -134,7 +134,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
         totalViewings,
         pendingViewings,
         totalPropertyValue: propertyValue._sum.price || 0,
-        avgPropertyValue: totalProperties > 0 ? (propertyValue._sum.price || 0) / totalProperties : 0
+        avgPropertyValue: totalProperties > 0 ? Number(propertyValue._sum.price || 0) / totalProperties : 0
       },
       recentProperties,
       monthlyStats,
@@ -546,8 +546,7 @@ export const updateViewingStatus = async (req: AuthRequest, res: Response) => {
       where: { id },
       data: {
         status,
-        notes: notes || viewing.notes,
-        updatedAt: new Date()
+        notes: notes || viewing.notes
       },
       include: {
         property: {

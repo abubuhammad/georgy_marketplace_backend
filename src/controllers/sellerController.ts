@@ -185,7 +185,8 @@ export const createProduct = async (req: AuthRequest, res: Response) => {
         title,
         description,
         price: Number(price),
-        category,
+        category: category || 'general',
+        categoryId: category || 'general', // Add required categoryId field
         condition,
         images: JSON.stringify(images),
         location,
@@ -496,7 +497,7 @@ export const getEarnings = async (req: AuthRequest, res: Response) => {
         sellerId,
         status: 'completed'
       },
-      orderBy: { completedAt: 'desc' },
+      orderBy: { createdAt: 'desc' },
       take: 10
     });
 

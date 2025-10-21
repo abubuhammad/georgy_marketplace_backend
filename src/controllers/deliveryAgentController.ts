@@ -285,7 +285,7 @@ export const updateShipmentStatus = async (req: AuthRequest, res: Response) => {
         where: { id: agent.id },
         data: {
           totalDeliveries: { increment: 1 },
-          earnings: { increment: shipment.deliveryFee * 0.8 } // 80% commission
+          earnings: { increment: Number(shipment.deliveryFee) * 0.8 } // 80% commission
         }
       });
     }
@@ -344,7 +344,7 @@ export const getOptimizedRoute = async (req: AuthRequest, res: Response) => {
     const totalDistance = optimizedRoute.length * 5; // Simplified calculation
     const estimatedDuration = optimizedRoute.reduce((sum, stop) => sum + stop.estimatedDuration, 0);
     const totalEarnings = optimizedRoute.reduce((sum, shipment) => 
-      sum + (shipment.deliveryFee * 0.8), 0
+      sum + (Number(shipment.deliveryFee) * 0.8), 0
     );
 
     res.json({
