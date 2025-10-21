@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -230,7 +230,7 @@ model Review {
   id        String   @id @default(cuid())
   productId String
   userId    String
-  rating    Int      @db.TinyInt
+  rating    Int
   comment   String?  @db.Text
   createdAt DateTime @default(now())
 
@@ -338,7 +338,7 @@ model JobApplication {
   coverLetter String?  @db.Text
   resume      String?  // URL to resume file
   status      String   @default("applied") // applied, screening, interviewing, offer, hired, rejected
-  score       Int?     @db.TinyInt
+  score       Int?
   notes       String?  @db.Text
   appliedAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -461,7 +461,7 @@ model LegalDocument {
   type          String   // terms_of_service, privacy_policy, user_agreement, community_guidelines
   version       String
   title         String
-  content       String   @db.LongText
+  content       String   @db.Text
   language      String   @default("en")
   jurisdiction  String   @default("NG")
   effectiveDate DateTime
@@ -508,7 +508,7 @@ model GDPRRequest {
   requestType   String   // export, deletion, rectification, portability
   status        String   @default("pending") // pending, processing, completed, rejected
   reason        String?  @db.Text
-  requestData   String?  @db.LongText // JSON
+  requestData   String?  @db.Text // JSON
   processedBy   String?
   processedAt   DateTime?
   completedAt   DateTime?
@@ -649,8 +649,8 @@ model SecurityAudit {
   severity        String   @default("info") // info, low, medium, high, critical
   category        String   // authentication, authorization, data_protection, infrastructure
   description     String   @db.Text
-  findings        String?  @db.LongText // JSON
-  recommendations String?  @db.LongText // JSON
+  findings        String?  @db.Text // JSON
+  recommendations String?  @db.Text // JSON
   remediation     String?  @db.Text
   targetSystem    String?  // system being audited
   conductedBy     String?  // auditor
@@ -735,8 +735,8 @@ model Dispute {
   relatedOrder    String?
   orderId         String?  // Alternative field name
   relatedItem     String?
-  evidence        String?  @db.LongText // JSON
-  timeline        String?  @db.LongText // JSON
+  evidence        String?  @db.Text // JSON
+  timeline        String?  @db.Text // JSON
   resolution      String?  @db.Text
   compensation    Decimal? @db.Decimal(10, 2)
   dueDate         DateTime?
@@ -810,7 +810,7 @@ model ContentModeration {
   moderationType String   @default("automated") // automated, manual, hybrid
   flaggedReason  String?  // spam, inappropriate, fraud, violence, adult_content
   severity       String   @default("low") // low, medium, high, critical
-  confidence     Float?   @db.Float // AI confidence score
+  confidence     Float?   // AI confidence score
   reviewedBy     String?
   reviewedAt     DateTime?
   action         String?  // approve, reject, edit, remove, warn_user, ban_user
@@ -833,8 +833,8 @@ model ModerationRule {
   description String   @db.Text
   category    String   // content_filter, user_behavior, transaction_safety
   type        String   // keyword, pattern, ml_model, manual_review
-  conditions  String   @db.LongText // JSON
-  actions     String   @db.LongText // JSON
+  conditions  String   @db.Text // JSON
+  actions     String   @db.Text // JSON
   severity    String   @default("medium") // low, medium, high, critical
   isActive    Boolean  @default(true)
   priority    Int      @default(0)
@@ -858,7 +858,7 @@ model ModerationQueue {
   status        String   @default("pending") // pending, in_review, completed
   flaggedBy     String   // system, user_report, automated_scan
   reason        String
-  content       String   @db.LongText // JSON snapshot of content
+  content       String   @db.Text // JSON snapshot of content
   metadata      String?  @db.Text // JSON
   assignedAt    DateTime?
   reviewedAt    DateTime?
@@ -890,7 +890,7 @@ model UserTrustProfile {
   lastActivity     DateTime?
   profileCompletion Int     @default(0) // percentage
   transactionCount Int      @default(0)
-  disputeRate      Float    @default(0.0) @db.Float
+  disputeRate      Float    @default(0.0)
   positiveReviews  Int      @default(0)
   negativeReviews  Int      @default(0)
   endorsementCount Int      @default(0)
@@ -1006,7 +1006,7 @@ model Shipment {
   pickedUpAt        DateTime?
   deliveredAt       DateTime?
   deliveryProof     String?  @db.Text // JSON with images/signature
-  rating            Int?     @db.TinyInt
+  rating            Int?
   feedback          String?  @db.Text
   events            String?  @db.Text // JSON array of tracking events
   createdAt         DateTime @default(now())
@@ -1382,7 +1382,7 @@ model Endorsement {
   endorseeId     String
   endorsementType String  // skill, reliability, communication, quality
   category       String   // skill, reliability, communication, quality
-  rating         Int      @db.TinyInt // 1-5
+  rating         Int      // 1-5
   title          String?
   comment        String?  @db.Text
   description    String?  @db.Text
@@ -1393,7 +1393,7 @@ model Endorsement {
   helpful        Int      @default(0)
   reportCount    Int      @default(0)
   status         String   @default("active") // active, hidden, reported, removed
-  weight         Float?   @db.Float
+  weight         Float?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -1456,8 +1456,8 @@ model CommunityPost {
 model ReviewAuthenticity {
   id            String   @id @default(cuid())
   reviewId      String   @unique
-  authenticityScore Float  @db.Float // 0.0 to 1.0
-  confidence    Float    @db.Float // 0.0 to 1.0
+  authenticityScore Float  // 0.0 to 1.0
+  confidence    Float    // 0.0 to 1.0
   riskFactors   String?  @db.Text // JSON array
   verificationMethod String? // ai_analysis, manual_review, user_verification
   isAuthentic   Boolean?
@@ -1503,7 +1503,7 @@ model VulnerabilityAssessment {
   title           String
   description     String   @db.Text
   severity        String   // info, low, medium, high, critical
-  cvssScore       Float?   @db.Float
+  cvssScore       Float?
   cveId           String?
   affectedSystems String   @db.Text // JSON array
   status          String   @default("identified") // identified, confirmed, patched, mitigated
@@ -1570,7 +1570,7 @@ model SecurityScan {
   scanType      String   // port_scan, vulnerability_scan, malware_scan
   target        String   // ip_address, domain, user_upload
   status        String   @default("queued") // queued, running, completed, failed
-  findings      String?  @db.LongText // JSON
+  findings      String?  @db.Text // JSON
   riskScore     Int?     @default(0)
   startedAt     DateTime?
   completedAt   DateTime?
@@ -1676,9 +1676,9 @@ model TrustMetric {
   id             String   @id @default(cuid())
   userId         String
   metricType     String   // transaction_history, response_time, completion_rate, etc.
-  value          Float    @db.Float
-  maxValue       Float    @db.Float @default(100.0)
-  weight         Float    @db.Float // importance in overall trust score
+  value          Float
+  maxValue       Float    @default(100.0)
+  weight         Float    // importance in overall trust score
   lastCalculated DateTime @default(now())
   period         String   @default("all_time") // all_time, last_30_days, last_year
   metadata       String?  @db.Text // JSON
@@ -1767,7 +1767,7 @@ model IdentityVerification {
   verificationMethod String  @default("manual") // manual, automated, hybrid
   verificationType  String   @default("identity") // identity, address, phone
   status            String   @default("pending") // pending, approved, rejected, expired
-  confidence        Float?   @db.Float // 0.0 to 1.0 for automated checks
+  confidence        Float?   // 0.0 to 1.0 for automated checks
   verifiedBy        String?
   verifiedAt        DateTime?
   expiresAt         DateTime?
@@ -1845,7 +1845,7 @@ model ContentItem {
   title       String?
   authorId    String
   status      String   @default("pending") // pending, approved, rejected, flagged
-  autoModerationScore Float? @db.Float
+  autoModerationScore Float?
   moderatedAt DateTime?
   isRemoved   Boolean  @default(false)
   isBlurred   Boolean  @default(false)
@@ -1905,7 +1905,7 @@ model ContentReview {
   reasoning    String?  @db.Text
   actionsTaken String?  @db.Text // JSON array
   reviewTime   Int?     // time in seconds
-  qualityScore Float?   @db.Float
+  qualityScore Float?
   notes        String?  @db.Text
   reason       String?  @db.Text // Alternative field name
   reviewedAt   DateTime @default(now())
