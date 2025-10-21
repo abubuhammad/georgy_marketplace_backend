@@ -27,26 +27,26 @@ router.use(authMiddleware);
 router.use(roleAuth(['seller']));
 
 // Dashboard & Analytics
-router.get('/dashboard/stats', getDashboardStats);
-router.get('/analytics', getAnalytics);
+router.get('/dashboard/stats', getDashboardStats as any);
+router.get('/analytics', getAnalytics as any);
 
 // Product Management
-router.get('/products', getSellerProducts);
-router.post('/products', createProduct);
-router.put('/products/:id', updateProduct);
-router.delete('/products/:id', deleteProduct);
-router.put('/products/bulk', bulkUpdateProducts);
+router.get('/products', getSellerProducts as any);
+router.post('/products', createProduct as any);
+router.put('/products/:id', updateProduct as any);
+router.delete('/products/:id', deleteProduct as any);
+router.put('/products/bulk', bulkUpdateProducts as any);
 
 // Order Management
-router.get('/orders', getSellerOrders);
-router.put('/orders/:id/status', updateOrderStatus);
+router.get('/orders', getSellerOrders as any);
+router.put('/orders/:id/status', updateOrderStatus as any);
 
 // Financial Management
-router.get('/earnings', getEarnings);
-router.post('/withdrawal', requestWithdrawal);
+router.get('/earnings', getEarnings as any);
+router.post('/withdrawal', requestWithdrawal as any);
 
 // Store Settings
-router.get('/store/settings', getStoreSettings);
-router.put('/store/settings', updateStoreSettings);
+router.get('/store/settings', getStoreSettings as any);
+router.put('/store/settings', updateStoreSettings as any);
 
 export default router;

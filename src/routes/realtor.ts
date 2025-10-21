@@ -28,27 +28,27 @@ router.use(authMiddleware);
 router.use(roleAuth(['realtor', 'admin']));
 
 // Dashboard & Analytics
-router.get('/dashboard/stats', getDashboardStats);
-router.get('/analytics', getAnalytics);
-router.get('/market/insights', getMarketInsights);
+router.get('/dashboard/stats', getDashboardStats as any);
+router.get('/analytics', getAnalytics as any);
+router.get('/market/insights', getMarketInsights as any);
 
 // Property Management
-router.get('/properties', getProperties);
-router.post('/properties', createProperty);
-router.put('/properties/:id', updateProperty);
-router.delete('/properties/:id', deleteProperty);
-router.put('/properties/bulk', bulkUpdateProperties);
+router.get('/properties', getProperties as any);
+router.post('/properties', createProperty as any);
+router.put('/properties/:id', updateProperty as any);
+router.delete('/properties/:id', deleteProperty as any);
+router.put('/properties/bulk', bulkUpdateProperties as any);
 
 // Viewing Management
-router.get('/viewings', getViewings);
-router.post('/viewings', scheduleViewing);
-router.put('/viewings/:id/status', updateViewingStatus);
+router.get('/viewings', getViewings as any);
+router.post('/viewings', scheduleViewing as any);
+router.put('/viewings/:id/status', updateViewingStatus as any);
 
 // Profile Management
-router.get('/profile', getProfile);
-router.put('/profile', updateProfile);
+router.get('/profile', getProfile as any);
+router.put('/profile', updateProfile as any);
 
 // Client Management
-router.get('/clients', getClients);
+router.get('/clients', getClients as any);
 
 export default router;

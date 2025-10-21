@@ -24,23 +24,23 @@ router.use(authMiddleware);
 router.use(roleAuth(['delivery_agent', 'admin']));
 
 // Dashboard & Analytics
-router.get('/dashboard/stats', getDashboardStats);
-router.get('/performance', getPerformanceMetrics);
+router.get('/dashboard/stats', getDashboardStats as any);
+router.get('/performance', getPerformanceMetrics as any);
 
 // Shipment Management
-router.get('/shipments', getAssignedShipments);
-router.put('/shipments/:id/status', updateShipmentStatus);
-router.get('/route/optimized', getOptimizedRoute);
+router.get('/shipments', getAssignedShipments as any);
+router.put('/shipments/:id/status', updateShipmentStatus as any);
+router.get('/route/optimized', getOptimizedRoute as any);
 
 // Earnings Management
-router.get('/earnings', getEarnings);
+router.get('/earnings', getEarnings as any);
 
 // Profile Management
-router.get('/profile', getProfile);
-router.put('/profile', updateProfile);
+router.get('/profile', getProfile as any);
+router.put('/profile', updateProfile as any);
 
 // Location Services
-router.post('/location', updateLocation);
-router.put('/availability', toggleAvailability);
+router.post('/location', updateLocation as any);
+router.put('/availability', toggleAvailability as any);
 
 export default router;
