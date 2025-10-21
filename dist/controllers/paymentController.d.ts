@@ -1,0 +1,35 @@
+import { Request, Response } from 'express';
+import '../types';
+export declare const initiatePayment: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const getPayment: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const handleWebhook: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const releaseEscrow: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const processRefund: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const getPaymentConfig: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const calculateBreakdown: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const getSellerFinancials: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const getFinancialReports: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const getUserPayments: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const getSellerPayouts: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const calculatePayment: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const verifyPayment: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const getPaymentHistory: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const generateInvoice: (req: Request, res: Response, next: import("express").NextFunction) => void;
+export declare const paymentController: {
+    initiatePayment: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    getPayment: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    handleWebhook: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    releaseEscrow: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    processRefund: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    getPaymentConfig: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    calculateBreakdown: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    calculatePayment: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    verifyPayment: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    getPaymentHistory: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    generateInvoice: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    getSellerFinancials: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    getFinancialReports: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    getUserPayments: (req: Request, res: Response, next: import("express").NextFunction) => void;
+    getSellerPayouts: (req: Request, res: Response, next: import("express").NextFunction) => void;
+};
+//# sourceMappingURL=paymentController.d.ts.map

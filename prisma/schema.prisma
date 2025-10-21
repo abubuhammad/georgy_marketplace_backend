@@ -1,0 +1,2092 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password      String
+  firstName     String
+  lastName      String
+  phone         String?
+  role          String   @default("customer") // customer, seller, admin, realtor, employer, employee, artisan
+  avatar        String?
+  emailVerified Boolean  @default(false)
+  phoneVerified Boolean  @default(false)
+  identityVerified Boolean @default(false)
+  addressVerified Boolean @default(false)
+  isActive      Boolean  @default(true)
+  isSuspended   Boolean  @default(false)
+  suspendedAt   DateTime?
+  isBanned      Boolean  @default(false)
+  bannedAt      DateTime?
+  isFrozen      Boolean  @default(false)
+  frozenAt      DateTime?
+  isDeleted     Boolean  @default(false)
+  deletedAt     DateTime?
+  verifiedDate  DateTime?
+  lastLoginAt   DateTime?
+  specializations String? @db.Text // JSON array for mediators
+  activeDisputes  Int     @default(0)
+  storeCredit     Decimal @default(0) @db.Decimal(10, 2)
+  moderationStats String? @db.Text // JSON object
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  passwordResets PasswordReset[]
+  seller         Seller?
+  orders         Order[]
+  reviews        Review[]
+  listings       Listing[]
+  properties     Property[]
+  jobs           Job[]
+  applications   JobApplication[]
+  artisanProfile ArtisanProfile?
+  serviceRequests ServiceRequest[]
+  chats          Chat[]
+  messages       Message[]
+  messagesReceived Message[] @relation("MessageRecipient")
+  
+  // Phase 7: Legal Framework & Safety Relations
+  consents            UserConsent[]
+  gdprRequests        GDPRRequest[]
+  privacySettings     UserPrivacySettings?
+  verification        UserVerification?
+  safetyProfile       UserSafetyProfile?
+  reportsMade         UserReport[]         @relation("ReportsMade")
+  disputesAsClaimant   Dispute[]           @relation("DisputeClaimant")
+  disputesAsComplainant Dispute[]          @relation("DisputeComplainant")
+  disputesAsRespondent Dispute[]           @relation("DisputeRespondent")
+  disputeMessages     DisputeMessage[]
+  disputeMediations   DisputeMediation[]
+  contentModerations  ContentModeration[]
+  moderationQueue     ModerationQueue[]
+  trustProfile        UserTrustProfile?
+  endorsementsGiven   UserEndorsement[]    @relation("EndorsementsGiven")
+  
+  // Delivery & Payment Relations
+  deliveryAgent       DeliveryAgent?
+  payments            Payment[]
+
+  // New Relations
+  notifications               Notification[]
+  notificationPreferences     NotificationPreference?
+  userNotificationPreference  UserNotificationPreference?
+  dataExportRequests          DataExportRequest[]
+  dataDeletionRequests        DataDeletionRequest[]
+  consentRecords              ConsentRecord[]
+  sentMessages                ChatMessage[] @relation("SentMessages")
+  receivedMessages            ChatMessage[] @relation("ReceivedMessages")
+  verificationBadges          VerificationBadge[]
+  endorsementsGiven2          Endorsement[] @relation("EndorsementsGiven")
+  endorsementsReceived        Endorsement[] @relation("EndorsementsReceived")
+  socialConnections           SocialConnection[]
+  communityPosts              CommunityPost[]
+  userActivities              UserActivity[]
+  emergencyContacts           EmergencyContact[]
+  safetySettings              SafetySettings?
+  trustMetrics                TrustMetric[]
+  policyViolations            PolicyViolation[]
+  riskAssessments             RiskAssessment[]
+  reputationChanges           ReputationChange[]
+  identityVerifications       IdentityVerification[]
+  backgroundChecks            BackgroundCheck[]
+  profile                     UserProfile?
+  reportsReceived             UserReport[] @relation("ReportsReceived")
+
+  @@map("users")
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_resets")
+}
+
+model Seller {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  businessName        String
+  businessDescription String   @db.Text
+  businessAddress     String   @db.Text // JSON object with address details
+  businessPhone       String?
+  businessEmail       String?
+  logo                String?
+  rating              Decimal? @db.Decimal(3, 2)
+  reviewCount         Int      @default(0)
+  isVerified          Boolean  @default(false)
+  documents           String?  @db.Text // JSON array of verification documents
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@map("sellers")
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  title         String
+  productName   String?
+  description   String   @db.Text
+  price         Decimal  @db.Decimal(10, 2)
+  originalPrice Decimal? @db.Decimal(10, 2)
+  categoryId    String
+  subcategoryId String?
+  brand         String?
+  condition     String   @default("new") // new, used, refurbished, like-new, excellent, good, fair
+  images        String   @db.Text // JSON array of image URLs
+  sellerId      String
+  featured      Boolean  @default(false)
+  status        String   @default("active") // active, sold, inactive
+  isActive      Boolean  @default(true)
+  location      String?
+  locationCity  String?
+  locationState String?
+  locationCountry String?
+  isNegotiable  Boolean  @default(false)
+  
+  // Analytics and engagement fields
+  viewCount     Int      @default(0)
+  rating        Decimal? @db.Decimal(3, 2)
+  reviewCount   Int      @default(0)
+  
+  // Dynamic fields stored as JSON to accommodate category-specific fields
+  dynamicFields String?  @db.Text // JSON object containing category-specific fields
+  
+  // For backwards compatibility
+  category      String   @default("") // Keep for existing queries
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  seller Seller  @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  orders Order[]
+  reviews Review[]
+
+  @@map("products")
+}
+
+model Order {
+  id                  String   @id @default(cuid())
+  productId           String
+  buyerId             String
+  sellerId            String
+  quantity            Int      @default(1)
+  totalAmount         Decimal  @db.Decimal(10, 2)
+  status              String   @default("pending") // pending, confirmed, shipped, delivered, cancelled
+  paymentStatus       String   @default("pending") // pending, paid, failed, refunded
+  paymentMethod       String?
+  shippingAddress     String   @db.Text
+  deliveryDate        DateTime?
+  expectedDeliveryDate DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  buyer   User    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  refunds Refund[]
+  shipments Shipment[]
+  disputes Dispute[]
+
+  @@map("orders")
+}
+
+model Refund {
+  id          String   @id @default(cuid())
+  orderId     String
+  reason      String
+  description String   @db.Text
+  amount      Decimal  @db.Decimal(10, 2)
+  status      String   @default("pending") // pending, approved, rejected, processed, completed
+  requestedBy String
+  processedBy String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("refunds")
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  userId    String
+  rating    Int      @db.TinyInt
+  comment   String?  @db.Text
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  authenticity ReviewAuthenticity?
+
+  @@map("reviews")
+}
+
+model Listing {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @db.Text
+  category    String
+  price       Decimal? @db.Decimal(10, 2)
+  negotiable  Boolean  @default(false)
+  condition   String   @default("new")
+  images      String   @db.Text // JSON array
+  location    String
+  userId      String
+  featured    Boolean  @default(false)
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("listings")
+}
+
+model Property {
+  id            String   @id @default(cuid())
+  title         String
+  description   String   @db.Text
+  type          String   // sale, lease, rent
+  propertyType  String   // house, apartment, commercial, land
+  price         Decimal  @db.Decimal(12, 2)
+  bedrooms      Int?
+  bathrooms     Int?
+  area          Decimal? @db.Decimal(8, 2)
+  location      String
+  address       String   @db.Text
+  latitude      Decimal? @db.Decimal(10, 8)
+  longitude     Decimal? @db.Decimal(11, 8)
+  images        String   @db.Text // JSON array
+  virtualTour   String?  @db.Text // JSON object
+  amenities     String?  @db.Text // JSON array
+  ownerId       String
+  agentId       String?
+  featured      Boolean  @default(false)
+  status        String   @default("available")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  owner User  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  viewings PropertyViewing[]
+
+  @@map("properties")
+}
+
+model PropertyViewing {
+  id         String   @id @default(cuid())
+  propertyId String
+  viewerId   String
+  agentId    String?
+  scheduledAt DateTime
+  status     String   @default("scheduled") // scheduled, completed, cancelled
+  notes      String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@map("property_viewings")
+}
+
+model Job {
+  id           String   @id @default(cuid())
+  title        String
+  description  String   @db.Text
+  company      String
+  location     String
+  type         String   // full-time, part-time, contract, remote
+  salary       Decimal? @db.Decimal(10, 2)
+  salaryType   String?  // hourly, monthly, yearly
+  requirements String   @db.Text
+  benefits     String?  @db.Text
+  employerId   String
+  featured     Boolean  @default(false)
+  status       String   @default("active") // active, closed, draft
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  employer User             @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  applications JobApplication[]
+
+  @@map("jobs")
+}
+
+model JobApplication {
+  id          String   @id @default(cuid())
+  jobId       String
+  applicantId String
+  coverLetter String?  @db.Text
+  resume      String?  // URL to resume file
+  status      String   @default("applied") // applied, screening, interviewing, offer, hired, rejected
+  score       Int?     @db.TinyInt
+  notes       String?  @db.Text
+  appliedAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  job       Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  applicant User @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+
+  @@map("job_applications")
+}
+
+model ArtisanProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  businessName String?
+  category     String   // plumber, electrician, carpenter, etc.
+  skills       String   @db.Text // JSON array
+  experience   Int      // years
+  hourlyRate   Decimal? @db.Decimal(8, 2)
+  location     String
+  latitude     Decimal? @db.Decimal(10, 8)
+  longitude    Decimal? @db.Decimal(11, 8)
+  portfolio    String?  @db.Text // JSON array of work images
+  bio          String?  @db.Text
+  verified     Boolean  @default(false)
+  rating       Decimal? @db.Decimal(3, 2)
+  totalJobs    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceRequests ServiceRequest[]
+
+  @@map("artisan_profiles")
+}
+
+model ServiceRequest {
+  id          String   @id @default(cuid())
+  customerId  String
+  artisanId   String?
+  category    String
+  title       String
+  description String   @db.Text
+  location    String
+  latitude    Decimal? @db.Decimal(10, 8)
+  longitude   Decimal? @db.Decimal(11, 8)
+  budget      Decimal? @db.Decimal(10, 2)
+  urgency     String   @default("normal") // low, normal, high, urgent
+  images      String?  @db.Text // JSON array
+  status      String   @default("open") // open, quoted, assigned, in_progress, completed, cancelled
+  scheduledAt DateTime?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  customer User           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  artisan  ArtisanProfile? @relation(fields: [artisanId], references: [id], onDelete: SetNull)
+  quotes   ServiceQuote[]
+  chats    Chat[]
+
+  @@map("service_requests")
+}
+
+model ServiceQuote {
+  id               String   @id @default(cuid())
+  serviceRequestId String
+  artisanId        String
+  amount           Decimal  @db.Decimal(10, 2)
+  description      String   @db.Text
+  estimatedDuration String
+  materials        String?  @db.Text
+  status           String   @default("pending") // pending, accepted, rejected, expired
+  validUntil       DateTime
+  createdAt        DateTime @default(now())
+
+  serviceRequest ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
+
+  @@map("service_quotes")
+}
+
+model Chat {
+  id               String  @id @default(cuid())
+  serviceRequestId String?
+  customerId       String
+  artisanId        String
+  status           String  @default("active") // active, closed
+  lastMessageAt    DateTime?
+  createdAt        DateTime @default(now())
+
+  serviceRequest ServiceRequest? @relation(fields: [serviceRequestId], references: [id], onDelete: SetNull)
+  customer       User            @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  messages       Message[]
+
+  @@map("chats")
+}
+
+model Message {
+  id          String   @id @default(cuid())
+  chatId      String
+  senderId    String
+  recipientId String
+  content     String   @db.Text
+  messageType String   @default("text") // text, image, file
+  fileUrl     String?
+  readAt      DateTime?
+  sentAt      DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  chat      Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender    User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  recipient User @relation("MessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+// ==================== PHASE 7: Legal Framework & Safety Measures ====================
+
+// Legal Documentation Models
+model LegalDocument {
+  id            String   @id @default(cuid())
+  type          String   // terms_of_service, privacy_policy, user_agreement, community_guidelines
+  version       String
+  title         String
+  content       String   @db.LongText
+  language      String   @default("en")
+  jurisdiction  String   @default("NG")
+  effectiveDate DateTime
+  createdBy     String
+  modifiedBy    String?
+  lastModified  DateTime @default(now())
+  status        String   @default("draft") // draft, active, archived
+  isActive      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  consents UserConsent[]
+
+  @@map("legal_documents")
+}
+
+model UserConsent {
+  id               String   @id @default(cuid())
+  userId           String
+  documentId       String
+  documentVersion  String
+  documentType     String   // privacy_policy, terms_of_service, etc.
+  consentGiven     Boolean
+  consentDate      DateTime @default(now())
+  consentMethod    String   @default("explicit") // explicit, implicit
+  ipAddress        String?
+  userAgent        String?  @db.Text
+  withdrawnAt      DateTime?
+  method           String   @default("explicit") // explicit, implicit
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document LegalDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, documentId, documentVersion])
+  @@map("user_consents")
+}
+
+
+
+// GDPR Compliance Models
+model GDPRRequest {
+  id            String   @id @default(cuid())
+  userId        String
+  requestType   String   // export, deletion, rectification, portability
+  status        String   @default("pending") // pending, processing, completed, rejected
+  reason        String?  @db.Text
+  requestData   String?  @db.LongText // JSON
+  processedBy   String?
+  processedAt   DateTime?
+  completedAt   DateTime?
+  expiresAt     DateTime?
+  notes         String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("gdpr_requests")
+}
+
+
+
+model UserPrivacySettings {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  profileVisible        Boolean  @default(true)
+  emailVisible          Boolean  @default(false)
+  phoneVisible          Boolean  @default(false)
+  locationVisible       Boolean  @default(true)
+  activityVisible       Boolean  @default(true)
+  marketingConsent      Boolean  @default(false)
+  analyticsConsent      Boolean  @default(true)
+  thirdPartySharing     Boolean  @default(false)
+  dataRetentionConsent  Boolean  @default(true)
+  updatedAt             DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_privacy_settings")
+}
+
+// User Safety & Security Models
+model UserVerification {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  identityVerified  Boolean  @default(false)
+  phoneVerified     Boolean  @default(false)
+  emailVerified     Boolean  @default(false)
+  addressVerified   Boolean  @default(false)
+  documentsVerified Boolean  @default(false)
+  backgroundCheck   String   @default("pending") // pending, passed, failed, not_required
+  verificationScore Int      @default(0)
+  lastVerifiedAt    DateTime?
+  verificationNotes String?  @db.Text
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_verifications")
+}
+
+model UserSafetyProfile {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  safetyScore        Int      @default(50)
+  riskLevel          String   @default("low") // low, medium, high, critical
+  emergencyContact   String?  @db.Text // JSON
+  safetyPreferences  String?  @db.Text // JSON
+  blockedUsers       String?  @db.Text // JSON array of user IDs
+  lastSafetyUpdate   DateTime?
+  safetyAlerts       Boolean  @default(true)
+  locationSharing    Boolean  @default(false)
+  meetingPreferences String?  @db.Text // JSON
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  safetyIncidents SafetyIncident[]
+  reports         UserReport[]
+
+  @@map("user_safety_profiles")
+}
+
+model SafetyIncident {
+  id              String   @id @default(cuid())
+  userId          String
+  incidentType    String   // harassment, fraud, violence, inappropriate_content
+  severity        String   @default("low") // low, medium, high, critical
+  status          String   @default("reported") // reported, investigating, resolved, dismissed
+  description     String   @db.Text
+  evidence        String?  @db.Text // JSON array of evidence
+  location        String?
+  reportedBy      String
+  assignedTo      String?
+  investigatedBy  String?  // Alternative field name
+  resolvedBy      String?
+  resolution      String?  @db.Text
+  resolvedAt      DateTime?
+  followUpDate    DateTime?
+  affectedUsers   String   @db.Text // JSON array of user IDs
+  title           String?  // Incident title
+  tags            String?  @db.Text // JSON array
+  estimatedResolution DateTime?
+  timestamp       DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  userProfile UserSafetyProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("safety_incidents")
+}
+
+model UserReport {
+  id            String   @id @default(cuid())
+  reporterId    String
+  reportedUserId String
+  reportedUser  String
+  category      String   // spam, harassment, fraud, inappropriate_content, fake_profile
+  reason        String   @db.Text
+  description   String   @db.Text
+  reportType    String   // user, content, transaction
+  evidence      String?  @db.Text // JSON
+  status        String   @default("pending") // pending, reviewing, resolved, dismissed
+  priority      String   @default("normal") // low, normal, high, urgent
+  assignedTo    String?
+  resolution    String?  @db.Text
+  actionTaken   String?  // warning, suspension, ban, content_removal
+  resolvedAt    DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  reporter        User              @relation("ReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUserRef User              @relation("ReportsReceived", fields: [reportedUserId], references: [id], onDelete: Cascade)
+  userProfile     UserSafetyProfile @relation(fields: [reportedUser], references: [userId], onDelete: Cascade)
+
+  @@map("user_reports")
+}
+
+// Platform Security Models
+model SecurityAudit {
+  id              String   @id @default(cuid())
+  auditType       String   // vulnerability_scan, penetration_test, compliance_check
+  status          String   @default("scheduled") // scheduled, in_progress, completed, failed
+  severity        String   @default("info") // info, low, medium, high, critical
+  category        String   // authentication, authorization, data_protection, infrastructure
+  description     String   @db.Text
+  findings        String?  @db.LongText // JSON
+  recommendations String?  @db.LongText // JSON
+  remediation     String?  @db.Text
+  targetSystem    String?  // system being audited
+  conductedBy     String?  // auditor
+  conductedAt     DateTime?
+  assignedTo      String?
+  scheduledAt     DateTime?
+  completedAt     DateTime?
+  nextAuditDate   DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  securityFindings SecurityFinding[]
+
+  @@map("security_audits")
+}
+
+model SecurityIncident {
+  id              String   @id @default(cuid())
+  incidentType    String   // breach, unauthorized_access, ddos, malware
+  title           String
+  severity        String   // low, medium, high, critical
+  status          String   @default("detected") // detected, investigating, contained, resolved
+  description     String   @db.Text
+  affectedSystems String?  @db.Text // JSON array
+  affectedUsers   Int      @default(0)
+  reportedBy      String?
+  detectedAt      DateTime @default(now())
+  containedAt     DateTime?
+  resolvedAt      DateTime?
+  assignedTo      String?
+  response        String?  @db.Text
+  lessons         String?  @db.Text
+  publicNotice    Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("security_incidents")
+}
+
+model AccessControl {
+  id          String   @id @default(cuid())
+  userId      String
+  resource    String   // API endpoint, admin panel, user data
+  permission  String   // read, write, delete, admin
+  action      String   @default("read") // read, write, delete, execute
+  granted     Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  grantedBy   String?
+  grantedAt   DateTime?
+  expiresAt   DateTime?
+  reason      String?  @db.Text
+  conditions  String?  @db.Text // JSON
+  lastUsedAt  DateTime?
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, resource, permission])
+  @@map("access_controls")
+}
+
+// Dispute Resolution Models
+model Dispute {
+  id              String   @id @default(cuid())
+  disputeId       String   @unique @default(cuid()) // Alternative ID field
+  disputeNumber   String   @unique
+  type            String   // transaction, product, service, delivery, refund
+  disputeType     String   // Additional type field
+  status          String   @default("open") // open, investigating, mediation, resolved, closed, escalated
+  priority        String   @default("normal") // low, normal, high, urgent
+  subject         String
+  description     String   @db.Text
+  amount          Decimal? @db.Decimal(10, 2)
+  currency        String   @default("NGN")
+  claimantId      String
+  complainantId   String   // Alternative field name
+  respondentId    String
+  assignedTo      String?
+  assignedMediatorId String?
+  category        String
+  subcategory     String?
+  relatedOrder    String?
+  orderId         String?  // Alternative field name
+  relatedItem     String?
+  evidence        String?  @db.LongText // JSON
+  timeline        String?  @db.LongText // JSON
+  resolution      String?  @db.Text
+  compensation    Decimal? @db.Decimal(10, 2)
+  dueDate         DateTime?
+  resolvedAt      DateTime?
+  escalatedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  claimant   User @relation("DisputeClaimant", fields: [claimantId], references: [id], onDelete: Cascade)
+  complainant User @relation("DisputeComplainant", fields: [complainantId], references: [id], onDelete: Cascade) 
+  respondent User @relation("DisputeRespondent", fields: [respondentId], references: [id], onDelete: Cascade)
+  
+  messages    DisputeMessage[]
+  mediations  DisputeMediation[]
+  resolutions DisputeResolution[]
+  order       Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@map("disputes")
+}
+
+model DisputeMessage {
+  id           String   @id @default(cuid())
+  disputeId    String
+  senderId     String
+  senderRole   String?  // claimant, respondent, mediator, admin
+  messageType  String   @default("message") // message, evidence, update
+  message      String   @db.Text // Alternative field name
+  content      String   @db.Text
+  attachments  String?  @db.Text // JSON
+  isInternal   Boolean  @default(false)
+  readBy       String?  @db.Text // JSON array of user IDs
+  sentAt       DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  dispute Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  sender  User    @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("dispute_messages")
+}
+
+model DisputeMediation {
+  id              String   @id @default(cuid())
+  disputeId       String
+  mediatorId      String
+  scheduledAt     DateTime
+  startedAt       DateTime?
+  endedAt         DateTime?
+  status          String   @default("scheduled") // scheduled, in_progress, completed, cancelled
+  type            String   @default("video") // video, phone, chat, in_person
+  meetingLink     String?
+  notes           String?  @db.Text
+  outcome         String?  // agreement, no_agreement, escalation
+  agreementTerms  String?  @db.Text
+  nextSteps       String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  dispute  Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  mediator User    @relation(fields: [mediatorId], references: [id], onDelete: Cascade)
+
+  @@map("dispute_mediations")
+}
+
+// Content Moderation Models
+model ContentModeration {
+  id             String   @id @default(cuid())
+  contentType    String   // product, review, message, profile, listing
+  contentId      String
+  authorId       String
+  status         String   @default("pending") // pending, approved, rejected, flagged, removed
+  moderationType String   @default("automated") // automated, manual, hybrid
+  flaggedReason  String?  // spam, inappropriate, fraud, violence, adult_content
+  severity       String   @default("low") // low, medium, high, critical
+  confidence     Float?   @db.Float // AI confidence score
+  reviewedBy     String?
+  reviewedAt     DateTime?
+  action         String?  // approve, reject, edit, remove, warn_user, ban_user
+  actionReason   String?  @db.Text
+  appeal         Boolean  @default(false)
+  appealReason   String?  @db.Text
+  appealedAt     DateTime?
+  appealReviewed Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("content_moderation")
+}
+
+model ModerationRule {
+  id          String   @id @default(cuid())
+  name        String
+  description String   @db.Text
+  category    String   // content_filter, user_behavior, transaction_safety
+  type        String   // keyword, pattern, ml_model, manual_review
+  conditions  String   @db.LongText // JSON
+  actions     String   @db.LongText // JSON
+  severity    String   @default("medium") // low, medium, high, critical
+  isActive    Boolean  @default(true)
+  priority    Int      @default(0)
+  createdBy   String
+  lastUsed    DateTime?
+  usageCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("moderation_rules")
+}
+
+model ModerationQueue {
+  id            String   @id @default(cuid())
+  contentType   String
+  contentId     String
+  contentItemId String?  // Alternative field name
+  authorId      String
+  priority      String   @default("normal") // low, normal, high, urgent
+  assignedTo    String?
+  status        String   @default("pending") // pending, in_review, completed
+  flaggedBy     String   // system, user_report, automated_scan
+  reason        String
+  content       String   @db.LongText // JSON snapshot of content
+  metadata      String?  @db.Text // JSON
+  assignedAt    DateTime?
+  reviewedAt    DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  contentItem ContentItem? @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@map("moderation_queue")
+}
+
+// User Trust & Verification Models
+model UserTrustProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  trustScore       Int      @default(50) // 0-100
+  trustLevel       String   @default("unverified") // unverified, basic, verified, trusted, premium, expert
+  verificationBadges String @db.Text // JSON array
+  reputationScore  Int      @default(0)
+  reliabilityScore Int      @default(50)
+  activityScore    Int      @default(0)
+  socialScore      Int      @default(0)
+  profileStrength  String   @default("weak") // weak, fair, good, strong, excellent
+  riskLevel        String   @default("low") // low, medium, high
+  riskFlags        String?  @db.Text // JSON array
+  accountAge       Int      @default(0) // days
+  lastActivity     DateTime?
+  profileCompletion Int     @default(0) // percentage
+  transactionCount Int      @default(0)
+  disputeRate      Float    @default(0.0) @db.Float
+  positiveReviews  Int      @default(0)
+  negativeReviews  Int      @default(0)
+  endorsementCount Int      @default(0)
+  warnings         Int      @default(0)
+  restrictions     String?  @db.Text // JSON
+  notes            String?  @db.Text
+  lastUpdated      DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  endorsements UserEndorsement[]
+  trustAlerts  TrustAlert[]
+
+  @@map("user_trust_profiles")
+}
+
+model UserEndorsement {
+  id           String   @id @default(cuid())
+  endorserId   String
+  endorseeId   String
+  category     String   // reliability, communication, quality, timeliness
+  rating       Int      // 1-5
+  comment      String?  @db.Text
+  relatedOrder String?
+  verified     Boolean  @default(false)
+  helpful      Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  endorser User             @relation("EndorsementsGiven", fields: [endorserId], references: [id], onDelete: Cascade)
+  trustProfile UserTrustProfile @relation(fields: [endorseeId], references: [userId], onDelete: Cascade)
+
+  @@unique([endorserId, endorseeId, category])
+  @@map("user_endorsements")
+}
+
+model TrustAlert {
+  id          String   @id @default(cuid())
+  userId      String
+  alertType   String   // score_drop, verification_expired, suspicious_activity
+  severity    String   @default("info") // info, warning, critical
+  title       String
+  description String   @db.Text
+  message     String   @db.Text
+  isResolved  Boolean  @default(false)
+  actionRequired Boolean @default(false)
+  dismissed   Boolean  @default(false)
+  dismissedAt DateTime?
+  expiresAt   DateTime?
+  metadata    String?  @db.Text // JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  trustProfile UserTrustProfile @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("trust_alerts")
+}
+
+// ==================== DELIVERY & LOGISTICS MODELS ====================
+
+model DeliveryAgent {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  businessName    String?
+  vehicleType     String   // bike, car, van, truck
+  licensePlate    String?
+  licenseNumber   String?
+  phoneNumber     String
+  emergencyContact String?
+  bankDetails     String?  @db.Text // JSON
+  isVerified      Boolean  @default(false)
+  isAvailable     Boolean  @default(true)
+  currentLocation String?  @db.Text // JSON with lat/lng
+  rating          Decimal? @db.Decimal(3, 2)
+  totalDeliveries Int      @default(0)
+  earnings        Decimal  @default(0) @db.Decimal(10, 2)
+  joinedAt        DateTime @default(now())
+  lastActiveAt    DateTime?
+  status          String   @default("active") // active, suspended, inactive
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shipments Shipment[]
+
+  @@map("delivery_agents")
+}
+
+model Shipment {
+  id                String   @id @default(cuid())
+  orderId           String?
+  serviceRequestId  String?
+  trackingNumber    String   @unique
+  status            String   @default("pending") // pending, assigned, picked_up, in_transit, delivered, cancelled
+  shippingOption    String   // standard, express, same_day, scheduled
+  estimatedDelivery DateTime?
+  actualDelivery    DateTime?
+  pickupAddress     String   @db.Text
+  deliveryAddress   String   @db.Text
+  pickupCoordinates String?  @db.Text // JSON
+  deliveryCoordinates String? @db.Text // JSON
+  currentLocation   String?  @db.Text // JSON
+  recipientName     String
+  recipientPhone    String
+  deliveryNotes     String?  @db.Text
+  packageDetails    String   @db.Text // JSON
+  deliveryFee       Decimal  @db.Decimal(8, 2)
+  agentId           String?
+  zoneId            String?
+  assignedAt        DateTime?
+  pickedUpAt        DateTime?
+  deliveredAt       DateTime?
+  deliveryProof     String?  @db.Text // JSON with images/signature
+  rating            Int?     @db.TinyInt
+  feedback          String?  @db.Text
+  events            String?  @db.Text // JSON array of tracking events
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  agent DeliveryAgent? @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  zone  DeliveryZone?    @relation(fields: [zoneId], references: [id], onDelete: SetNull)
+  order Order?          @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@map("shipments")
+}
+
+model DeliveryZone {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  coordinates String   @db.Text // JSON polygon coordinates
+  baseFee     Decimal  @db.Decimal(8, 2)
+  feePerKm    Decimal  @default(0) @db.Decimal(8, 2)
+  maxDistance Int      @default(50) // km
+  priority    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  shipments Shipment[]
+
+  @@map("delivery_zones")
+}
+
+// ==================== PAYMENT MODELS ====================
+
+model Payment {
+  id              String   @id @default(cuid())
+  reference       String   @unique
+  userId          String
+  sellerId        String?
+  orderId         String?
+  serviceRequestId String?
+  amount          Decimal  @db.Decimal(10, 2)
+  currency        String   @default("NGN")
+  method          String   // card, bank_transfer, ussd, qr, mobile_money
+  status          String   @default("pending") // pending, processing, completed, failed, refunded
+  provider        String   // paystack, flutterwave, etc
+  providerRef     String?
+  description     String?
+  escrow          Boolean  @default(false)
+  escrowStatus    String?  // held, released, disputed
+  platformCut     Decimal  @default(0) @db.Decimal(8, 2)
+  sellerNet       Decimal  @default(0) @db.Decimal(10, 2)
+  processingFee   Decimal  @default(0) @db.Decimal(8, 2)
+  tax             Decimal  @default(0) @db.Decimal(8, 2)
+  metadata        String?  @db.Text // JSON
+  paidAt          DateTime?
+  failureReason   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refunds PaymentRefund[]
+  invoices Invoice[]
+
+  @@map("payments")
+}
+
+model PaymentRefund {
+  id            String   @id @default(cuid())
+  paymentId     String
+  amount        Decimal  @db.Decimal(10, 2)
+  reason        String
+  status        String   @default("pending") // pending, processing, completed, failed
+  providerRef   String?
+  processedBy   String?
+  requestedBy   String
+  approvedAt    DateTime?
+  completedAt   DateTime?
+  failureReason String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@map("payment_refunds")
+}
+
+model Payout {
+  id             String   @id @default(cuid())
+  sellerId       String
+  totalAmount    Decimal  @db.Decimal(10, 2)
+  currency       String   @default("NGN")
+  status         String   @default("scheduled") // scheduled, processing, completed, failed
+  provider       String   // paystack, flutterwave, etc
+  providerRef    String?
+  bankDetails    String   @db.Text // JSON
+  scheduledAt    DateTime
+  processedAt    DateTime?
+  failureReason  String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  items PayoutItem[]
+
+  @@map("payouts")
+}
+
+model PayoutItem {
+  id         String  @id @default(cuid())
+  payoutId   String
+  paymentId  String
+  amount     Decimal @db.Decimal(10, 2)
+  commission Decimal @db.Decimal(8, 2)
+  net        Decimal @db.Decimal(10, 2)
+
+  payout Payout @relation(fields: [payoutId], references: [id], onDelete: Cascade)
+
+  @@unique([payoutId, paymentId])
+  @@map("payout_items")
+}
+
+model Invoice {
+  id          String   @id @default(cuid())
+  paymentId   String
+  invoiceNumber String @unique
+  type        String   // sale, service, refund
+  amount      Decimal  @db.Decimal(10, 2)
+  tax         Decimal  @default(0) @db.Decimal(8, 2)
+  status      String   @default("issued") // issued, paid, overdue, cancelled
+  dueDate     DateTime?
+  paidAt      DateTime?
+  details     String   @db.Text // JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+
+  @@map("invoices")
+}
+
+model TaxRule {
+  id          String  @id @default(cuid())
+  name        String
+  type        String  // vat, sales_tax, service_tax
+  rate        Decimal @db.Decimal(5, 4)
+  category    String? // product, service, digital
+  region      String? // state, country code
+  isActive    Boolean @default(true)
+  description String? @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("tax_rules")
+}
+
+model RevenueShareScheme {
+  id                String  @id @default(cuid())
+  name              String
+  category          String  // product, service, premium
+  platformPercentage Decimal @db.Decimal(5, 4)
+  sellerPercentage  Decimal @db.Decimal(5, 4)
+  minimumFee        Decimal @default(0) @db.Decimal(8, 2)
+  maximumFee        Decimal? @db.Decimal(8, 2)
+  userType          String? // regular, premium, verified
+  isActive          Boolean @default(true)
+  effectiveFrom     DateTime @default(now())
+  effectiveTo       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("revenue_share_schemes")
+}
+
+// ==================== NOTIFICATION MODELS ====================
+
+model Notification {
+  id              String   @id @default(cuid())
+  userId          String
+  title           String
+  message         String   @db.Text
+  type            String   // info, warning, success, error
+  category        String   // order, payment, security, system
+  priority        String   @default("normal") // low, normal, high, urgent
+  isRead          Boolean  @default(false)
+  read            Boolean  @default(false)
+  actionUrl       String?
+  actionLabel     String?
+  metadata        String?  @db.Text // JSON
+  scheduledFor    DateTime?
+  sentAt          DateTime?
+  readAt          DateTime?
+  expiresAt       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model NotificationPreference {
+  id                  String  @id @default(cuid())
+  userId              String  @unique
+  emailNotifications  Boolean @default(true)
+  smsNotifications    Boolean @default(true)
+  pushNotifications   Boolean @default(true)
+  orderUpdates        Boolean @default(true)
+  paymentAlerts       Boolean @default(true)
+  securityAlerts      Boolean @default(true)
+  marketingEmails     Boolean @default(false)
+  weeklyDigest        Boolean @default(true)
+  promotionalOffers   Boolean @default(true)
+  systemMaintenance   Boolean @default(true)
+  frequency           String  @default("immediate") // immediate, daily, weekly
+  quietHoursStart     String? // HH:MM format
+  quietHoursEnd       String? // HH:MM format
+  timezone            String  @default("UTC")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+model UserNotificationPreference {
+  id        String @id @default(cuid())
+  userId    String @unique
+  email     Boolean @default(true)
+  sms       Boolean @default(true)
+  push      Boolean @default(true)
+  inApp     Boolean @default(true)
+  whatsapp  Boolean @default(false)
+  categories String? @db.Text // JSON object
+  quietHours String? @db.Text // JSON object
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_notification_preferences")
+}
+
+// ==================== GDPR & COMPLIANCE MODELS ====================
+
+model DataExportRequest {
+  id            String   @id @default(cuid())
+  userId        String
+  requestType   String   @default("full_export") // full_export, partial_export, portability
+  status        String   @default("pending") // pending, processing, completed, failed
+  dataTypes     String   @db.Text // JSON array
+  format        String   @default("json") // json, csv, xml
+  downloadUrl   String?
+  expiresAt     DateTime?
+  requestedBy   DateTime @default(now()) // Alternative field name
+  requestedAt   DateTime @default(now())
+  processedAt   DateTime?
+  completedAt   DateTime?
+  fileSize      Int?     // in bytes
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("data_export_requests")
+}
+
+model DataDeletionRequest {
+  id                String   @id @default(cuid())
+  userId            String
+  requestType       String   @default("full_deletion") // full_deletion, partial_deletion, anonymization
+  status            String   @default("pending") // pending, processing, completed, rejected
+  reason            String?  @db.Text
+  dataTypes         String?  @db.Text // JSON array for partial deletion
+  retentionPeriod   Int?     // days to keep before permanent deletion
+  requestDate       DateTime @default(now())
+  requestedBy       DateTime @default(now()) // Alternative field name
+  scheduledDate     DateTime?
+  scheduledFor      DateTime?
+  verificationToken String?
+  deletionMethod    String   @default("soft_delete") // soft_delete, hard_delete, anonymization
+  processedBy       String?
+  processedAt       DateTime?
+  completedAt       DateTime?
+  backupCreated     Boolean  @default(false)
+  notes             String?  @db.Text
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("data_deletion_requests")
+}
+
+model ConsentRecord {
+  id              String   @id @default(cuid())
+  userId          String
+  consentType     String   // privacy_policy, terms_of_service, marketing, cookies
+  consentSource   String   @default("website") // website, app, email, phone
+  consentGiven    Boolean
+  consentDate     DateTime @default(now())
+  consentMethod   String   @default("explicit") // explicit, implicit, inferred
+  ipAddress       String?
+  userAgent       String?  @db.Text
+  version         String   // version of document consented to
+  withdrawnAt     DateTime?
+  withdrawalReason String?  @db.Text
+  isActive        Boolean  @default(true)
+  legalBasis      String?  // consent, legitimate_interest, contract, etc.
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("consent_records")
+}
+
+// ==================== COMMUNICATION MODELS ====================
+
+model ChatMessage {
+  id          String   @id @default(cuid())
+  chatId      String
+  roomId      String?
+  senderId    String
+  recipientId String
+  content     String   @db.Text
+  messageType String   @default("text") // text, image, file, system
+  attachments String?  @db.Text // JSON
+  isRead      Boolean  @default(false)
+  isEdited    Boolean  @default(false)
+  editedAt    DateTime?
+  replyToId   String?
+  reactions   String?  @db.Text // JSON
+  metadata    String?  @db.Text // JSON
+  readAt      DateTime?
+  deliveredAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sender    User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient User @relation("ReceivedMessages", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@map("chat_messages")
+}
+
+// ==================== TRUST & VERIFICATION MODELS ====================
+
+model VerificationBadge {
+  id          String   @id @default(cuid())
+  userId      String
+  badgeType   String   // email_verified, phone_verified, identity_verified, etc.
+  badgeName   String
+  description String?  @db.Text
+  iconUrl     String?
+  color       String?  @default("#10B981")
+  isActive    Boolean  @default(true)
+  status      String   @default("active") // active, expired, revoked
+  earnedAt    DateTime @default(now())
+  expiresAt   DateTime?
+  verifiedBy  String?
+  criteria    String?  @db.Text // JSON
+  metadata    String?  @db.Text // JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeType])
+  @@map("verification_badges")
+}
+
+model Endorsement {
+  id             String   @id @default(cuid())
+  endorserId     String
+  endorseeId     String
+  endorsementType String  // skill, reliability, communication, quality
+  category       String   // skill, reliability, communication, quality
+  rating         Int      @db.TinyInt // 1-5
+  title          String?
+  comment        String?  @db.Text
+  description    String?  @db.Text
+  isPublic       Boolean  @default(true)
+  isVerified     Boolean  @default(false)
+  verifiedBy     String?
+  relatedOrder   String?
+  helpful        Int      @default(0)
+  reportCount    Int      @default(0)
+  status         String   @default("active") // active, hidden, reported, removed
+  weight         Float?   @db.Float
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  endorser User @relation("EndorsementsGiven", fields: [endorserId], references: [id], onDelete: Cascade)
+  endorsee User @relation("EndorsementsReceived", fields: [endorseeId], references: [id], onDelete: Cascade)
+
+  @@unique([endorserId, endorseeId, category])
+  @@map("endorsements")
+}
+
+model SocialConnection {
+  id          String   @id @default(cuid())
+  userId      String
+  platform    String   // facebook, twitter, linkedin, instagram, etc.
+  username    String
+  profileUrl  String?
+  isVerified  Boolean  @default(false)
+  isPublic    Boolean  @default(true)
+  followers   Int?
+  following   Int?
+  lastSynced  DateTime?
+  metadata    String?  @db.Text // JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, platform])
+  @@map("social_connections")
+}
+
+model CommunityPost {
+  id            String   @id @default(cuid())
+  authorId      String
+  title         String
+  content       String   @db.Text
+  postType      String   @default("discussion") // discussion, question, announcement, review
+  category      String?
+  tags          String?  @db.Text // JSON array
+  images        String?  @db.Text // JSON array
+  isPublic      Boolean  @default(true)
+  isLocked      Boolean  @default(false)
+  isPinned      Boolean  @default(false)
+  viewCount     Int      @default(0)
+  likeCount     Int      @default(0)
+  commentCount  Int      @default(0)
+  shareCount    Int      @default(0)
+  reportCount   Int      @default(0)
+  status        String   @default("published") // draft, published, hidden, removed
+  moderatedAt   DateTime?
+  moderatedBy   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("community_posts")
+}
+
+model ReviewAuthenticity {
+  id            String   @id @default(cuid())
+  reviewId      String   @unique
+  authenticityScore Float  @db.Float // 0.0 to 1.0
+  confidence    Float    @db.Float // 0.0 to 1.0
+  riskFactors   String?  @db.Text // JSON array
+  verificationMethod String? // ai_analysis, manual_review, user_verification
+  isAuthentic   Boolean?
+  flaggedReason String?
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  metadata      String?  @db.Text // JSON
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@map("review_authenticity")
+}
+
+// ==================== SECURITY & MONITORING MODELS ====================
+
+model SecurityFinding {
+  id          String   @id @default(cuid())
+  auditId     String
+  findingType String   // vulnerability, misconfiguration, compliance_issue
+  severity    String   // info, low, medium, high, critical
+  title       String
+  description String   @db.Text
+  remediation String?  @db.Text
+  status      String   @default("open") // open, acknowledged, remediated, false_positive
+  assignedTo  String?
+  dueDate     DateTime?
+  closedAt    DateTime?
+  closedBy    String?
+  evidence    String?  @db.Text // JSON
+  metadata    String?  @db.Text // JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  audit SecurityAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@map("security_findings")
+}
+
+model VulnerabilityAssessment {
+  id              String   @id @default(cuid())
+  title           String
+  description     String   @db.Text
+  severity        String   // info, low, medium, high, critical
+  cvssScore       Float?   @db.Float
+  cveId           String?
+  affectedSystems String   @db.Text // JSON array
+  status          String   @default("identified") // identified, confirmed, patched, mitigated
+  discoveredBy    String?
+  discoveredAt    DateTime @default(now())
+  patchAvailable  Boolean  @default(false)
+  patchVersion    String?
+  mitigationSteps String?  @db.Text
+  assignedTo      String?
+  dueDate         DateTime?
+  resolvedAt      DateTime?
+  resolvedBy      String?
+  notes           String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("vulnerability_assessments")
+}
+
+model SecurityLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  sessionId   String?
+  eventType   String   // login, logout, permission_change, data_access
+  action      String
+  resource    String?
+  details     String?  @db.Text
+  ipAddress   String?
+  userAgent   String?  @db.Text
+  success     Boolean
+  errorCode   String?
+  errorMessage String? @db.Text
+  metadata    String?  @db.Text // JSON
+  riskScore   Int?     @default(0)
+  flagged     Boolean  @default(false)
+  timestamp   DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@map("security_logs")
+}
+
+model BlockedIP {
+  id          String   @id @default(cuid())
+  ipAddress   String   @unique
+  reason      String   @db.Text
+  blockedBy   String
+  blockedAt   DateTime @default(now())
+  expiresAt   DateTime?
+  isActive    Boolean  @default(true)
+  attempts    Int      @default(1)
+  lastAttempt DateTime @default(now())
+  metadata    String?  @db.Text // JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("blocked_ips")
+}
+
+model SecurityScan {
+  id            String   @id @default(cuid())
+  scanType      String   // port_scan, vulnerability_scan, malware_scan
+  target        String   // ip_address, domain, user_upload
+  status        String   @default("queued") // queued, running, completed, failed
+  findings      String?  @db.LongText // JSON
+  riskScore     Int?     @default(0)
+  startedAt     DateTime?
+  completedAt   DateTime?
+  duration      Int?     // seconds
+  scanEngine    String?
+  engineVersion String?
+  metadata      String?  @db.Text // JSON
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("security_scans")
+}
+
+// ==================== ADDITIONAL USER & ACTIVITY MODELS ====================
+
+model UserActivity {
+  id          String   @id @default(cuid())
+  userId      String
+  activityType String  // login, logout, purchase, listing, message, etc.
+  action      String
+  resource    String?
+  metadata    String?  @db.Text // JSON
+  ipAddress   String?
+  userAgent   String?  @db.Text
+  duration    Int?     // seconds for session activities
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([activityType])
+  @@index([createdAt])
+  @@map("user_activities")
+}
+
+model EmergencyContact {
+  id           String   @id @default(cuid())
+  userId       String
+  name         String
+  relationship String   // family, friend, colleague, etc.
+  phone        String
+  email        String?
+  address      String?  @db.Text
+  isPrimary    Boolean  @default(false)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("emergency_contacts")
+}
+
+model SafetySettings {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  locationSharing      Boolean  @default(false)
+  meetingReminders     Boolean  @default(true)
+  emergencyContacts    Boolean  @default(true)
+  safetyTips           Boolean  @default(true)
+  incidentReporting    Boolean  @default(true)
+  riskAssessment       Boolean  @default(true)
+  backgroundChecks     Boolean  @default(false)
+  identityVerification Boolean  @default(false)
+  twoFactorAuth        Boolean  @default(false)
+  loginAlerts          Boolean  @default(true)
+  profileVisibilityLevel String @default("public") // public, friends, private
+  allowContactFromStrangers Boolean @default(true)
+  shareLocationData    Boolean  @default(false)
+  emergencyModeEnabled Boolean  @default(false)
+  safeWord             String?
+  safeWordEnabled      Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("safety_settings")
+}
+
+model MeetingGuidelines {
+  id          String   @id @default(cuid())
+  title       String
+  content     String   @db.Text
+  category    String   // first_meeting, public_spaces, safety_tips
+  type        String   @default("general") // general, product_specific, location_specific
+  isActive    Boolean  @default(true)
+  priority    Int      @default(0)
+  audience    String?  // buyer, seller, all
+  createdBy   String
+  viewCount   Int      @default(0)
+  helpful     Int      @default(0)
+  notHelpful  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("meeting_guidelines")
+}
+
+// ==================== TRUST & REPUTATION MODELS ====================
+
+model TrustMetric {
+  id             String   @id @default(cuid())
+  userId         String
+  metricType     String   // transaction_history, response_time, completion_rate, etc.
+  value          Float    @db.Float
+  maxValue       Float    @db.Float @default(100.0)
+  weight         Float    @db.Float // importance in overall trust score
+  lastCalculated DateTime @default(now())
+  period         String   @default("all_time") // all_time, last_30_days, last_year
+  metadata       String?  @db.Text // JSON
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, metricType, period])
+  @@map("trust_metrics")
+}
+
+model PolicyViolation {
+  id            String   @id @default(cuid())
+  userId        String
+  violationType String   // spam, fraud, harassment, fake_listing
+  severity      String   // minor, major, critical
+  status        String   @default("reported") // reported, investigating, confirmed, dismissed
+  description   String   @db.Text
+  evidence      String?  @db.Text // JSON
+  reportedBy    String?
+  reviewedBy    String?
+  actionTaken   String?  // warning, suspension, ban, content_removal
+  appealStatus  String?  // none, pending, approved, rejected
+  detectedAt    DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("policy_violations")
+}
+
+model RiskAssessment {
+  id              String   @id @default(cuid())
+  userId          String
+  riskType        String   // transaction, communication, meeting, identity
+  riskScore       Int      // 0-100
+  riskLevel       String   // low, medium, high, critical
+  overallRisk     String   // low, medium, high, critical (alternative field name)
+  factors         String   @db.Text // JSON array of risk factors
+  riskFactors     String   @db.Text // JSON array (alternative field name)
+  recommendations String?  @db.Text // JSON array
+  assessedBy      String   // system, manual_review
+  validUntil      DateTime?
+  notes           String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("risk_assessments")
+}
+
+model ReputationChange {
+  id            String   @id @default(cuid())
+  userId        String
+  changeType    String   // positive_review, negative_review, violation, achievement
+  points        Int      // can be negative
+  previousScore Int      @default(0)
+  newScore      Int      @default(0)
+  delta         Int      @default(0)
+  reason        String   @db.Text
+  source        String   // review, transaction, admin_action, system_calculation
+  relatedEntity String?  // order_id, review_id, etc.
+  triggeredBy   String?
+  timestamp     DateTime @default(now())
+  metadata      String?  @db.Text // JSON
+  createdBy     String?
+  createdAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("reputation_changes")
+}
+
+// ==================== IDENTITY VERIFICATION MODELS ====================
+
+model IdentityVerification {
+  id                String   @id @default(cuid())
+  userId            String
+  documentType      String   // passport, drivers_license, national_id, etc.
+  documentNumber    String?
+  documentImages    String   @db.Text // JSON array of image URLs
+  selfieImage       String?
+  verificationMethod String  @default("manual") // manual, automated, hybrid
+  verificationType  String   @default("identity") // identity, address, phone
+  status            String   @default("pending") // pending, approved, rejected, expired
+  confidence        Float?   @db.Float // 0.0 to 1.0 for automated checks
+  verifiedBy        String?
+  verifiedAt        DateTime?
+  expiresAt         DateTime?
+  submittedAt       DateTime @default(now())
+  rejectionReason   String?  @db.Text
+  notes             String?  @db.Text
+  metadata          String?  @db.Text // JSON
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("identity_verifications")
+}
+
+model BackgroundCheck {
+  id            String   @id @default(cuid())
+  userId        String
+  checkType     String   // criminal, credit, employment, reference
+  provider      String?  // third-party service provider
+  providerRef   String?
+  status        String   @default("pending") // pending, in_progress, completed, failed
+  result        String?  // clear, flagged, inconclusive
+  score         Int?     // 0-100
+  findings      String?  @db.Text // JSON
+  requestedBy   String
+  requestedAt   DateTime @default(now())
+  completedAt   DateTime?
+  expiresAt     DateTime?
+  cost          Decimal? @db.Decimal(8, 2)
+  notes         String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("background_checks")
+}
+
+// ==================== USER PROFILE MODEL ====================
+
+model UserProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  bio             String?  @db.Text
+  website         String?
+  location        String?
+  dateOfBirth     DateTime?
+  gender          String?
+  interests       String?  @db.Text // JSON array
+  languages       String?  @db.Text // JSON array
+  timezone        String   @default("UTC")
+  profilePicture  String?
+  coverPicture    String?
+  socialLinks     String?  @db.Text // JSON object
+  preferences     String?  @db.Text // JSON object
+  isPublic        Boolean  @default(true)
+  lastActiveAt    DateTime?
+  verifiedDate    DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+// ==================== ADDITIONAL MISSING MODELS ====================
+
+model ContentItem {
+  id          String   @id @default(cuid())
+  itemId      String   // External reference ID
+  contentType String   // product, review, message, listing
+  content     String   @db.Text
+  title       String?
+  authorId    String
+  status      String   @default("pending") // pending, approved, rejected, flagged
+  autoModerationScore Float? @db.Float
+  moderatedAt DateTime?
+  isRemoved   Boolean  @default(false)
+  isBlurred   Boolean  @default(false)
+  visibilityRestricted Boolean @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  flags           ContentFlag[]
+  violations      ContentViolation[]
+  moderationQueue ModerationQueue[]
+
+  @@map("content_items")
+}
+
+model ContentFlag {
+  id            String   @id @default(cuid())
+  contentId     String   // Reference to content
+  contentItemId String   // Alternative reference field
+  flaggedBy     String
+  reason        String
+  severity      String   @default("medium")
+  status        String   @default("pending")
+  flagType      String   @default("inappropriate") // inappropriate, spam, fake, etc.
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  reviewNotes   String?  @db.Text
+  description   String?  @db.Text
+  flaggedAt     DateTime @default(now())
+
+  content ContentItem @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@map("content_flags")
+}
+
+model ContentViolation {
+  id           String   @id @default(cuid())
+  contentId    String
+  violationType String
+  severity     String
+  confidence   Float?
+  description  String   @db.Text
+  detectedAt   DateTime @default(now())
+  detectedBy   String   // system, user, moderator
+
+  content ContentItem @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@map("content_violations")
+}
+
+model ContentReview {
+  id           String   @id @default(cuid())
+  contentId    String
+  contentItemId String? // Alternative field name
+  reviewerId   String
+  decision     String   // approve, reject, flag
+  confidence   String?  // high, medium, low
+  reasoning    String?  @db.Text
+  actionsTaken String?  @db.Text // JSON array
+  reviewTime   Int?     // time in seconds
+  qualityScore Float?   @db.Float
+  notes        String?  @db.Text
+  reason       String?  @db.Text // Alternative field name
+  reviewedAt   DateTime @default(now())
+  verifiedAt   DateTime @default(now())
+
+  @@map("content_reviews")
+}
+
+model DisputeEvidence {
+  id           String   @id @default(cuid())
+  disputeId    String
+  submittedBy  String
+  evidenceType String
+  title        String
+  description  String   @db.Text
+  fileUrls     String   @db.Text // JSON array
+  createdAt    DateTime @default(now())
+
+  @@map("dispute_evidence")
+}
+
+model DisputeResolution {
+  id           String   @id @default(cuid())
+  disputeId    String
+  resolvedBy   String
+  resolutionType String
+  outcome      String
+  description  String   @db.Text
+  compensation String?  @db.Text // JSON
+  resolvedAt   DateTime @default(now())
+
+  dispute Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+
+  @@map("dispute_resolutions")
+}
+
+model MediationSession {
+  id           String   @id @default(cuid())
+  disputeId    String
+  mediatorId   String
+  scheduledAt  DateTime
+  duration     Int      // minutes
+  sessionType  String
+  location     String?
+  meetingLink  String?
+  status       String   @default("scheduled")
+
+  @@map("mediation_sessions")
+}
+
+
+
+
+model PushSubscription {
+  id           String   @id @default(cuid())
+  userId       String
+  endpoint     String   @db.VarChar(500)
+  p256dh       String?
+  auth         String?
+  isActive     Boolean  @default(true)
+  active       Boolean  @default(true)  // Alternative field name
+  userAgent    String?  @db.Text
+  deviceInfo   String?  @db.Text // JSON
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, endpoint])
+  @@map("push_subscriptions")
+}
+
+model ScheduledNotification {
+  id           String   @id @default(cuid())
+  userId       String
+  type         String
+  category     String?  // order, payment, delivery, system
+  title        String
+  message      String   @db.Text
+  scheduledFor DateTime
+  sent         Boolean  @default(false)
+  sentAt       DateTime?
+  data         String?  @db.Text // JSON
+  createdAt    DateTime @default(now())
+
+  @@map("scheduled_notifications")
+}
+
+model SafetyAlert {
+  id          String   @id @default(cuid())
+  userId      String
+  alertType   String
+  type        String   // Alternative field name
+  title       String
+  message     String   @db.Text
+  description String?  @db.Text
+  severity    String   @default("medium")
+  source      String?  // system, manual, automated
+  status      String   @default("active")
+  acknowledged Boolean @default(false)
+  affectedCount Int    @default(1)
+  assignedTo  String?
+  dueDate     DateTime?
+  metadata    String?  @db.Text // JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("safety_alerts")
+}
+
+model SafetyAction {
+  id         String   @id @default(cuid())
+  type       String   // action type
+  actionType String
+  target     String   // target entity
+  targetId   String
+  reason     String   @db.Text
+  severity   String
+  executedBy String
+  performedBy String
+  executedAt DateTime @default(now())
+  status     String   @default("completed")
+  data       String?  @db.Text // JSON
+  createdAt  DateTime @default(now())
+
+  @@map("safety_actions")
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  type      String?  // activity type
+  action    String
+  details   String   @db.Text
+  metadata  String?  @db.Text // JSON
+  ipAddress String?
+  userAgent String?  @db.Text
+  timestamp DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@map("activity_logs")
+}
+
+
+model ComplianceCheck {
+  id          String   @id @default(cuid())
+  checkType   String   // gdpr, data_retention, security
+  status      String   @default("pending")
+  result      String?  @db.Text // JSON
+  performedAt DateTime @default(now()) // Alternative field name
+  scheduledAt DateTime
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+
+  @@map("compliance_checks")
+}
+
+model FraudDetection {
+  id           String   @id @default(cuid())
+  entityType   String   // user, transaction, listing
+  entityId     String
+  userId       String?  // For user-related fraud
+  fraudType    String?  // identity_theft, payment_fraud, listing_fraud
+  riskScore    Int      // 0-100
+  riskFactors  String   @db.Text // JSON
+  status       String   @default("flagged")
+  reviewedBy   String?
+  reviewedAt   DateTime?
+  actionTaken  String?  // none, warn, suspend, ban
+  detectedAt   DateTime @default(now())
+
+  @@map("fraud_detections")
+}
+
+model UserWarning {
+  id            String   @id @default(cuid())
+  userId        String
+  contentItemId String?  // Related content item
+  reason        String   @db.Text
+  severity      String   @default("medium")
+  issuedBy      String
+  issuedAt      DateTime @default(now())
+  acknowledged  Boolean  @default(false)
+
+  @@map("user_warnings")
+}
