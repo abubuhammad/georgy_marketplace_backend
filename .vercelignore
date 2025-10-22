@@ -11,4 +11,9 @@ tests/
 **/*.test.*
 **/*.spec.*
 prisma/migrations/
+prisma/seed.ts
+**/*.d.ts
+.gitignore
+README.md
+*.md
 !api/index.js

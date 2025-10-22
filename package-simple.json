@@ -1,0 +1,16 @@
+{
+  "name": "georgy-backend-simple",
+  "version": "1.0.0",
+  "description": "Simple Georgy Marketplace Backend",
+  "main": "api/index.js",
+  "scripts": {
+    "start": "node api/index.js",
+    "dev": "node api/index.js"
+  },
+  "dependencies": {
+    "@vercel/node": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
