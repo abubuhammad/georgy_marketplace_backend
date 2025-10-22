@@ -31,6 +31,41 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Database initialization endpoint
+app.post('/api/init-db', async (req, res) => {
+  try {
+    // This endpoint will initialize the database
+    const { exec } = require('child_process');
+    const { promisify } = require('util');
+    const execAsync = promisify(exec);
+    
+    if (!process.env.DATABASE_URL) {
+      return res.status(400).json({
+        error: 'DATABASE_URL not configured',
+        message: 'Please set DATABASE_URL in environment variables'
+      });
+    }
+    
+    // Run Prisma commands to set up database
+    await execAsync('npx prisma generate');
+    await execAsync('npx prisma db push --force-reset');
+    
+    res.json({
+      status: 'success',
+      message: 'Database initialized successfully',
+      timestamp: new Date().toISOString()
+    });
+    
+  } catch (error) {
+    console.error('Database initialization error:', error);
+    res.status(500).json({
+      error: 'Database initialization failed',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Catch all API routes
 app.all('/api/*', (req, res) => {
   res.json({
