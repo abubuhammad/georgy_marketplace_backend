@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: georgy-marketplace-backend
+    runtime: node
+    region: ohio
+    plan: free
+    
+    # Build configuration
+    buildCommand: npm ci --production=false && npm run build && npx prisma generate --schema=prisma/schema.prisma
+    startCommand: node dist/server.js
+    
+    # Environment variables
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+    
+    # Health check
+    healthCheckPath: /api/health
+    
+    # Auto-deploy on push
+    autoDeploy: true
+    
+    # Disk space for node_modules
+    disk:
+      name: node_modules
+      mountPath: /opt/render/project/node_modules
+      sizeGB: 2

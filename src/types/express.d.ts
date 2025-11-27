@@ -1,3 +1,5 @@
+import { Request } from 'express';
+
 // Extend Express Request interface to include user property
 declare global {
   namespace Express {
@@ -12,5 +14,3 @@ declare global {
     }
   }
 }
-
-export {};
