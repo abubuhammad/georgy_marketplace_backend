@@ -7,24 +7,16 @@
     "rootDir": "./src",
     "strict": false,
     "noImplicitAny": false,
-    "noImplicitThis": false,
-    "strictNullChecks": false,
-    "strictFunctionTypes": false,
-    "strictBindCallApply": false,
-    "strictPropertyInitialization": false,
-    "noImplicitReturns": false,
     "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": false,
     "resolveJsonModule": true,
     "declaration": false,
-    "declarationMap": false,
     "sourceMap": false,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "noEmit": false,
     "removeComments": true,
-    "typeRoots": ["./node_modules/@types"]
+    "noEmit": false,
+    "moduleResolution": "node"
   },
   "include": [
     "src/**/*"
@@ -36,9 +28,5 @@
     "src/server-temp.ts",
     "src/server-working.ts",
     "src/server-minimal.ts"
-  ],
-  "ts-node": {
-    "transpileOnly": true,
-    "files": false
-  }
+  ]
 }
