@@ -1643,6 +1643,8 @@ model SafetySettings {
   backgroundChecks     Boolean  @default(false)
   identityVerification Boolean  @default(false)
   twoFactorAuth        Boolean  @default(false)
+  /// TOTP secret for authenticator apps (Base32)
+  twoFactorSecret      String?
   loginAlerts          Boolean  @default(true)
   profileVisibilityLevel String @default("public") // public, friends, private
   allowContactFromStrangers Boolean @default(true)

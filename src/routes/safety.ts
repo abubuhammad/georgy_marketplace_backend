@@ -170,6 +170,62 @@ router.post('/trigger-emergency', authenticateToken, async (req, res) => {
   }
 });
 
+// Two-Factor Authentication (2FA) routes
+router.post('/two-factor/setup', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'User not authenticated' });
+    }
+
+    const accountLabel = req.user?.email || userId;
+    const data = await safetyService.startTwoFactorSetup(userId, accountLabel);
+
+    res.json({ success: true, data });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+router.post('/two-factor/verify', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'User not authenticated' });
+    }
+
+    const { code } = req.body as { code?: string };
+    if (!code || !/^[0-9]{6}$/.test(code)) {
+      return res.status(400).json({ success: false, error: 'Invalid verification code format' });
+    }
+
+    const verified = await safetyService.verifyTwoFactorCode(userId, code);
+    if (!verified) {
+      return res.status(400).json({ success: false, error: 'Invalid verification code' });
+    }
+
+    res.json({ success: true, data: { twoFactorAuth: true } });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+router.post('/two-factor/disable', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ success: false, error: 'User not authenticated' });
+    }
+
+    const { clearSecret } = req.body as { clearSecret?: boolean };
+    await safetyService.disableTwoFactor(userId, !!clearSecret);
+
+    res.json({ success: true, data: { twoFactorAuth: false } });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Security Routes (Admin only)
 router.get('/security/audits', authenticateToken, async (req, res) => {
   try {

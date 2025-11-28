@@ -2,6 +2,8 @@ import { PrismaClient } from '@prisma/client';
 import { Logger } from '../utils/logger';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
+import { authenticator } from 'otplib';
+import QRCode from 'qrcode';
 
 interface IdentityVerification {
   id?: string;
@@ -87,6 +89,10 @@ interface SafetySettings {
   safeWord?: string;
   autoReportSuspiciousActivity: boolean;
   requireVerificationForMeetings: boolean;
+  /** Whether 2FA is enabled for this user (from prisma.safetySettings.twoFactorAuth) */
+  twoFactorAuth?: boolean;
+  /** Stored TOTP secret (Base32). Only used server-side; never expose to clients. */
+  twoFactorSecret?: string | null;
   updatedAt: Date;
 }
 
@@ -627,11 +633,119 @@ export class UserSafetyService {
       return {
         ...updatedSettings,
         autoReportSuspiciousActivity: updatedSettings?.riskAssessment || false,
-        requireVerificationForMeetings: updatedSettings?.identityVerification || false
+        requireVerificationForMeetings: updatedSettings?.identityVerification || false,
+        twoFactorAuth: updatedSettings.twoFactorAuth,
+        twoFactorSecret: updatedSettings.twoFactorSecret,
       } as SafetySettings;
     } catch (error) {
       this.logger.error('Error updating safety settings:', error);
       throw new Error('Failed to update safety settings');
+    }
+  }
+
+  /**
+   * Start TOTP-based 2FA setup: generate secret, store it, and return QR + secret
+   */
+  async startTwoFactorSetup(userId: string, accountLabel?: string): Promise<{
+    otpauthUrl: string;
+    qrCodeDataUrl: string;
+    secret: string;
+  }> {
+    try {
+      // Generate a new secret for this user
+      const secret = authenticator.generateSecret();
+
+      // Derive label and issuer for authenticator apps
+      const issuer = 'Georgy Marketplace';
+      const label = accountLabel || userId;
+
+      const otpauthUrl = authenticator.keyuri(label, issuer, secret);
+      const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl);
+
+      // Persist secret and keep twoFactorAuth disabled until verified
+      await this.prisma.safetySettings.upsert({
+        where: { userId },
+        update: {
+          twoFactorSecret: secret,
+          twoFactorAuth: false,
+          updatedAt: new Date(),
+        },
+        create: {
+          userId,
+          twoFactorSecret: secret,
+          twoFactorAuth: false,
+          updatedAt: new Date(),
+        } as any,
+      });
+
+      this.logger.info(`2FA setup started for user: ${userId}`);
+      return { otpauthUrl, qrCodeDataUrl, secret };
+    } catch (error) {
+      this.logger.error('Error starting two-factor setup:', error);
+      throw new Error('Failed to start two-factor authentication setup');
+    }
+  }
+
+  /**
+   * Verify a TOTP code and enable 2FA on success
+   */
+  async verifyTwoFactorCode(userId: string, code: string): Promise<boolean> {
+    try {
+      const settings = await this.prisma.safetySettings.findUnique({
+        where: { userId },
+      });
+
+      if (!settings?.twoFactorSecret) {
+        this.logger.warn(`2FA verification attempted without secret for user: ${userId}`);
+        return false;
+      }
+
+      const isValid = authenticator.verify({ token: code, secret: settings.twoFactorSecret });
+      if (!isValid) {
+        this.logger.warn(`Invalid 2FA code for user: ${userId}`);
+        return false;
+      }
+
+      await this.prisma.safetySettings.update({
+        where: { userId },
+        data: {
+          twoFactorAuth: true,
+          updatedAt: new Date(),
+        },
+      });
+
+      this.logger.info(`Two-factor authentication enabled for user: ${userId}`);
+      return true;
+    } catch (error) {
+      this.logger.error('Error verifying two-factor code:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Disable 2FA (and optionally clear secret)
+   */
+  async disableTwoFactor(userId: string, clearSecret: boolean = false): Promise<void> {
+    try {
+      await this.prisma.safetySettings.upsert({
+        where: { userId },
+        update: {
+          twoFactorAuth: false,
+          twoFactorSecret: clearSecret ? null : undefined,
+          updatedAt: new Date(),
+        },
+        create: {
+          userId,
+          twoFactorAuth: false,
+          twoFactorSecret: clearSecret ? null : undefined,
+          updatedAt: new Date(),
+        } as any,
+      });
+
+      this.logger.info(`Two-factor authentication disabled for user: ${userId}`);
+    } catch (error) {
+      this.logger.error('Error disabling two-factor authentication:', error);
+      throw new Error('Failed to disable two-factor authentication');
     }
   }
 
