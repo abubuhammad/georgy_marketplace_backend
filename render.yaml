@@ -6,7 +6,7 @@ services:
     plan: free
     
     # Build configuration
-    buildCommand: npm ci --production=false && npm run build && npx prisma generate --schema=prisma/schema.prisma
+    buildCommand: npm ci && npm run build
     startCommand: node dist/server.js
     
     # Environment variables
