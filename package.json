@@ -8,7 +8,7 @@
     "dev:minimal": "nodemon src/server-minimal.ts",
     "dev:working": "nodemon src/server-working.ts",
     "dev:temp": "nodemon src/server-temp.ts",
-    "build": "tsc --noEmitOnError false",
+    "build": "npm ci && tsc --noEmitOnError false",
     "start": "node dist/server.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
