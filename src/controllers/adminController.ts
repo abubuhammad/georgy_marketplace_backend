@@ -54,7 +54,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
     });
 
     // User breakdown by role
-    const usersByRole = await prisma.$queryRaw`
+    const usersByRole = // await prisma.$queryRaw`
       SELECT role, COUNT(*) as count
       FROM users 
       WHERE isDeleted = false
@@ -62,14 +62,14 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
     `;
 
     // Orders by status
-    const ordersByStatus = await prisma.$queryRaw`
+    const ordersByStatus = // await prisma.$queryRaw`
       SELECT status, COUNT(*) as count, SUM(totalAmount) as revenue
       FROM orders
       GROUP BY status
     `;
 
     // Monthly growth (last 12 months)
-    const monthlyGrowth = await prisma.$queryRaw`
+    const monthlyGrowth = // await prisma.$queryRaw`
       SELECT 
         DATE_FORMAT(createdAt, '%Y-%m') as month,
         COUNT(DISTINCT CASE WHEN role = 'seller' THEN id END) as sellers,
@@ -675,7 +675,7 @@ export const getPlatformAnalytics = async (req: AuthRequest, res: Response) => {
     }
 
     // Revenue analytics
-    const revenueData = await prisma.$queryRaw`
+    const revenueData = // await prisma.$queryRaw`
       SELECT 
         DATE(paidAt) as date,
         COUNT(*) as transactions,
@@ -690,7 +690,7 @@ export const getPlatformAnalytics = async (req: AuthRequest, res: Response) => {
     `;
 
     // User growth
-    const userGrowth = await prisma.$queryRaw`
+    const userGrowth = // await prisma.$queryRaw`
       SELECT 
         DATE(createdAt) as date,
         COUNT(CASE WHEN role = 'customer' THEN 1 END) as customers,
@@ -703,7 +703,7 @@ export const getPlatformAnalytics = async (req: AuthRequest, res: Response) => {
     `;
 
     // Product categories performance
-    const categoryPerformance = await prisma.$queryRaw`
+    const categoryPerformance = // await prisma.$queryRaw`
       SELECT 
         p.category,
         COUNT(DISTINCT p.id) as totalProducts,
@@ -719,7 +719,7 @@ export const getPlatformAnalytics = async (req: AuthRequest, res: Response) => {
     `;
 
     // Geographic distribution
-    const geographicData = await prisma.$queryRaw`
+    const geographicData = // await prisma.$queryRaw`
       SELECT 
         p.location as location,
         COUNT(DISTINCT p.sellerId) as sellers,
@@ -1167,7 +1167,7 @@ export class AdminController {
       }
 
       // Payment volume and trends
-      const paymentTrends = await prisma.$queryRaw`
+      const paymentTrends = // await prisma.$queryRaw`
         SELECT 
           DATE(paidAt) as date,
           COUNT(*) as totalTransactions,
@@ -1183,7 +1183,7 @@ export class AdminController {
       `;
 
       // Payment methods breakdown
-      const paymentMethods = await prisma.$queryRaw`
+      const paymentMethods = // await prisma.$queryRaw`
         SELECT 
           method as paymentMethod,
           COUNT(*) as transactions,
@@ -1197,7 +1197,7 @@ export class AdminController {
       `;
 
       // Failed payments analysis
-      const failureAnalysis = await prisma.$queryRaw`
+      const failureAnalysis = // await prisma.$queryRaw`
         SELECT 
           failureReason,
           COUNT(*) as count,
@@ -1275,7 +1275,7 @@ export class AdminController {
       let revenueData: any;
 
       if (breakdown === 'category') {
-        revenueData = await prisma.$queryRaw`
+        revenueData = // await prisma.$queryRaw`
           SELECT 
             p.category,
             COUNT(DISTINCT o.id) as totalOrders,
@@ -1291,7 +1291,7 @@ export class AdminController {
           ORDER BY totalRevenue DESC
         `;
       } else if (breakdown === 'seller') {
-        revenueData = await prisma.$queryRaw`
+        revenueData = // await prisma.$queryRaw`
           SELECT 
             u.id as sellerId,
             u.firstName,
@@ -1309,7 +1309,7 @@ export class AdminController {
           LIMIT 50
         `;
       } else if (breakdown === 'monthly') {
-        revenueData = await prisma.$queryRaw`
+        revenueData = // await prisma.$queryRaw`
           SELECT 
             DATE_FORMAT(pay.createdAt, '%Y-%m') as month,
             COUNT(*) as transactions,
@@ -1613,3 +1613,5 @@ export class AdminController {
 }
 
 export const adminController = new AdminController();
+
+

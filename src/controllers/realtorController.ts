@@ -87,7 +87,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
     });
 
     // Get monthly property stats (last 12 months)
-    const monthlyStats = await prisma.$queryRaw`
+    const monthlyStats = // await prisma.$queryRaw`
       SELECT 
         DATE_FORMAT(createdAt, '%Y-%m') as month,
         COUNT(*) as properties,
@@ -587,7 +587,7 @@ export const getAnalytics = async (req: AuthRequest, res: Response) => {
     }
 
     // Property performance analytics
-    const propertyPerformance = await prisma.$queryRaw`
+    const propertyPerformance = // await prisma.$queryRaw`
       SELECT 
         p.id, p.title, p.type, p.propertyType, p.price, p.location,
         COUNT(pv.id) as totalViewings,
@@ -602,7 +602,7 @@ export const getAnalytics = async (req: AuthRequest, res: Response) => {
     `;
 
     // Viewing trends
-    const viewingTrends = await prisma.$queryRaw`
+    const viewingTrends = // await prisma.$queryRaw`
       SELECT 
         DATE(pv.scheduledAt) as date,
         COUNT(*) as viewings,
@@ -616,7 +616,7 @@ export const getAnalytics = async (req: AuthRequest, res: Response) => {
     `;
 
     // Property type breakdown
-    const propertyTypeBreakdown = await prisma.$queryRaw`
+    const propertyTypeBreakdown = // await prisma.$queryRaw`
       SELECT 
         p.propertyType,
         p.type,
@@ -631,7 +631,7 @@ export const getAnalytics = async (req: AuthRequest, res: Response) => {
     `;
 
     // Location performance
-    const locationPerformance = await prisma.$queryRaw`
+    const locationPerformance = // await prisma.$queryRaw`
       SELECT 
         p.location,
         COUNT(DISTINCT p.id) as properties,
@@ -891,7 +891,7 @@ export const getMarketInsights = async (req: AuthRequest, res: Response) => {
     const { location, propertyType } = req.query;
 
     // Market trends for realtor's area/specialty
-    const marketTrends = await prisma.$queryRaw`
+    const marketTrends = // await prisma.$queryRaw`
       SELECT 
         DATE_FORMAT(p.createdAt, '%Y-%m') as month,
         COUNT(*) as listings,
@@ -909,7 +909,7 @@ export const getMarketInsights = async (req: AuthRequest, res: Response) => {
     `;
 
     // Competition analysis
-    const competitionAnalysis = await prisma.$queryRaw`
+    const competitionAnalysis = // await prisma.$queryRaw`
       SELECT 
         u.firstName, u.lastName,
         COUNT(p.id) as totalProperties,
@@ -927,7 +927,7 @@ export const getMarketInsights = async (req: AuthRequest, res: Response) => {
     `;
 
     // Price distribution
-    const priceDistribution = await prisma.$queryRaw`
+    const priceDistribution = // await prisma.$queryRaw`
       SELECT 
         CASE 
           WHEN price < 50000000 THEN 'Under 50M'
@@ -959,3 +959,4 @@ export const getMarketInsights = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Failed to fetch market insights' });
   }
 };
+

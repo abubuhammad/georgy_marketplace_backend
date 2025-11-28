@@ -60,7 +60,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
     });
 
     // Get monthly sales data (last 12 months)
-    const monthlyStats = await prisma.$queryRaw`
+    const monthlyStats = // await prisma.$queryRaw`
       SELECT 
         DATE_FORMAT(createdAt, '%Y-%m') as month,
         COUNT(*) as orders,
@@ -73,7 +73,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
     `;
 
     // Get top performing products
-    const topProducts = await prisma.$queryRaw`
+    const topProducts = // await prisma.$queryRaw`
       SELECT 
         p.id, p.title, p.price, p.images,
         COUNT(o.id) as orderCount,
@@ -690,7 +690,7 @@ export const getAnalytics = async (req: AuthRequest, res: Response) => {
     }
 
     // Sales analytics
-    const salesData = await prisma.$queryRaw`
+    const salesData = // await prisma.$queryRaw`
       SELECT 
         DATE(createdAt) as date,
         COUNT(*) as orders,
@@ -705,7 +705,7 @@ export const getAnalytics = async (req: AuthRequest, res: Response) => {
     `;
 
     // Product performance
-    const productPerformance = await prisma.$queryRaw`
+    const productPerformance = // await prisma.$queryRaw`
       SELECT 
         p.id, p.title, p.category, p.price,
         COUNT(o.id) as totalOrders,
@@ -722,7 +722,7 @@ export const getAnalytics = async (req: AuthRequest, res: Response) => {
     `;
 
     // Category breakdown
-    const categoryBreakdown = await prisma.$queryRaw`
+    const categoryBreakdown = // await prisma.$queryRaw`
       SELECT 
         p.category,
         COUNT(o.id) as orders,
@@ -745,3 +745,4 @@ export const getAnalytics = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: 'Failed to fetch analytics' });
   }
 };
+

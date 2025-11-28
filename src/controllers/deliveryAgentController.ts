@@ -43,7 +43,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
     });
 
     // Get total earnings
-    const totalEarnings = await prisma.$queryRaw`
+    const totalEarnings = // await prisma.$queryRaw`
       SELECT COALESCE(SUM(deliveryFee * 0.8), 0) as earnings
       FROM shipments 
       WHERE agentId = ${agent.id} AND status = 'delivered'
@@ -85,7 +85,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
     });
 
     // Get weekly performance (last 7 days)
-    const weeklyStats = await prisma.$queryRaw`
+    const weeklyStats = // await prisma.$queryRaw`
       SELECT 
         DATE(deliveredAt) as date,
         COUNT(*) as deliveries,
@@ -401,7 +401,7 @@ export const getEarnings = async (req: AuthRequest, res: Response) => {
     }
 
     // Get earnings summary
-    const earningsData = await prisma.$queryRaw`
+    const earningsData = // await prisma.$queryRaw`
       SELECT 
         COUNT(*) as totalDeliveries,
         SUM(deliveryFee) as totalRevenue,
@@ -414,7 +414,7 @@ export const getEarnings = async (req: AuthRequest, res: Response) => {
     `;
 
     // Get daily earnings (last 30 days)
-    const dailyEarnings = await prisma.$queryRaw`
+    const dailyEarnings = // await prisma.$queryRaw`
       SELECT 
         DATE(deliveredAt) as date,
         COUNT(*) as deliveries,
@@ -428,7 +428,7 @@ export const getEarnings = async (req: AuthRequest, res: Response) => {
     `;
 
     // Get top performing zones
-    const topZones = await prisma.$queryRaw`
+    const topZones = // await prisma.$queryRaw`
       SELECT 
         dz.name as zoneName,
         COUNT(s.id) as deliveries,
@@ -654,7 +654,7 @@ export const getPerformanceMetrics = async (req: AuthRequest, res: Response) => 
     }
 
     // Performance metrics
-    const metrics = await prisma.$queryRaw`
+    const metrics = // await prisma.$queryRaw`
       SELECT 
         COUNT(*) as totalDeliveries,
         COUNT(CASE WHEN status = 'delivered' THEN 1 END) as completedDeliveries,
@@ -671,7 +671,7 @@ export const getPerformanceMetrics = async (req: AuthRequest, res: Response) => 
     `;
 
     // On-time delivery rate
-    const onTimeDeliveries = await prisma.$queryRaw`
+    const onTimeDeliveries = // await prisma.$queryRaw`
       SELECT 
         COUNT(CASE WHEN actualDelivery <= estimatedDelivery THEN 1 END) as onTime,
         COUNT(*) as total
@@ -684,7 +684,7 @@ export const getPerformanceMetrics = async (req: AuthRequest, res: Response) => 
     `;
 
     // Daily performance trends
-    const dailyTrends = await prisma.$queryRaw`
+    const dailyTrends = // await prisma.$queryRaw`
       SELECT 
         DATE(createdAt) as date,
         COUNT(*) as deliveries,
@@ -725,3 +725,4 @@ export const getPerformanceMetrics = async (req: AuthRequest, res: Response) => 
     res.status(500).json({ error: 'Failed to fetch performance metrics' });
   }
 };
+
