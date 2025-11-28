@@ -814,7 +814,9 @@ export class PaymentService {
         breakdown: {
           byPaymentMethod: Object.entries(byPaymentMethod).map(([method, data]) => ({
             method,
-            ...data
+            count: data.count,
+            total: data.total,
+            average: data.average
           }))
         }
       };

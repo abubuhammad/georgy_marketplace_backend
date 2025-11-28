@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import { Prisma } from '@prisma/client';
 
 export interface AppError extends Error {
   statusCode?: number;
@@ -14,7 +13,7 @@ export const createError = (message: string, statusCode: number = 500): AppError
 };
 
 export const errorHandler = (
-  error: AppError | Prisma.PrismaClientKnownRequestError | Error,
+  error: AppError | Error,
   req: Request,
   res: Response,
   next: NextFunction
@@ -29,13 +28,14 @@ export const errorHandler = (
     message = error.message;
   }
   
-  // Handle Prisma errors
-  else if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    switch (error.code) {
+  // Handle Prisma errors by checking error code property
+  else if ('code' in error && typeof error.code === 'string') {
+    const errorCode = error.code;
+    switch (errorCode) {
       case 'P2002':
         statusCode = 409;
         message = 'A record with this information already exists';
-        details = { field: error.meta?.target };
+        details = { field: 'meta' in error ? error.meta?.target : undefined };
         break;
       case 'P2025':
         statusCode = 404;
@@ -48,14 +48,8 @@ export const errorHandler = (
       default:
         statusCode = 400;
         message = 'Database operation failed';
-        details = { code: error.code };
+        details = { code: errorCode };
     }
-  }
-  
-  // Handle Prisma validation errors
-  else if (error instanceof Prisma.PrismaClientValidationError) {
-    statusCode = 400;
-    message = 'Invalid data provided';
   }
   
   // Handle JSON parsing errors

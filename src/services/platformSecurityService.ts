@@ -733,13 +733,13 @@ export class PlatformSecurityService {
       }, {} as { [key: string]: number });
 
       const incidentMap = incidents.reduce((acc, i) => {
-        acc[i.incidentType] = i._count;
+        acc[i.incidentType] = Number(i._count) || 0;
         return acc;
       }, {} as { [key: string]: number });
 
       // Get top threats (most common incident types)
       const topThreats = Object.entries(incidentMap)
-        .sort(([, a], [, b]) => b - a)
+        .sort(([, a], [, b]) => (b as unknown as number) - (a as unknown as number))
         .slice(0, 5)
         .map(([type]) => type);
 

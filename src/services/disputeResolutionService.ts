@@ -867,17 +867,20 @@ export class DisputeResolutionService {
       const topIssues = Object.entries(issueMap)
         .sort(([, a], [, b]) => b - a)
         .slice(0, 5)
-        .map(([type, count]) => ({ type, count }));
+        .map(([type, count]) => ({ type, count: Number(count) }));
 
       // Mediator performance
       const mediatorPerformance = await this.getMediatorPerformance(startDate, endDate);
 
       // Generate recommendations
       const recommendations = [];
-      if (metrics.averageResolutionTime > 14) {
+      const avgResolutionTime = typeof metrics.averageResolutionTime === 'number' ? metrics.averageResolutionTime : Number(metrics.averageResolutionTime) || 0;
+      const resolutionSuccessRate = typeof metrics.resolutionSuccess === 'number' ? metrics.resolutionSuccess : Number(metrics.resolutionSuccess) || 0;
+      
+      if (avgResolutionTime > 14) {
         recommendations.push('Consider adding more mediators to reduce resolution time');
       }
-      if (metrics.resolutionSuccess < 80) {
+      if (resolutionSuccessRate < 80) {
         recommendations.push('Review dispute resolution processes to improve success rate');
       }
       if (metrics.pendingDisputes > metrics.resolvedDisputes) {
