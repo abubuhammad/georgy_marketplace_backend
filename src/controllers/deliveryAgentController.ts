@@ -70,7 +70,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
             product: {
               select: { title: true, images: true }
             },
-            customer: {
+            buyer: {
               select: { firstName: true, lastName: true, phone: true }
             }
           }
@@ -145,7 +145,7 @@ export const getAssignedShipments = async (req: AuthRequest, res: Response) => {
             product: {
               select: { title: true, images: true, price: true }
             },
-            customer: {
+            buyer: {
               select: { firstName: true, lastName: true, email: true, phone: true }
             }
           }
@@ -253,7 +253,7 @@ export const updateShipmentStatus = async (req: AuthRequest, res: Response) => {
       include: {
         order: {
           include: {
-            customer: {
+            buyer: {
               select: { firstName: true, lastName: true, email: true, phone: true }
             },
             product: {

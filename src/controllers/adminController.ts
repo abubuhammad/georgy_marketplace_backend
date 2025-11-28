@@ -67,7 +67,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
       take: 10,
       orderBy: { createdAt: 'desc' },
       include: {
-        customer: {
+        buyer: {
           select: { firstName: true, lastName: true }
         },
         product: {
@@ -239,7 +239,7 @@ export const getUserDetails = async (req: AuthRequest, res: Response) => {
     const recentOrders = await prisma.order.findMany({
       where: {
         OR: [
-          { customerId: id },
+          { buyerId: id },
           { sellerId: id }
         ]
       },
@@ -521,7 +521,7 @@ export const getRefunds = async (req: AuthRequest, res: Response) => {
             product: {
               select: { title: true, images: true }
             },
-            customer: {
+            buyer: {
               select: { firstName: true, lastName: true, email: true }
             }
           }
@@ -563,7 +563,7 @@ export const processRefund = async (req: AuthRequest, res: Response) => {
         order: {
           include: {
             product: true,
-            customer: true
+            buyer: true
           }
         }
       }

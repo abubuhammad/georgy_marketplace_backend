@@ -7,8 +7,8 @@ const prisma = new PrismaClient();
 // Create Order
 export const createOrder = async (req: AuthRequest, res: Response) => {
   try {
-    const customerId = req.user?.id;
-    if (!customerId) {
+    const buyerId = req.user?.id;
+    if (!buyerId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -44,7 +44,7 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
     const order = await prisma.order.create({
       data: {
         productId,
-        customerId,
+        buyerId,
         sellerId: product.sellerId,
         quantity,
         totalAmount,
@@ -62,7 +62,7 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
             images: true
           }
         },
-        customer: {
+        buyer: {
           select: {
             firstName: true,
             lastName: true,
@@ -92,7 +92,7 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
     await prisma.payment.create({
       data: {
         reference: `ORDER_${order.id}_${Date.now()}`,
-        userId: customerId,
+        userId: buyerId,
         sellerId: product.sellerId,
         orderId: order.id,
         amount: totalAmount,
@@ -115,10 +115,10 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
 // Get Orders (for buyer)
 export const getBuyerOrders = async (req: AuthRequest, res: Response) => {
   try {
-    const customerId = req.user?.id;
+    const buyerId = req.user?.id;
     const { page = 1, limit = 20, status, search } = req.query;
 
-    const where: any = { customerId };
+    const where: any = { buyerId };
 
     if (status && status !== 'all') {
       where.status = status;
@@ -141,7 +141,7 @@ export const getBuyerOrders = async (req: AuthRequest, res: Response) => {
             category: true
           }
         },
-        customer: {
+        buyer: {
           select: {
             firstName: true,
             lastName: true,
@@ -198,7 +198,7 @@ export const getOrderDetails = async (req: AuthRequest, res: Response) => {
             }
           }
         },
-        customer: {
+        buyer: {
           select: {
             firstName: true,
             lastName: true,
@@ -229,7 +229,7 @@ export const getOrderDetails = async (req: AuthRequest, res: Response) => {
     // Check authorization
     const isAuthorized = 
       userRole === 'admin' ||
-      order.customerId === userId ||
+      order.buyerId === userId ||
       order.sellerId === userId ||
       (userRole === 'delivery_agent' && order.shipments?.some((s: any) => s.agent?.userId === userId));
 
@@ -257,7 +257,7 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response) => {
       where: { id },
       include: {
         product: true,
-        customer: {
+        buyer: {
           select: { firstName: true, lastName: true, email: true }
         }
       }
@@ -353,7 +353,7 @@ export const cancelOrder = async (req: AuthRequest, res: Response) => {
     // Check authorization (buyer, seller, or admin can cancel)
     const isAuthorized = 
       userRole === 'admin' ||
-      order.customerId === userId ||
+      order.buyerId === userId ||
       order.sellerId === userId;
 
     if (!isAuthorized) {
@@ -398,7 +398,7 @@ export const requestRefund = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { reason, description, amount } = req.body;
-    const customerId = req.user?.id;
+    const buyerId = req.user?.id;
 
     const order = await prisma.order.findUnique({
       where: { id },
@@ -413,7 +413,7 @@ export const requestRefund = async (req: AuthRequest, res: Response) => {
     }
 
     // Check if buyer owns this order
-    if (order.customerId !== customerId) {
+    if (order.buyerId !== buyerId) {
       return res.status(403).json({ error: 'Not authorized to request refund for this order' });
     }
 
@@ -436,7 +436,7 @@ export const requestRefund = async (req: AuthRequest, res: Response) => {
         description,
         amount: amount ? Number(amount) : order.totalAmount,
         status: 'pending',
-        requestedBy: customerId!
+        requestedBy: buyerId!
       },
       include: {
         order: {
