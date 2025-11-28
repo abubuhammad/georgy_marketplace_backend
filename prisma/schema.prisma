@@ -11,7 +11,7 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(cuid())
+  id            String   @id @default(cuid()) @map("_id")
   email         String   @unique
   password      String
   firstName     String
@@ -36,7 +36,7 @@ model User {
   lastLoginAt   DateTime?
   specializations String? // JSON array for mediators
   activeDisputes  Int     @default(0)
-  storeCredit     Decimal @default(0)
+  storeCredit     Float @default(0)
   moderationStats String? // JSON object
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -107,7 +107,7 @@ model User {
 }
 
 model PasswordReset {
-  id        String   @id @default(cuid())
+  id        String   @id @default(cuid()) @map("_id")
   userId    String
   token     String   @unique
   expiresAt DateTime
@@ -120,7 +120,7 @@ model PasswordReset {
 }
 
 model Seller {
-  id                  String   @id @default(cuid())
+  id                  String   @id @default(cuid()) @map("_id")
   userId              String   @unique
   businessName        String
   businessDescription String  
@@ -128,7 +128,7 @@ model Seller {
   businessPhone       String?
   businessEmail       String?
   logo                String?
-  rating              Decimal?
+  rating              Float?
   reviewCount         Int      @default(0)
   isVerified          Boolean  @default(false)
   documents           String?  // JSON array of verification documents
@@ -142,12 +142,12 @@ model Seller {
 }
 
 model Product {
-  id            String   @id @default(cuid())
+  id            String   @id @default(cuid()) @map("_id")
   title         String
   productName   String?
   description   String  
-  price         Decimal 
-  originalPrice Decimal?
+  price         Float 
+  originalPrice Float?
   categoryId    String
   subcategoryId String?
   brand         String?
@@ -165,7 +165,7 @@ model Product {
   
   // Analytics and engagement fields
   viewCount     Int      @default(0)
-  rating        Decimal?
+  rating        Float?
   reviewCount   Int      @default(0)
   
   // Dynamic fields stored as JSON to accommodate category-specific fields
@@ -185,12 +185,12 @@ model Product {
 }
 
 model Order {
-  id                  String   @id @default(cuid())
+  id                  String   @id @default(cuid()) @map("_id")
   productId           String
   buyerId             String
   sellerId            String
   quantity            Int      @default(1)
-  totalAmount         Decimal 
+  totalAmount         Float 
   status              String   @default("pending") // pending, confirmed, shipped, delivered, cancelled
   paymentStatus       String   @default("pending") // pending, paid, failed, refunded
   paymentMethod       String?
@@ -210,11 +210,11 @@ model Order {
 }
 
 model Refund {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   orderId     String
   reason      String
   description String  
-  amount      Decimal 
+  amount      Float 
   status      String   @default("pending") // pending, approved, rejected, processed, completed
   requestedBy String
   processedBy String?
@@ -227,7 +227,7 @@ model Refund {
 }
 
 model Review {
-  id        String   @id @default(cuid())
+  id        String   @id @default(cuid()) @map("_id")
   productId String
   userId    String
   rating    Int
@@ -243,11 +243,11 @@ model Review {
 }
 
 model Listing {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   title       String
   description String  
   category    String
-  price       Decimal?
+  price       Float?
   negotiable  Boolean  @default(false)
   condition   String   @default("new")
   images      String   // JSON array
@@ -264,19 +264,19 @@ model Listing {
 }
 
 model Property {
-  id            String   @id @default(cuid())
+  id            String   @id @default(cuid()) @map("_id")
   title         String
   description   String  
   type          String   // sale, lease, rent
   propertyType  String   // house, apartment, commercial, land
-  price         Decimal 
+  price         Float 
   bedrooms      Int?
   bathrooms     Int?
-  area          Decimal?
+  area          Float?
   location      String
   address       String  
-  latitude      Decimal?
-  longitude     Decimal?
+  latitude      Float?
+  longitude     Float?
   images        String   // JSON array
   virtualTour   String?  // JSON object
   amenities     String?  // JSON array
@@ -294,7 +294,7 @@ model Property {
 }
 
 model PropertyViewing {
-  id         String   @id @default(cuid())
+  id         String   @id @default(cuid()) @map("_id")
   propertyId String
   viewerId   String
   agentId    String?
@@ -309,13 +309,13 @@ model PropertyViewing {
 }
 
 model Job {
-  id           String   @id @default(cuid())
+  id           String   @id @default(cuid()) @map("_id")
   title        String
   description  String  
   company      String
   location     String
   type         String   // full-time, part-time, contract, remote
-  salary       Decimal?
+  salary       Float?
   salaryType   String?  // hourly, monthly, yearly
   requirements String  
   benefits     String? 
@@ -332,7 +332,7 @@ model Job {
 }
 
 model JobApplication {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   jobId       String
   applicantId String
   coverLetter String? 
@@ -350,20 +350,20 @@ model JobApplication {
 }
 
 model ArtisanProfile {
-  id           String   @id @default(cuid())
+  id           String   @id @default(cuid()) @map("_id")
   userId       String   @unique
   businessName String?
   category     String   // plumber, electrician, carpenter, etc.
   skills       String   // JSON array
   experience   Int      // years
-  hourlyRate   Decimal?
+  hourlyRate   Float?
   location     String
-  latitude     Decimal?
-  longitude    Decimal?
+  latitude     Float?
+  longitude    Float?
   portfolio    String?  // JSON array of work images
   bio          String? 
   verified     Boolean  @default(false)
-  rating       Decimal?
+  rating       Float?
   totalJobs    Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -375,16 +375,16 @@ model ArtisanProfile {
 }
 
 model ServiceRequest {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   customerId  String
   artisanId   String?
   category    String
   title       String
   description String  
   location    String
-  latitude    Decimal?
-  longitude   Decimal?
-  budget      Decimal?
+  latitude    Float?
+  longitude   Float?
+  budget      Float?
   urgency     String   @default("normal") // low, normal, high, urgent
   images      String?  // JSON array
   status      String   @default("open") // open, quoted, assigned, in_progress, completed, cancelled
@@ -402,10 +402,10 @@ model ServiceRequest {
 }
 
 model ServiceQuote {
-  id               String   @id @default(cuid())
+  id               String   @id @default(cuid()) @map("_id")
   serviceRequestId String
   artisanId        String
-  amount           Decimal 
+  amount           Float 
   description      String  
   estimatedDuration String
   materials        String? 
@@ -419,7 +419,7 @@ model ServiceQuote {
 }
 
 model Chat {
-  id               String  @id @default(cuid())
+  id               String  @id @default(cuid()) @map("_id")
   serviceRequestId String?
   customerId       String
   artisanId        String
@@ -435,7 +435,7 @@ model Chat {
 }
 
 model Message {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   chatId      String
   senderId    String
   recipientId String
@@ -457,7 +457,7 @@ model Message {
 
 // Legal Documentation Models
 model LegalDocument {
-  id            String   @id @default(cuid())
+  id            String   @id @default(cuid()) @map("_id")
   type          String   // terms_of_service, privacy_policy, user_agreement, community_guidelines
   version       String
   title         String
@@ -479,7 +479,7 @@ model LegalDocument {
 }
 
 model UserConsent {
-  id               String   @id @default(cuid())
+  id               String   @id @default(cuid()) @map("_id")
   userId           String
   documentId       String
   documentVersion  String
@@ -503,7 +503,7 @@ model UserConsent {
 
 // GDPR Compliance Models
 model GDPRRequest {
-  id            String   @id @default(cuid())
+  id            String   @id @default(cuid()) @map("_id")
   userId        String
   requestType   String   // export, deletion, rectification, portability
   status        String   @default("pending") // pending, processing, completed, rejected
@@ -525,7 +525,7 @@ model GDPRRequest {
 
 
 model UserPrivacySettings {
-  id                    String   @id @default(cuid())
+  id                    String   @id @default(cuid()) @map("_id")
   userId                String   @unique
   profileVisible        Boolean  @default(true)
   emailVisible          Boolean  @default(false)
@@ -545,7 +545,7 @@ model UserPrivacySettings {
 
 // User Safety & Security Models
 model UserVerification {
-  id                String   @id @default(cuid())
+  id                String   @id @default(cuid()) @map("_id")
   userId            String   @unique
   identityVerified  Boolean  @default(false)
   phoneVerified     Boolean  @default(false)
@@ -565,7 +565,7 @@ model UserVerification {
 }
 
 model UserSafetyProfile {
-  id                 String   @id @default(cuid())
+  id                 String   @id @default(cuid()) @map("_id")
   userId             String   @unique
   safetyScore        Int      @default(50)
   riskLevel          String   @default("low") // low, medium, high, critical
@@ -587,7 +587,7 @@ model UserSafetyProfile {
 }
 
 model SafetyIncident {
-  id              String   @id @default(cuid())
+  id              String   @id @default(cuid()) @map("_id")
   userId          String
   incidentType    String   // harassment, fraud, violence, inappropriate_content
   severity        String   @default("low") // low, medium, high, critical
@@ -616,7 +616,7 @@ model SafetyIncident {
 }
 
 model UserReport {
-  id            String   @id @default(cuid())
+  id            String   @id @default(cuid()) @map("_id")
   reporterId    String
   reportedUserId String
   reportedUser  String
@@ -643,7 +643,7 @@ model UserReport {
 
 // Platform Security Models
 model SecurityAudit {
-  id              String   @id @default(cuid())
+  id              String   @id @default(cuid()) @map("_id")
   auditType       String   // vulnerability_scan, penetration_test, compliance_check
   status          String   @default("scheduled") // scheduled, in_progress, completed, failed
   severity        String   @default("info") // info, low, medium, high, critical
@@ -668,7 +668,7 @@ model SecurityAudit {
 }
 
 model SecurityIncident {
-  id              String   @id @default(cuid())
+  id              String   @id @default(cuid()) @map("_id")
   incidentType    String   // breach, unauthorized_access, ddos, malware
   title           String
   severity        String   // low, medium, high, critical
@@ -691,7 +691,7 @@ model SecurityIncident {
 }
 
 model AccessControl {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   userId      String
   resource    String   // API endpoint, admin panel, user data
   permission  String   // read, write, delete, admin
@@ -714,7 +714,7 @@ model AccessControl {
 
 // Dispute Resolution Models
 model Dispute {
-  id              String   @id @default(cuid())
+  id              String   @id @default(cuid()) @map("_id")
   disputeId       String   @unique @default(cuid()) // Alternative ID field
   disputeNumber   String   @unique
   type            String   // transaction, product, service, delivery, refund
@@ -723,7 +723,7 @@ model Dispute {
   priority        String   @default("normal") // low, normal, high, urgent
   subject         String
   description     String  
-  amount          Decimal?
+  amount          Float?
   currency        String   @default("NGN")
   claimantId      String
   complainantId   String   // Alternative field name
@@ -738,7 +738,7 @@ model Dispute {
   evidence        String?  // JSON
   timeline        String?  // JSON
   resolution      String? 
-  compensation    Decimal?
+  compensation    Float?
   dueDate         DateTime?
   resolvedAt      DateTime?
   escalatedAt     DateTime?
@@ -758,7 +758,7 @@ model Dispute {
 }
 
 model DisputeMessage {
-  id           String   @id @default(cuid())
+  id           String   @id @default(cuid()) @map("_id")
   disputeId    String
   senderId     String
   senderRole   String?  // claimant, respondent, mediator, admin
@@ -778,7 +778,7 @@ model DisputeMessage {
 }
 
 model DisputeMediation {
-  id              String   @id @default(cuid())
+  id              String   @id @default(cuid()) @map("_id")
   disputeId       String
   mediatorId      String
   scheduledAt     DateTime
@@ -802,7 +802,7 @@ model DisputeMediation {
 
 // Content Moderation Models
 model ContentModeration {
-  id             String   @id @default(cuid())
+  id             String   @id @default(cuid()) @map("_id")
   contentType    String   // product, review, message, profile, listing
   contentId      String
   authorId       String
@@ -828,7 +828,7 @@ model ContentModeration {
 }
 
 model ModerationRule {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   name        String
   description String  
   category    String   // content_filter, user_behavior, transaction_safety
@@ -848,7 +848,7 @@ model ModerationRule {
 }
 
 model ModerationQueue {
-  id            String   @id @default(cuid())
+  id            String   @id @default(cuid()) @map("_id")
   contentType   String
   contentId     String
   contentItemId String?  // Alternative field name
@@ -874,7 +874,7 @@ model ModerationQueue {
 
 // User Trust & Verification Models
 model UserTrustProfile {
-  id               String   @id @default(cuid())
+  id               String   @id @default(cuid()) @map("_id")
   userId           String   @unique
   trustScore       Int      @default(50) // 0-100
   trustLevel       String   @default("unverified") // unverified, basic, verified, trusted, premium, expert
@@ -910,7 +910,7 @@ model UserTrustProfile {
 }
 
 model UserEndorsement {
-  id           String   @id @default(cuid())
+  id           String   @id @default(cuid()) @map("_id")
   endorserId   String
   endorseeId   String
   category     String   // reliability, communication, quality, timeliness
@@ -930,7 +930,7 @@ model UserEndorsement {
 }
 
 model TrustAlert {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   userId      String
   alertType   String   // score_drop, verification_expired, suspicious_activity
   severity    String   @default("info") // info, warning, critical
@@ -954,7 +954,7 @@ model TrustAlert {
 // ==================== DELIVERY & LOGISTICS MODELS ====================
 
 model DeliveryAgent {
-  id              String   @id @default(cuid())
+  id              String   @id @default(cuid()) @map("_id")
   userId          String   @unique
   businessName    String?
   vehicleType     String   // bike, car, van, truck
@@ -966,9 +966,9 @@ model DeliveryAgent {
   isVerified      Boolean  @default(false)
   isAvailable     Boolean  @default(true)
   currentLocation String?  // JSON with lat/lng
-  rating          Decimal?
+  rating          Float?
   totalDeliveries Int      @default(0)
-  earnings        Decimal  @default(0)
+  earnings        Float  @default(0)
   joinedAt        DateTime @default(now())
   lastActiveAt    DateTime?
   status          String   @default("active") // active, suspended, inactive
@@ -982,7 +982,7 @@ model DeliveryAgent {
 }
 
 model Shipment {
-  id                String   @id @default(cuid())
+  id                String   @id @default(cuid()) @map("_id")
   orderId           String?
   serviceRequestId  String?
   trackingNumber    String   @unique
@@ -999,7 +999,7 @@ model Shipment {
   recipientPhone    String
   deliveryNotes     String? 
   packageDetails    String   // JSON
-  deliveryFee       Decimal 
+  deliveryFee       Float 
   agentId           String?
   zoneId            String?
   assignedAt        DateTime?
@@ -1020,13 +1020,13 @@ model Shipment {
 }
 
 model DeliveryZone {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   name        String
   description String?
   isActive    Boolean  @default(true)
   coordinates String   // JSON polygon coordinates
-  baseFee     Decimal 
-  feePerKm    Decimal  @default(0)
+  baseFee     Float 
+  feePerKm    Float  @default(0)
   maxDistance Int      @default(50) // km
   priority    Int      @default(0)
   createdAt   DateTime @default(now())
@@ -1040,13 +1040,13 @@ model DeliveryZone {
 // ==================== PAYMENT MODELS ====================
 
 model Payment {
-  id              String   @id @default(cuid())
+  id              String   @id @default(cuid()) @map("_id")
   reference       String   @unique
   userId          String
   sellerId        String?
   orderId         String?
   serviceRequestId String?
-  amount          Decimal 
+  amount          Float 
   currency        String   @default("NGN")
   method          String   // card, bank_transfer, ussd, qr, mobile_money
   status          String   @default("pending") // pending, processing, completed, failed, refunded
@@ -1055,10 +1055,10 @@ model Payment {
   description     String?
   escrow          Boolean  @default(false)
   escrowStatus    String?  // held, released, disputed
-  platformCut     Decimal  @default(0)
-  sellerNet       Decimal  @default(0)
-  processingFee   Decimal  @default(0)
-  tax             Decimal  @default(0)
+  platformCut     Float  @default(0)
+  sellerNet       Float  @default(0)
+  processingFee   Float  @default(0)
+  tax             Float  @default(0)
   metadata        String?  // JSON
   paidAt          DateTime?
   failureReason   String?
@@ -1073,9 +1073,9 @@ model Payment {
 }
 
 model PaymentRefund {
-  id            String   @id @default(cuid())
+  id            String   @id @default(cuid()) @map("_id")
   paymentId     String
-  amount        Decimal 
+  amount        Float 
   reason        String
   status        String   @default("pending") // pending, processing, completed, failed
   providerRef   String?
@@ -1093,9 +1093,9 @@ model PaymentRefund {
 }
 
 model Payout {
-  id             String   @id @default(cuid())
+  id             String   @id @default(cuid()) @map("_id")
   sellerId       String
-  totalAmount    Decimal 
+  totalAmount    Float 
   currency       String   @default("NGN")
   status         String   @default("scheduled") // scheduled, processing, completed, failed
   provider       String   // paystack, flutterwave, etc
@@ -1113,12 +1113,12 @@ model Payout {
 }
 
 model PayoutItem {
-  id         String  @id @default(cuid())
+  id         String  @id @default(cuid()) @map("_id")
   payoutId   String
   paymentId  String
-  amount     Decimal
-  commission Decimal
-  net        Decimal
+  amount     Float
+  commission Float
+  net        Float
 
   payout Payout @relation(fields: [payoutId], references: [id], onDelete: Cascade)
 
@@ -1127,12 +1127,12 @@ model PayoutItem {
 }
 
 model Invoice {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   paymentId   String
   invoiceNumber String @unique
   type        String   // sale, service, refund
-  amount      Decimal 
-  tax         Decimal  @default(0)
+  amount      Float 
+  tax         Float  @default(0)
   status      String   @default("issued") // issued, paid, overdue, cancelled
   dueDate     DateTime?
   paidAt      DateTime?
@@ -1146,10 +1146,10 @@ model Invoice {
 }
 
 model TaxRule {
-  id          String  @id @default(cuid())
+  id          String  @id @default(cuid()) @map("_id")
   name        String
   type        String  // vat, sales_tax, service_tax
-  rate        Decimal
+  rate        Float
   category    String? // product, service, digital
   region      String? // state, country code
   isActive    Boolean @default(true)
@@ -1161,13 +1161,13 @@ model TaxRule {
 }
 
 model RevenueShareScheme {
-  id                String  @id @default(cuid())
+  id                String  @id @default(cuid()) @map("_id")
   name              String
   category          String  // product, service, premium
-  platformPercentage Decimal
-  sellerPercentage  Decimal
-  minimumFee        Decimal @default(0)
-  maximumFee        Decimal?
+  platformPercentage Float
+  sellerPercentage  Float
+  minimumFee        Float @default(0)
+  maximumFee        Float?
   userType          String? // regular, premium, verified
   isActive          Boolean @default(true)
   effectiveFrom     DateTime @default(now())
@@ -1181,7 +1181,7 @@ model RevenueShareScheme {
 // ==================== NOTIFICATION MODELS ====================
 
 model Notification {
-  id              String   @id @default(cuid())
+  id              String   @id @default(cuid()) @map("_id")
   userId          String
   title           String
   message         String  
@@ -1206,7 +1206,7 @@ model Notification {
 }
 
 model NotificationPreference {
-  id                  String  @id @default(cuid())
+  id                  String  @id @default(cuid()) @map("_id")
   userId              String  @unique
   emailNotifications  Boolean @default(true)
   smsNotifications    Boolean @default(true)
@@ -1231,7 +1231,7 @@ model NotificationPreference {
 }
 
 model UserNotificationPreference {
-  id        String @id @default(cuid())
+  id        String @id @default(cuid()) @map("_id")
   userId    String @unique
   email     Boolean @default(true)
   sms       Boolean @default(true)
@@ -1251,7 +1251,7 @@ model UserNotificationPreference {
 // ==================== GDPR & COMPLIANCE MODELS ====================
 
 model DataExportRequest {
-  id            String   @id @default(cuid())
+  id            String   @id @default(cuid()) @map("_id")
   userId        String
   requestType   String   @default("full_export") // full_export, partial_export, portability
   status        String   @default("pending") // pending, processing, completed, failed
@@ -1273,7 +1273,7 @@ model DataExportRequest {
 }
 
 model DataDeletionRequest {
-  id                String   @id @default(cuid())
+  id                String   @id @default(cuid()) @map("_id")
   userId            String
   requestType       String   @default("full_deletion") // full_deletion, partial_deletion, anonymization
   status            String   @default("pending") // pending, processing, completed, rejected
@@ -1300,7 +1300,7 @@ model DataDeletionRequest {
 }
 
 model ConsentRecord {
-  id              String   @id @default(cuid())
+  id              String   @id @default(cuid()) @map("_id")
   userId          String
   consentType     String   // privacy_policy, terms_of_service, marketing, cookies
   consentSource   String   @default("website") // website, app, email, phone
@@ -1325,7 +1325,7 @@ model ConsentRecord {
 // ==================== COMMUNICATION MODELS ====================
 
 model ChatMessage {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   chatId      String
   roomId      String?
   senderId    String
@@ -1353,7 +1353,7 @@ model ChatMessage {
 // ==================== TRUST & VERIFICATION MODELS ====================
 
 model VerificationBadge {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   userId      String
   badgeType   String   // email_verified, phone_verified, identity_verified, etc.
   badgeName   String
@@ -1377,7 +1377,7 @@ model VerificationBadge {
 }
 
 model Endorsement {
-  id             String   @id @default(cuid())
+  id             String   @id @default(cuid()) @map("_id")
   endorserId     String
   endorseeId     String
   endorsementType String  // skill, reliability, communication, quality
@@ -1405,7 +1405,7 @@ model Endorsement {
 }
 
 model SocialConnection {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   userId      String
   platform    String   // facebook, twitter, linkedin, instagram, etc.
   username    String
@@ -1426,7 +1426,7 @@ model SocialConnection {
 }
 
 model CommunityPost {
-  id            String   @id @default(cuid())
+  id            String   @id @default(cuid()) @map("_id")
   authorId      String
   title         String
   content       String  
@@ -1454,7 +1454,7 @@ model CommunityPost {
 }
 
 model ReviewAuthenticity {
-  id            String   @id @default(cuid())
+  id            String   @id @default(cuid()) @map("_id")
   reviewId      String   @unique
   authenticityScore Float  // 0.0 to 1.0
   confidence    Float    // 0.0 to 1.0
@@ -1476,7 +1476,7 @@ model ReviewAuthenticity {
 // ==================== SECURITY & MONITORING MODELS ====================
 
 model SecurityFinding {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   auditId     String
   findingType String   // vulnerability, misconfiguration, compliance_issue
   severity    String   // info, low, medium, high, critical
@@ -1499,7 +1499,7 @@ model SecurityFinding {
 }
 
 model VulnerabilityAssessment {
-  id              String   @id @default(cuid())
+  id              String   @id @default(cuid()) @map("_id")
   title           String
   description     String  
   severity        String   // info, low, medium, high, critical
@@ -1524,7 +1524,7 @@ model VulnerabilityAssessment {
 }
 
 model SecurityLog {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   userId      String?
   sessionId   String?
   eventType   String   // login, logout, permission_change, data_access
@@ -1549,7 +1549,7 @@ model SecurityLog {
 }
 
 model BlockedIP {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   ipAddress   String   @unique
   reason      String  
   blockedBy   String
@@ -1566,7 +1566,7 @@ model BlockedIP {
 }
 
 model SecurityScan {
-  id            String   @id @default(cuid())
+  id            String   @id @default(cuid()) @map("_id")
   scanType      String   // port_scan, vulnerability_scan, malware_scan
   target        String   // ip_address, domain, user_upload
   status        String   @default("queued") // queued, running, completed, failed
@@ -1587,7 +1587,7 @@ model SecurityScan {
 // ==================== ADDITIONAL USER & ACTIVITY MODELS ====================
 
 model UserActivity {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   userId      String
   activityType String  // login, logout, purchase, listing, message, etc.
   action      String
@@ -1607,7 +1607,7 @@ model UserActivity {
 }
 
 model EmergencyContact {
-  id           String   @id @default(cuid())
+  id           String   @id @default(cuid()) @map("_id")
   userId       String
   name         String
   relationship String   // family, friend, colleague, etc.
@@ -1625,7 +1625,7 @@ model EmergencyContact {
 }
 
 model SafetySettings {
-  id                   String   @id @default(cuid())
+  id                   String   @id @default(cuid()) @map("_id")
   userId               String   @unique
   locationSharing      Boolean  @default(false)
   meetingReminders     Boolean  @default(true)
@@ -1652,7 +1652,7 @@ model SafetySettings {
 }
 
 model MeetingGuidelines {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   title       String
   content     String  
   category    String   // first_meeting, public_spaces, safety_tips
@@ -1673,7 +1673,7 @@ model MeetingGuidelines {
 // ==================== TRUST & REPUTATION MODELS ====================
 
 model TrustMetric {
-  id             String   @id @default(cuid())
+  id             String   @id @default(cuid()) @map("_id")
   userId         String
   metricType     String   // transaction_history, response_time, completion_rate, etc.
   value          Float
@@ -1692,7 +1692,7 @@ model TrustMetric {
 }
 
 model PolicyViolation {
-  id            String   @id @default(cuid())
+  id            String   @id @default(cuid()) @map("_id")
   userId        String
   violationType String   // spam, fraud, harassment, fake_listing
   severity      String   // minor, major, critical
@@ -1713,7 +1713,7 @@ model PolicyViolation {
 }
 
 model RiskAssessment {
-  id              String   @id @default(cuid())
+  id              String   @id @default(cuid()) @map("_id")
   userId          String
   riskType        String   // transaction, communication, meeting, identity
   riskScore       Int      // 0-100
@@ -1734,7 +1734,7 @@ model RiskAssessment {
 }
 
 model ReputationChange {
-  id            String   @id @default(cuid())
+  id            String   @id @default(cuid()) @map("_id")
   userId        String
   changeType    String   // positive_review, negative_review, violation, achievement
   points        Int      // can be negative
@@ -1758,7 +1758,7 @@ model ReputationChange {
 // ==================== IDENTITY VERIFICATION MODELS ====================
 
 model IdentityVerification {
-  id                String   @id @default(cuid())
+  id                String   @id @default(cuid()) @map("_id")
   userId            String
   documentType      String   // passport, drivers_license, national_id, etc.
   documentNumber    String?
@@ -1784,7 +1784,7 @@ model IdentityVerification {
 }
 
 model BackgroundCheck {
-  id            String   @id @default(cuid())
+  id            String   @id @default(cuid()) @map("_id")
   userId        String
   checkType     String   // criminal, credit, employment, reference
   provider      String?  // third-party service provider
@@ -1797,7 +1797,7 @@ model BackgroundCheck {
   requestedAt   DateTime @default(now())
   completedAt   DateTime?
   expiresAt     DateTime?
-  cost          Decimal?
+  cost          Float?
   notes         String? 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -1810,7 +1810,7 @@ model BackgroundCheck {
 // ==================== USER PROFILE MODEL ====================
 
 model UserProfile {
-  id              String   @id @default(cuid())
+  id              String   @id @default(cuid()) @map("_id")
   userId          String   @unique
   bio             String? 
   website         String?
@@ -1838,7 +1838,7 @@ model UserProfile {
 // ==================== ADDITIONAL MISSING MODELS ====================
 
 model ContentItem {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   itemId      String   // External reference ID
   contentType String   // product, review, message, listing
   content     String  
@@ -1861,7 +1861,7 @@ model ContentItem {
 }
 
 model ContentFlag {
-  id            String   @id @default(cuid())
+  id            String   @id @default(cuid()) @map("_id")
   contentId     String   // Reference to content
   contentItemId String   // Alternative reference field
   flaggedBy     String
@@ -1881,7 +1881,7 @@ model ContentFlag {
 }
 
 model ContentViolation {
-  id           String   @id @default(cuid())
+  id           String   @id @default(cuid()) @map("_id")
   contentId    String
   violationType String
   severity     String
@@ -1896,7 +1896,7 @@ model ContentViolation {
 }
 
 model ContentReview {
-  id           String   @id @default(cuid())
+  id           String   @id @default(cuid()) @map("_id")
   contentId    String
   contentItemId String? // Alternative field name
   reviewerId   String
@@ -1915,7 +1915,7 @@ model ContentReview {
 }
 
 model DisputeEvidence {
-  id           String   @id @default(cuid())
+  id           String   @id @default(cuid()) @map("_id")
   disputeId    String
   submittedBy  String
   evidenceType String
@@ -1928,7 +1928,7 @@ model DisputeEvidence {
 }
 
 model DisputeResolution {
-  id           String   @id @default(cuid())
+  id           String   @id @default(cuid()) @map("_id")
   disputeId    String
   resolvedBy   String
   resolutionType String
@@ -1943,7 +1943,7 @@ model DisputeResolution {
 }
 
 model MediationSession {
-  id           String   @id @default(cuid())
+  id           String   @id @default(cuid()) @map("_id")
   disputeId    String
   mediatorId   String
   scheduledAt  DateTime
@@ -1960,9 +1960,9 @@ model MediationSession {
 
 
 model PushSubscription {
-  id           String   @id @default(cuid())
+  id           String   @id @default(cuid()) @map("_id")
   userId       String
-  endpoint     String   @db.VarChar(500)
+  endpoint     String
   p256dh       String?
   auth         String?
   isActive     Boolean  @default(true)
@@ -1977,7 +1977,7 @@ model PushSubscription {
 }
 
 model ScheduledNotification {
-  id           String   @id @default(cuid())
+  id           String   @id @default(cuid()) @map("_id")
   userId       String
   type         String
   category     String?  // order, payment, delivery, system
@@ -1993,7 +1993,7 @@ model ScheduledNotification {
 }
 
 model SafetyAlert {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   userId      String
   alertType   String
   type        String   // Alternative field name
@@ -2015,7 +2015,7 @@ model SafetyAlert {
 }
 
 model SafetyAction {
-  id         String   @id @default(cuid())
+  id         String   @id @default(cuid()) @map("_id")
   type       String   // action type
   actionType String
   target     String   // target entity
@@ -2033,7 +2033,7 @@ model SafetyAction {
 }
 
 model ActivityLog {
-  id        String   @id @default(cuid())
+  id        String   @id @default(cuid()) @map("_id")
   userId    String?
   type      String?  // activity type
   action    String
@@ -2049,7 +2049,7 @@ model ActivityLog {
 
 
 model ComplianceCheck {
-  id          String   @id @default(cuid())
+  id          String   @id @default(cuid()) @map("_id")
   checkType   String   // gdpr, data_retention, security
   status      String   @default("pending")
   result      String?  // JSON
@@ -2062,7 +2062,7 @@ model ComplianceCheck {
 }
 
 model FraudDetection {
-  id           String   @id @default(cuid())
+  id           String   @id @default(cuid()) @map("_id")
   entityType   String   // user, transaction, listing
   entityId     String
   userId       String?  // For user-related fraud
@@ -2079,7 +2079,7 @@ model FraudDetection {
 }
 
 model UserWarning {
-  id            String   @id @default(cuid())
+  id            String   @id @default(cuid()) @map("_id")
   userId        String
   contentItemId String?  // Related content item
   reason        String  
@@ -2090,3 +2090,5 @@ model UserWarning {
 
   @@map("user_warnings")
 }
+
+
