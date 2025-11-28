@@ -35,7 +35,9 @@ const server = createServer(app);
 app.use(helmet());
 app.use(cors({
   origin: [
-    config.frontend.url, // Web frontend
+    config.frontend.url, // Web frontend from config
+    'https://georgy-marketplace-frontend.vercel.app', // Vercel production frontend
+    /^https:\/\/.*\.vercel\.app$/, // Vercel preview deployments
     'http://localhost:8080', // Web frontend (alt port)
     'http://localhost:5173', // Web frontend (vite default)
     'http://192.168.0.171:8080', // Network IP for mobile/remote access
