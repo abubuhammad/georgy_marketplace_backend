@@ -7,8 +7,8 @@ const prisma = new PrismaClient();
 // Create Order
 export const createOrder = async (req: AuthRequest, res: Response) => {
   try {
-    const buyerId = req.user?.id;
-    if (!buyerId) {
+    const customerId = req.user?.id;
+    if (!customerId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
@@ -44,7 +44,7 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
     const order = await prisma.order.create({
       data: {
         productId,
-        buyerId,
+        customerId,
         sellerId: product.sellerId,
         quantity,
         totalAmount,
@@ -62,7 +62,7 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
             images: true
           }
         },
-        buyer: {
+        customer: {
           select: {
             firstName: true,
             lastName: true,
@@ -92,7 +92,7 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
     await prisma.payment.create({
       data: {
         reference: `ORDER_${order.id}_${Date.now()}`,
-        userId: buyerId,
+        userId: customerId,
         sellerId: product.sellerId,
         orderId: order.id,
         amount: totalAmount,
@@ -115,10 +115,10 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
 // Get Orders (for buyer)
 export const getBuyerOrders = async (req: AuthRequest, res: Response) => {
   try {
-    const buyerId = req.user?.id;
+    const customerId = req.user?.id;
     const { page = 1, limit = 20, status, search } = req.query;
 
-    const where: any = { buyerId };
+    const where: any = { customerId };
 
     if (status && status !== 'all') {
       where.status = status;
@@ -141,7 +141,13 @@ export const getBuyerOrders = async (req: AuthRequest, res: Response) => {
             category: true
           }
         },
-        // seller info not directly available in Order model
+        customer: {
+          select: {
+            firstName: true,
+            lastName: true,
+            email: true
+          }
+        },
         shipments: {
           select: {
             trackingNumber: true,
@@ -192,7 +198,7 @@ export const getOrderDetails = async (req: AuthRequest, res: Response) => {
             }
           }
         },
-        buyer: {
+        customer: {
           select: {
             firstName: true,
             lastName: true,
@@ -223,7 +229,7 @@ export const getOrderDetails = async (req: AuthRequest, res: Response) => {
     // Check authorization
     const isAuthorized = 
       userRole === 'admin' ||
-      order.buyerId === userId ||
+      order.customerId === userId ||
       order.sellerId === userId ||
       (userRole === 'delivery_agent' && order.shipments?.some((s: any) => s.agent?.userId === userId));
 
@@ -251,7 +257,7 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response) => {
       where: { id },
       include: {
         product: true,
-        buyer: {
+        customer: {
           select: { firstName: true, lastName: true, email: true }
         }
       }
@@ -347,7 +353,7 @@ export const cancelOrder = async (req: AuthRequest, res: Response) => {
     // Check authorization (buyer, seller, or admin can cancel)
     const isAuthorized = 
       userRole === 'admin' ||
-      order.buyerId === userId ||
+      order.customerId === userId ||
       order.sellerId === userId;
 
     if (!isAuthorized) {
@@ -392,7 +398,7 @@ export const requestRefund = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { reason, description, amount } = req.body;
-    const buyerId = req.user?.id;
+    const customerId = req.user?.id;
 
     const order = await prisma.order.findUnique({
       where: { id },
@@ -407,7 +413,7 @@ export const requestRefund = async (req: AuthRequest, res: Response) => {
     }
 
     // Check if buyer owns this order
-    if (order.buyerId !== buyerId) {
+    if (order.customerId !== customerId) {
       return res.status(403).json({ error: 'Not authorized to request refund for this order' });
     }
 
@@ -430,7 +436,7 @@ export const requestRefund = async (req: AuthRequest, res: Response) => {
         description,
         amount: amount ? Number(amount) : order.totalAmount,
         status: 'pending',
-        requestedBy: buyerId!
+        requestedBy: customerId!
       },
       include: {
         order: {

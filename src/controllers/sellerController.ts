@@ -51,7 +51,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
         product: {
           select: { title: true, images: true }
         },
-        buyer: {
+        customer: {
           select: { firstName: true, lastName: true, email: true }
         }
       },
@@ -321,7 +321,7 @@ export const getSellerOrders = async (req: AuthRequest, res: Response) => {
             price: true
           }
         },
-        buyer: {
+        customer: {
           select: {
             firstName: true,
             lastName: true,
@@ -396,7 +396,7 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response) => {
         updatedAt: new Date()
       },
       include: {
-        buyer: {
+        customer: {
           select: { firstName: true, lastName: true, email: true }
         },
         product: {
