@@ -867,7 +867,7 @@ export class DisputeResolutionService {
       }, {} as Record<string, number>);
 
       const topIssues = Object.entries(issueMap)
-        .sort(([, a], [, b]) => b - a)
+        .sort(([, a], [, b]) => (b as number) - (a as number))
         .slice(0, 5)
         .map(([type, count]) => ({ type, count: Number(count) }));
 
