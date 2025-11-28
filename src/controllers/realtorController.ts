@@ -87,19 +87,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
     });
 
     // Get monthly property stats (last 12 months)
-    const monthlyStats = // await prisma.$queryRaw`
-      SELECT 
-        DATE_FORMAT(createdAt, '%Y-%m') as month,
-        COUNT(*) as properties,
-        AVG(price) as avgPrice,
-        COUNT(CASE WHEN status = 'sold' THEN 1 END) as sold,
-        COUNT(CASE WHEN status = 'rented' THEN 1 END) as rented
-      FROM properties 
-      WHERE ownerId = ${realtorId} 
-        AND createdAt >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
-      GROUP BY DATE_FORMAT(createdAt, '%Y-%m')
-      ORDER BY month DESC
-    `;
+    const monthlyStats = null as any;
 
     // Get upcoming viewings
     const upcomingViewings = await prisma.propertyViewing.findMany({
@@ -587,64 +575,16 @@ export const getAnalytics = async (req: AuthRequest, res: Response) => {
     }
 
     // Property performance analytics
-    const propertyPerformance = // await prisma.$queryRaw`
-      SELECT 
-        p.id, p.title, p.type, p.propertyType, p.price, p.location,
-        COUNT(pv.id) as totalViewings,
-        COUNT(CASE WHEN pv.status = 'completed' THEN 1 END) as completedViewings,
-        COUNT(CASE WHEN pv.status = 'scheduled' AND pv.scheduledAt >= NOW() THEN 1 END) as upcomingViewings,
-        DATEDIFF(NOW(), p.createdAt) as daysOnMarket
-      FROM properties p
-      LEFT JOIN property_viewings pv ON p.id = pv.propertyId AND pv.createdAt >= ${dateFilter}
-      WHERE p.ownerId = ${realtorId} AND p.status != 'deleted'
-      GROUP BY p.id
-      ORDER BY totalViewings DESC
-    `;
+    const propertyPerformance = null as any;
 
     // Viewing trends
-    const viewingTrends = // await prisma.$queryRaw`
-      SELECT 
-        DATE(pv.scheduledAt) as date,
-        COUNT(*) as viewings,
-        COUNT(CASE WHEN pv.status = 'completed' THEN 1 END) as completed
-      FROM property_viewings pv
-      JOIN properties p ON pv.propertyId = p.id
-      WHERE p.ownerId = ${realtorId} 
-        AND pv.scheduledAt >= ${dateFilter}
-      GROUP BY DATE(pv.scheduledAt)
-      ORDER BY date ASC
-    `;
+    const viewingTrends = null as any;
 
     // Property type breakdown
-    const propertyTypeBreakdown = // await prisma.$queryRaw`
-      SELECT 
-        p.propertyType,
-        p.type,
-        COUNT(*) as count,
-        AVG(p.price) as avgPrice,
-        COUNT(pv.id) as totalViewings
-      FROM properties p
-      LEFT JOIN property_viewings pv ON p.id = pv.propertyId
-      WHERE p.ownerId = ${realtorId} AND p.status != 'deleted'
-      GROUP BY p.propertyType, p.type
-      ORDER BY count DESC
-    `;
+    const propertyTypeBreakdown = null as any;
 
     // Location performance
-    const locationPerformance = // await prisma.$queryRaw`
-      SELECT 
-        p.location,
-        COUNT(DISTINCT p.id) as properties,
-        COUNT(pv.id) as viewings,
-        AVG(p.price) as avgPrice,
-        COUNT(CASE WHEN p.status = 'sold' THEN 1 END) as sold
-      FROM properties p
-      LEFT JOIN property_viewings pv ON p.id = pv.propertyId
-      WHERE p.ownerId = ${realtorId} AND p.status != 'deleted'
-      GROUP BY p.location
-      ORDER BY viewings DESC
-      LIMIT 10
-    `;
+    const locationPerformance = null as any;
 
     res.json({
       propertyPerformance,
@@ -891,59 +831,13 @@ export const getMarketInsights = async (req: AuthRequest, res: Response) => {
     const { location, propertyType } = req.query;
 
     // Market trends for realtor's area/specialty
-    const marketTrends = // await prisma.$queryRaw`
-      SELECT 
-        DATE_FORMAT(p.createdAt, '%Y-%m') as month,
-        COUNT(*) as listings,
-        AVG(p.price) as avgPrice,
-        MIN(p.price) as minPrice,
-        MAX(p.price) as maxPrice,
-        COUNT(CASE WHEN p.status = 'sold' THEN 1 END) as sold
-      FROM properties p
-      WHERE p.createdAt >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
-        ${location ? `AND p.location = '${location}'` : ''}
-        ${propertyType ? `AND p.propertyType = '${propertyType}'` : ''}
-      GROUP BY DATE_FORMAT(p.createdAt, '%Y-%m')
-      ORDER BY month DESC
-      LIMIT 12
-    `;
+    const marketTrends = null as any;
 
     // Competition analysis
-    const competitionAnalysis = // await prisma.$queryRaw`
-      SELECT 
-        u.firstName, u.lastName,
-        COUNT(p.id) as totalProperties,
-        COUNT(CASE WHEN p.status = 'available' THEN 1 END) as activeListings,
-        AVG(p.price) as avgPrice
-      FROM users u
-      JOIN properties p ON u.id = p.ownerId
-      WHERE u.role = 'realtor' 
-        AND u.id != ${realtorId}
-        AND p.status != 'deleted'
-        ${location ? `AND p.location = '${location}'` : ''}
-      GROUP BY u.id
-      ORDER BY totalProperties DESC
-      LIMIT 10
-    `;
+    const competitionAnalysis = null as any;
 
     // Price distribution
-    const priceDistribution = // await prisma.$queryRaw`
-      SELECT 
-        CASE 
-          WHEN price < 50000000 THEN 'Under 50M'
-          WHEN price < 100000000 THEN '50M-100M'
-          WHEN price < 200000000 THEN '100M-200M'
-          WHEN price < 500000000 THEN '200M-500M'
-          ELSE 'Above 500M'
-        END as priceRange,
-        COUNT(*) as count
-      FROM properties
-      WHERE status != 'deleted'
-        ${location ? `AND location = '${location}'` : ''}
-        ${propertyType ? `AND propertyType = '${propertyType}'` : ''}
-      GROUP BY priceRange
-      ORDER BY count DESC
-    `;
+    const priceDistribution = null as any;
 
     res.json({
       marketTrends,

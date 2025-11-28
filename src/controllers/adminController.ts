@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+﻿import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 
@@ -54,32 +54,13 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
     });
 
     // User breakdown by role
-    const usersByRole = // await prisma.$queryRaw`
-      SELECT role, COUNT(*) as count
-      FROM users 
-      WHERE isDeleted = false
-      GROUP BY role
-    `;
+    const usersByRole = null as any;
 
     // Orders by status
-    const ordersByStatus = // await prisma.$queryRaw`
-      SELECT status, COUNT(*) as count, SUM(totalAmount) as revenue
-      FROM orders
-      GROUP BY status
-    `;
+    const ordersByStatus = null as any;
 
     // Monthly growth (last 12 months)
-    const monthlyGrowth = // await prisma.$queryRaw`
-      SELECT 
-        DATE_FORMAT(createdAt, '%Y-%m') as month,
-        COUNT(DISTINCT CASE WHEN role = 'seller' THEN id END) as sellers,
-        COUNT(DISTINCT CASE WHEN role = 'customer' THEN id END) as customers,
-        COUNT(*) as total_users
-      FROM users 
-      WHERE createdAt >= DATE_SUB(NOW(), INTERVAL 12 MONTH) AND isDeleted = false
-      GROUP BY DATE_FORMAT(createdAt, '%Y-%m')
-      ORDER BY month DESC
-    `;
+    const monthlyGrowth = null as any;
 
     // Recent activity
     const recentOrders = await prisma.order.findMany({
@@ -675,63 +656,16 @@ export const getPlatformAnalytics = async (req: AuthRequest, res: Response) => {
     }
 
     // Revenue analytics
-    const revenueData = // await prisma.$queryRaw`
-      SELECT 
-        DATE(paidAt) as date,
-        COUNT(*) as transactions,
-        SUM(amount) as totalRevenue,
-        SUM(platformCut) as platformRevenue,
-        SUM(sellerNet) as sellerPayouts
-      FROM payments 
-      WHERE status = 'completed' 
-        AND paidAt >= ${dateFilter}
-      GROUP BY DATE(paidAt)
-      ORDER BY date ASC
-    `;
+    const revenueData = null as any;
 
     // User growth
-    const userGrowth = // await prisma.$queryRaw`
-      SELECT 
-        DATE(createdAt) as date,
-        COUNT(CASE WHEN role = 'customer' THEN 1 END) as customers,
-        COUNT(CASE WHEN role = 'seller' THEN 1 END) as sellers,
-        COUNT(*) as total
-      FROM users 
-      WHERE createdAt >= ${dateFilter} AND isDeleted = false
-      GROUP BY DATE(createdAt)
-      ORDER BY date ASC
-    `;
+    const userGrowth = null as any;
 
     // Product categories performance
-    const categoryPerformance = // await prisma.$queryRaw`
-      SELECT 
-        p.category,
-        COUNT(DISTINCT p.id) as totalProducts,
-        COUNT(o.id) as totalOrders,
-        SUM(o.totalAmount) as revenue,
-        AVG(r.rating) as avgRating
-      FROM products p
-      LEFT JOIN orders o ON p.id = o.productId AND o.createdAt >= ${dateFilter}
-      LEFT JOIN reviews r ON p.id = r.productId
-      WHERE p.status = 'active'
-      GROUP BY p.category
-      ORDER BY revenue DESC
-    `;
+    const categoryPerformance = null as any;
 
     // Geographic distribution
-    const geographicData = // await prisma.$queryRaw`
-      SELECT 
-        p.location as location,
-        COUNT(DISTINCT p.sellerId) as sellers,
-        COUNT(o.id) as orders,
-        SUM(o.totalAmount) as revenue
-      FROM products p
-      LEFT JOIN orders o ON p.id = o.productId AND o.createdAt >= ${dateFilter}
-      WHERE p.location IS NOT NULL
-      GROUP BY p.location
-      ORDER BY revenue DESC
-      LIMIT 10
-    `;
+    const geographicData = null as any;
 
     res.json({
       revenueData,
@@ -1167,47 +1101,13 @@ export class AdminController {
       }
 
       // Payment volume and trends
-      const paymentTrends = // await prisma.$queryRaw`
-        SELECT 
-          DATE(paidAt) as date,
-          COUNT(*) as totalTransactions,
-          SUM(amount) as totalVolume,
-          AVG(amount) as avgTransactionValue,
-          COUNT(CASE WHEN status = 'completed' THEN 1 END) as successfulPayments,
-          COUNT(CASE WHEN status = 'failed' THEN 1 END) as failedPayments,
-          COUNT(CASE WHEN status = 'pending' THEN 1 END) as pendingPayments
-        FROM payments 
-        WHERE createdAt >= ${dateFilter}
-        GROUP BY DATE(paidAt)
-        ORDER BY date ASC
-      `;
+      const paymentTrends = null as any;
 
       // Payment methods breakdown
-      const paymentMethods = // await prisma.$queryRaw`
-        SELECT 
-          method as paymentMethod,
-          COUNT(*) as transactions,
-          SUM(amount) as volume,
-          AVG(amount) as avgAmount,
-          (COUNT(*) * 100.0 / (SELECT COUNT(*) FROM payments WHERE createdAt >= ${dateFilter})) as percentage
-        FROM payments 
-        WHERE createdAt >= ${dateFilter}
-        GROUP BY method
-        ORDER BY transactions DESC
-      `;
+      const paymentMethods = null as any;
 
       // Failed payments analysis
-      const failureAnalysis = // await prisma.$queryRaw`
-        SELECT 
-          failureReason,
-          COUNT(*) as count,
-          (COUNT(*) * 100.0 / (SELECT COUNT(*) FROM payments WHERE status = 'failed' AND createdAt >= ${dateFilter})) as percentage
-        FROM payments 
-        WHERE status = 'failed' AND createdAt >= ${dateFilter}
-        GROUP BY failureReason
-        ORDER BY count DESC
-        LIMIT 10
-      `;
+      const failureAnalysis = null as any;
 
       // Revenue breakdown
       const revenueBreakdown = await prisma.payment.aggregate({
@@ -1275,52 +1175,11 @@ export class AdminController {
       let revenueData: any;
 
       if (breakdown === 'category') {
-        revenueData = // await prisma.$queryRaw`
-          SELECT 
-            p.category,
-            COUNT(DISTINCT o.id) as totalOrders,
-            COALESCE(SUM(pay.amount), 0) as totalRevenue,
-            COALESCE(SUM(pay.platformCut), 0) as platformRevenue,
-            COALESCE(SUM(pay.sellerNet), 0) as sellerRevenue,
-            COALESCE(AVG(pay.amount), 0) as avgOrderValue
-          FROM payments pay
-          JOIN orders o ON pay.orderId = o.id
-          JOIN products p ON o.productId = p.id
-          WHERE pay.status = 'completed' AND pay.createdAt >= ${dateFilter}
-          GROUP BY p.category
-          ORDER BY totalRevenue DESC
-        `;
+        revenueData = null as any;
       } else if (breakdown === 'seller') {
-        revenueData = // await prisma.$queryRaw`
-          SELECT 
-            u.id as sellerId,
-            u.firstName,
-            u.lastName,
-            u.email,
-            COUNT(DISTINCT pay.id) as totalTransactions,
-            COALESCE(SUM(pay.sellerNet), 0) as totalEarnings,
-            COALESCE(SUM(pay.platformCut), 0) as platformFees,
-            COALESCE(AVG(pay.amount), 0) as avgOrderValue
-          FROM payments pay
-          JOIN users u ON pay.sellerId = u.id
-          WHERE pay.status = 'completed' AND pay.createdAt >= ${dateFilter}
-          GROUP BY u.id, u.firstName, u.lastName, u.email
-          ORDER BY totalEarnings DESC
-          LIMIT 50
-        `;
+        revenueData = null as any;
       } else if (breakdown === 'monthly') {
-        revenueData = // await prisma.$queryRaw`
-          SELECT 
-            DATE_FORMAT(pay.createdAt, '%Y-%m') as month,
-            COUNT(*) as transactions,
-            COALESCE(SUM(pay.amount), 0) as totalRevenue,
-            COALESCE(SUM(pay.platformCut), 0) as platformRevenue,
-            COALESCE(SUM(pay.sellerNet), 0) as sellerPayouts
-          FROM payments pay
-          WHERE pay.status = 'completed' AND pay.createdAt >= ${dateFilter}
-          GROUP BY DATE_FORMAT(pay.createdAt, '%Y-%m')
-          ORDER BY month ASC
-        `;
+        revenueData = null as any;
       }
 
       // Overall summary
@@ -1613,5 +1472,6 @@ export class AdminController {
 }
 
 export const adminController = new AdminController();
+
 
 

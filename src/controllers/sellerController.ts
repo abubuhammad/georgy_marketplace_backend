@@ -60,31 +60,10 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
     });
 
     // Get monthly sales data (last 12 months)
-    const monthlyStats = // await prisma.$queryRaw`
-      SELECT 
-        DATE_FORMAT(createdAt, '%Y-%m') as month,
-        COUNT(*) as orders,
-        SUM(totalAmount) as revenue
-      FROM orders 
-      WHERE sellerId = ${sellerId} 
-        AND createdAt >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
-      GROUP BY DATE_FORMAT(createdAt, '%Y-%m')
-      ORDER BY month DESC
-    `;
+    const monthlyStats = null as any;
 
     // Get top performing products
-    const topProducts = // await prisma.$queryRaw`
-      SELECT 
-        p.id, p.title, p.price, p.images,
-        COUNT(o.id) as orderCount,
-        SUM(o.totalAmount) as revenue
-      FROM products p
-      LEFT JOIN orders o ON p.id = o.productId
-      WHERE p.sellerId = ${sellerId}
-      GROUP BY p.id
-      ORDER BY orderCount DESC
-      LIMIT 5
-    `;
+    const topProducts = null as any;
 
     res.json({
       stats: {
@@ -690,49 +669,13 @@ export const getAnalytics = async (req: AuthRequest, res: Response) => {
     }
 
     // Sales analytics
-    const salesData = // await prisma.$queryRaw`
-      SELECT 
-        DATE(createdAt) as date,
-        COUNT(*) as orders,
-        SUM(totalAmount) as revenue,
-        AVG(totalAmount) as avgOrderValue
-      FROM orders 
-      WHERE sellerId = ${sellerId} 
-        AND createdAt >= ${dateFilter}
-        AND status != 'cancelled'
-      GROUP BY DATE(createdAt)
-      ORDER BY date ASC
-    `;
+    const salesData = null as any;
 
     // Product performance
-    const productPerformance = // await prisma.$queryRaw`
-      SELECT 
-        p.id, p.title, p.category, p.price,
-        COUNT(o.id) as totalOrders,
-        SUM(o.totalAmount) as totalRevenue,
-        AVG(COALESCE(r.rating, 0)) as avgRating,
-        COUNT(r.id) as reviewCount
-      FROM products p
-      LEFT JOIN orders o ON p.id = o.productId AND o.createdAt >= ${dateFilter}
-      LEFT JOIN reviews r ON p.id = r.productId
-      WHERE p.sellerId = ${sellerId}
-      GROUP BY p.id
-      ORDER BY totalOrders DESC
-      LIMIT 10
-    `;
+    const productPerformance = null as any;
 
     // Category breakdown
-    const categoryBreakdown = // await prisma.$queryRaw`
-      SELECT 
-        p.category,
-        COUNT(o.id) as orders,
-        SUM(o.totalAmount) as revenue
-      FROM products p
-      LEFT JOIN orders o ON p.id = o.productId AND o.createdAt >= ${dateFilter}
-      WHERE p.sellerId = ${sellerId}
-      GROUP BY p.category
-      ORDER BY revenue DESC
-    `;
+    const categoryBreakdown = null as any;
 
     res.json({
       salesData,
