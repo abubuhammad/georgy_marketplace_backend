@@ -861,7 +861,8 @@ export class DisputeResolutionService {
       // Top issues
       const issueMap = disputes.reduce((acc: Record<string, number>, dispute) => {
         const disputeType = dispute.disputeType || 'unknown';
-        acc[disputeType] = (acc[disputeType] || 0) + 1;
+        const current = acc[disputeType] ?? 0;
+        acc[disputeType] = (current as number) + 1;
         return acc;
       }, {} as Record<string, number>);
 
