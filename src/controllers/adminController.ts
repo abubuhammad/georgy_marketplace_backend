@@ -1232,7 +1232,7 @@ export class AdminController {
         data: {
           period,
           summary: {
-            totalTransactions: revenueBreakdown._count,
+            totalTransactions: Number(revenueBreakdown._count) || 0,
             totalVolume: revenueBreakdown._sum.amount || 0,
             platformRevenue: revenueBreakdown._sum.platformCut || 0,
             sellerPayouts: revenueBreakdown._sum.sellerNet || 0,
@@ -1343,7 +1343,7 @@ export class AdminController {
           period,
           breakdownType: breakdown,
           summary: {
-            totalTransactions: summary._count,
+            totalTransactions: Number(summary._count) || 0,
             totalRevenue: summary._sum.amount || 0,
             platformRevenue: summary._sum.platformCut || 0,
             sellerPayouts: summary._sum.sellerNet || 0

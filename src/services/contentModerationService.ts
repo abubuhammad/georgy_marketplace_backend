@@ -1252,7 +1252,7 @@ export class ContentModerationService {
 
       return reviews.map(r => ({
         reviewerId: r.reviewerId,
-        reviews: r._count,
+        reviews: Number(r._count) || 0,
         avgTime: Math.round((r._avg.reviewTime || 0) * 100) / 100
       }));
     } catch (error) {

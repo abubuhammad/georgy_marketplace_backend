@@ -512,12 +512,12 @@ export const getDeliveryAnalytics = asyncHandler(async (req: Request, res: Respo
       breakdown: {
         byStatus: shipmentsByStatus.map(item => ({
           status: item.status,
-          count: item._count.status,
-          percentage: Math.round((item._count.status / totalShipments) * 100)
+          count: Number(item._count?.status || 0),
+          percentage: Math.round((Number(item._count?.status || 0) / totalShipments) * 100)
         })),
         byPartner: shipmentsByPartner.map(item => ({
           status: item.status,
-          count: item._count?.status || 0,
+          count: Number(item._count?.status || 0),
           averageFee: item._avg?.deliveryFee || 0
         }))
       }

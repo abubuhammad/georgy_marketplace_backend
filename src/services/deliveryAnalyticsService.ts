@@ -176,12 +176,12 @@ export class DeliveryAnalyticsService {
     });
 
     // Calculate basic metrics
-    const totalShipments = shipmentCounts.reduce((sum, item) => sum + item._count.id, 0);
-    const deliveredShipments = shipmentCounts.find(item => item.status === ShipmentStatus.DELIVERED)?._count.id || 0;
-    const failedShipments = shipmentCounts.find(item => item.status === ShipmentStatus.FAILED)?._count.id || 0;
+    const totalShipments = shipmentCounts.reduce((sum, item) => sum + (Number(item._count.id) || 0), 0);
+    const deliveredShipments = shipmentCounts.find(item => item.status === ShipmentStatus.DELIVERED)?._count.id ? Number(shipmentCounts.find(item => item.status === ShipmentStatus.DELIVERED)?._count.id) : 0;
+    const failedShipments = shipmentCounts.find(item => item.status === ShipmentStatus.FAILED)?._count.id ? Number(shipmentCounts.find(item => item.status === ShipmentStatus.FAILED)?._count.id) : 0;
     const inTransitShipments = shipmentCounts.filter(item => 
       [ShipmentStatus.PICKED_UP, ShipmentStatus.IN_TRANSIT].includes(item.status as ShipmentStatus)
-    ).reduce((sum, item) => sum + item._count.id, 0);
+    ).reduce((sum, item) => sum + (Number(item._count.id) || 0), 0);
 
     // Get delivery times and revenue data
     const deliveryData = await prisma.shipment.findMany({

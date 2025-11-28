@@ -812,11 +812,11 @@ export class PaymentService {
           averageTransactionValue: totalRevenue / payments.length || 0
         },
         breakdown: {
-          byPaymentMethod: Object.entries(byPaymentMethod).map(([method, data]) => ({
+          byPaymentMethod: Object.entries(byPaymentMethod).map(([method, data]: [string, any]) => ({
             method,
-            count: data.count,
-            total: data.total,
-            average: data.average
+            count: data.count || 0,
+            total: data.revenue || 0,
+            average: data.revenue && data.count ? Math.round((data.revenue / data.count) * 100) / 100 : 0
           }))
         }
       };

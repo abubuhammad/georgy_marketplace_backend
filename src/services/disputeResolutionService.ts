@@ -859,10 +859,11 @@ export class DisputeResolutionService {
       });
 
       // Top issues
-      const issueMap = disputes.reduce((acc, dispute) => {
-        acc[dispute.disputeType] = (acc[dispute.disputeType] || 0) + 1;
+      const issueMap = disputes.reduce((acc: Record<string, number>, dispute) => {
+        const disputeType = dispute.disputeType || 'unknown';
+        acc[disputeType] = (acc[disputeType] || 0) + 1;
         return acc;
-      }, {} as { [key: string]: number });
+      }, {} as Record<string, number>);
 
       const topIssues = Object.entries(issueMap)
         .sort(([, a], [, b]) => b - a)

@@ -728,7 +728,7 @@ export class PlatformSecurityService {
       ]);
 
       const vulnerabilityMap = vulnerabilities.reduce((acc, v) => {
-        acc[v.severity] = v._count;
+        acc[v.severity] = Number(v._count) || 0;
         return acc;
       }, {} as { [key: string]: number });
 

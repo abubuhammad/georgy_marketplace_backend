@@ -35,7 +35,9 @@ export const errorHandler = (
       case 'P2002':
         statusCode = 409;
         message = 'A record with this information already exists';
-        details = { field: 'meta' in error ? error.meta?.target : undefined };
+        if ('meta' in error && typeof error.meta === 'object' && error.meta !== null && 'target' in error.meta) {
+          details = { field: (error.meta as any).target };
+        }
         break;
       case 'P2025':
         statusCode = 404;
