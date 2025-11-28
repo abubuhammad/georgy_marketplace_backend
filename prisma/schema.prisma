@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
@@ -34,10 +34,10 @@ model User {
   deletedAt     DateTime?
   verifiedDate  DateTime?
   lastLoginAt   DateTime?
-  specializations String? @db.Text // JSON array for mediators
+  specializations String? // JSON array for mediators
   activeDisputes  Int     @default(0)
-  storeCredit     Decimal @default(0) @db.Decimal(10, 2)
-  moderationStats String? @db.Text // JSON object
+  storeCredit     Decimal @default(0)
+  moderationStats String? // JSON object
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -123,15 +123,15 @@ model Seller {
   id                  String   @id @default(cuid())
   userId              String   @unique
   businessName        String
-  businessDescription String   @db.Text
-  businessAddress     String   @db.Text // JSON object with address details
+  businessDescription String  
+  businessAddress     String   // JSON object with address details
   businessPhone       String?
   businessEmail       String?
   logo                String?
-  rating              Decimal? @db.Decimal(3, 2)
+  rating              Decimal?
   reviewCount         Int      @default(0)
   isVerified          Boolean  @default(false)
-  documents           String?  @db.Text // JSON array of verification documents
+  documents           String?  // JSON array of verification documents
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
@@ -145,14 +145,14 @@ model Product {
   id            String   @id @default(cuid())
   title         String
   productName   String?
-  description   String   @db.Text
-  price         Decimal  @db.Decimal(10, 2)
-  originalPrice Decimal? @db.Decimal(10, 2)
+  description   String  
+  price         Decimal 
+  originalPrice Decimal?
   categoryId    String
   subcategoryId String?
   brand         String?
   condition     String   @default("new") // new, used, refurbished, like-new, excellent, good, fair
-  images        String   @db.Text // JSON array of image URLs
+  images        String   // JSON array of image URLs
   sellerId      String
   featured      Boolean  @default(false)
   status        String   @default("active") // active, sold, inactive
@@ -165,11 +165,11 @@ model Product {
   
   // Analytics and engagement fields
   viewCount     Int      @default(0)
-  rating        Decimal? @db.Decimal(3, 2)
+  rating        Decimal?
   reviewCount   Int      @default(0)
   
   // Dynamic fields stored as JSON to accommodate category-specific fields
-  dynamicFields String?  @db.Text // JSON object containing category-specific fields
+  dynamicFields String?  // JSON object containing category-specific fields
   
   // For backwards compatibility
   category      String   @default("") // Keep for existing queries
@@ -190,11 +190,11 @@ model Order {
   buyerId             String
   sellerId            String
   quantity            Int      @default(1)
-  totalAmount         Decimal  @db.Decimal(10, 2)
+  totalAmount         Decimal 
   status              String   @default("pending") // pending, confirmed, shipped, delivered, cancelled
   paymentStatus       String   @default("pending") // pending, paid, failed, refunded
   paymentMethod       String?
-  shippingAddress     String   @db.Text
+  shippingAddress     String  
   deliveryDate        DateTime?
   expectedDeliveryDate DateTime?
   createdAt           DateTime @default(now())
@@ -213,8 +213,8 @@ model Refund {
   id          String   @id @default(cuid())
   orderId     String
   reason      String
-  description String   @db.Text
-  amount      Decimal  @db.Decimal(10, 2)
+  description String  
+  amount      Decimal 
   status      String   @default("pending") // pending, approved, rejected, processed, completed
   requestedBy String
   processedBy String?
@@ -231,7 +231,7 @@ model Review {
   productId String
   userId    String
   rating    Int
-  comment   String?  @db.Text
+  comment   String? 
   createdAt DateTime @default(now())
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -245,12 +245,12 @@ model Review {
 model Listing {
   id          String   @id @default(cuid())
   title       String
-  description String   @db.Text
+  description String  
   category    String
-  price       Decimal? @db.Decimal(10, 2)
+  price       Decimal?
   negotiable  Boolean  @default(false)
   condition   String   @default("new")
-  images      String   @db.Text // JSON array
+  images      String   // JSON array
   location    String
   userId      String
   featured    Boolean  @default(false)
@@ -266,20 +266,20 @@ model Listing {
 model Property {
   id            String   @id @default(cuid())
   title         String
-  description   String   @db.Text
+  description   String  
   type          String   // sale, lease, rent
   propertyType  String   // house, apartment, commercial, land
-  price         Decimal  @db.Decimal(12, 2)
+  price         Decimal 
   bedrooms      Int?
   bathrooms     Int?
-  area          Decimal? @db.Decimal(8, 2)
+  area          Decimal?
   location      String
-  address       String   @db.Text
-  latitude      Decimal? @db.Decimal(10, 8)
-  longitude     Decimal? @db.Decimal(11, 8)
-  images        String   @db.Text // JSON array
-  virtualTour   String?  @db.Text // JSON object
-  amenities     String?  @db.Text // JSON array
+  address       String  
+  latitude      Decimal?
+  longitude     Decimal?
+  images        String   // JSON array
+  virtualTour   String?  // JSON object
+  amenities     String?  // JSON array
   ownerId       String
   agentId       String?
   featured      Boolean  @default(false)
@@ -300,7 +300,7 @@ model PropertyViewing {
   agentId    String?
   scheduledAt DateTime
   status     String   @default("scheduled") // scheduled, completed, cancelled
-  notes      String?  @db.Text
+  notes      String? 
   createdAt  DateTime @default(now())
 
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
@@ -311,14 +311,14 @@ model PropertyViewing {
 model Job {
   id           String   @id @default(cuid())
   title        String
-  description  String   @db.Text
+  description  String  
   company      String
   location     String
   type         String   // full-time, part-time, contract, remote
-  salary       Decimal? @db.Decimal(10, 2)
+  salary       Decimal?
   salaryType   String?  // hourly, monthly, yearly
-  requirements String   @db.Text
-  benefits     String?  @db.Text
+  requirements String  
+  benefits     String? 
   employerId   String
   featured     Boolean  @default(false)
   status       String   @default("active") // active, closed, draft
@@ -335,11 +335,11 @@ model JobApplication {
   id          String   @id @default(cuid())
   jobId       String
   applicantId String
-  coverLetter String?  @db.Text
+  coverLetter String? 
   resume      String?  // URL to resume file
   status      String   @default("applied") // applied, screening, interviewing, offer, hired, rejected
   score       Int?
-  notes       String?  @db.Text
+  notes       String? 
   appliedAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -354,16 +354,16 @@ model ArtisanProfile {
   userId       String   @unique
   businessName String?
   category     String   // plumber, electrician, carpenter, etc.
-  skills       String   @db.Text // JSON array
+  skills       String   // JSON array
   experience   Int      // years
-  hourlyRate   Decimal? @db.Decimal(8, 2)
+  hourlyRate   Decimal?
   location     String
-  latitude     Decimal? @db.Decimal(10, 8)
-  longitude    Decimal? @db.Decimal(11, 8)
-  portfolio    String?  @db.Text // JSON array of work images
-  bio          String?  @db.Text
+  latitude     Decimal?
+  longitude    Decimal?
+  portfolio    String?  // JSON array of work images
+  bio          String? 
   verified     Boolean  @default(false)
-  rating       Decimal? @db.Decimal(3, 2)
+  rating       Decimal?
   totalJobs    Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -380,13 +380,13 @@ model ServiceRequest {
   artisanId   String?
   category    String
   title       String
-  description String   @db.Text
+  description String  
   location    String
-  latitude    Decimal? @db.Decimal(10, 8)
-  longitude   Decimal? @db.Decimal(11, 8)
-  budget      Decimal? @db.Decimal(10, 2)
+  latitude    Decimal?
+  longitude   Decimal?
+  budget      Decimal?
   urgency     String   @default("normal") // low, normal, high, urgent
-  images      String?  @db.Text // JSON array
+  images      String?  // JSON array
   status      String   @default("open") // open, quoted, assigned, in_progress, completed, cancelled
   scheduledAt DateTime?
   completedAt DateTime?
@@ -405,10 +405,10 @@ model ServiceQuote {
   id               String   @id @default(cuid())
   serviceRequestId String
   artisanId        String
-  amount           Decimal  @db.Decimal(10, 2)
-  description      String   @db.Text
+  amount           Decimal 
+  description      String  
   estimatedDuration String
-  materials        String?  @db.Text
+  materials        String? 
   status           String   @default("pending") // pending, accepted, rejected, expired
   validUntil       DateTime
   createdAt        DateTime @default(now())
@@ -439,7 +439,7 @@ model Message {
   chatId      String
   senderId    String
   recipientId String
-  content     String   @db.Text
+  content     String  
   messageType String   @default("text") // text, image, file
   fileUrl     String?
   readAt      DateTime?
@@ -461,7 +461,7 @@ model LegalDocument {
   type          String   // terms_of_service, privacy_policy, user_agreement, community_guidelines
   version       String
   title         String
-  content       String   @db.Text
+  content       String  
   language      String   @default("en")
   jurisdiction  String   @default("NG")
   effectiveDate DateTime
@@ -488,7 +488,7 @@ model UserConsent {
   consentDate      DateTime @default(now())
   consentMethod    String   @default("explicit") // explicit, implicit
   ipAddress        String?
-  userAgent        String?  @db.Text
+  userAgent        String? 
   withdrawnAt      DateTime?
   method           String   @default("explicit") // explicit, implicit
 
@@ -507,13 +507,13 @@ model GDPRRequest {
   userId        String
   requestType   String   // export, deletion, rectification, portability
   status        String   @default("pending") // pending, processing, completed, rejected
-  reason        String?  @db.Text
-  requestData   String?  @db.Text // JSON
+  reason        String? 
+  requestData   String?  // JSON
   processedBy   String?
   processedAt   DateTime?
   completedAt   DateTime?
   expiresAt     DateTime?
-  notes         String?  @db.Text
+  notes         String? 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -555,7 +555,7 @@ model UserVerification {
   backgroundCheck   String   @default("pending") // pending, passed, failed, not_required
   verificationScore Int      @default(0)
   lastVerifiedAt    DateTime?
-  verificationNotes String?  @db.Text
+  verificationNotes String? 
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -569,13 +569,13 @@ model UserSafetyProfile {
   userId             String   @unique
   safetyScore        Int      @default(50)
   riskLevel          String   @default("low") // low, medium, high, critical
-  emergencyContact   String?  @db.Text // JSON
-  safetyPreferences  String?  @db.Text // JSON
-  blockedUsers       String?  @db.Text // JSON array of user IDs
+  emergencyContact   String?  // JSON
+  safetyPreferences  String?  // JSON
+  blockedUsers       String?  // JSON array of user IDs
   lastSafetyUpdate   DateTime?
   safetyAlerts       Boolean  @default(true)
   locationSharing    Boolean  @default(false)
-  meetingPreferences String?  @db.Text // JSON
+  meetingPreferences String?  // JSON
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
@@ -592,19 +592,19 @@ model SafetyIncident {
   incidentType    String   // harassment, fraud, violence, inappropriate_content
   severity        String   @default("low") // low, medium, high, critical
   status          String   @default("reported") // reported, investigating, resolved, dismissed
-  description     String   @db.Text
-  evidence        String?  @db.Text // JSON array of evidence
+  description     String  
+  evidence        String?  // JSON array of evidence
   location        String?
   reportedBy      String
   assignedTo      String?
   investigatedBy  String?  // Alternative field name
   resolvedBy      String?
-  resolution      String?  @db.Text
+  resolution      String? 
   resolvedAt      DateTime?
   followUpDate    DateTime?
-  affectedUsers   String   @db.Text // JSON array of user IDs
+  affectedUsers   String   // JSON array of user IDs
   title           String?  // Incident title
-  tags            String?  @db.Text // JSON array
+  tags            String?  // JSON array
   estimatedResolution DateTime?
   timestamp       DateTime @default(now())
   createdAt       DateTime @default(now())
@@ -621,14 +621,14 @@ model UserReport {
   reportedUserId String
   reportedUser  String
   category      String   // spam, harassment, fraud, inappropriate_content, fake_profile
-  reason        String   @db.Text
-  description   String   @db.Text
+  reason        String  
+  description   String  
   reportType    String   // user, content, transaction
-  evidence      String?  @db.Text // JSON
+  evidence      String?  // JSON
   status        String   @default("pending") // pending, reviewing, resolved, dismissed
   priority      String   @default("normal") // low, normal, high, urgent
   assignedTo    String?
-  resolution    String?  @db.Text
+  resolution    String? 
   actionTaken   String?  // warning, suspension, ban, content_removal
   resolvedAt    DateTime?
   createdAt     DateTime @default(now())
@@ -648,10 +648,10 @@ model SecurityAudit {
   status          String   @default("scheduled") // scheduled, in_progress, completed, failed
   severity        String   @default("info") // info, low, medium, high, critical
   category        String   // authentication, authorization, data_protection, infrastructure
-  description     String   @db.Text
-  findings        String?  @db.Text // JSON
-  recommendations String?  @db.Text // JSON
-  remediation     String?  @db.Text
+  description     String  
+  findings        String?  // JSON
+  recommendations String?  // JSON
+  remediation     String? 
   targetSystem    String?  // system being audited
   conductedBy     String?  // auditor
   conductedAt     DateTime?
@@ -673,16 +673,16 @@ model SecurityIncident {
   title           String
   severity        String   // low, medium, high, critical
   status          String   @default("detected") // detected, investigating, contained, resolved
-  description     String   @db.Text
-  affectedSystems String?  @db.Text // JSON array
+  description     String  
+  affectedSystems String?  // JSON array
   affectedUsers   Int      @default(0)
   reportedBy      String?
   detectedAt      DateTime @default(now())
   containedAt     DateTime?
   resolvedAt      DateTime?
   assignedTo      String?
-  response        String?  @db.Text
-  lessons         String?  @db.Text
+  response        String? 
+  lessons         String? 
   publicNotice    Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -701,8 +701,8 @@ model AccessControl {
   grantedBy   String?
   grantedAt   DateTime?
   expiresAt   DateTime?
-  reason      String?  @db.Text
-  conditions  String?  @db.Text // JSON
+  reason      String? 
+  conditions  String?  // JSON
   lastUsedAt  DateTime?
   usageCount  Int      @default(0)
   createdAt   DateTime @default(now())
@@ -722,8 +722,8 @@ model Dispute {
   status          String   @default("open") // open, investigating, mediation, resolved, closed, escalated
   priority        String   @default("normal") // low, normal, high, urgent
   subject         String
-  description     String   @db.Text
-  amount          Decimal? @db.Decimal(10, 2)
+  description     String  
+  amount          Decimal?
   currency        String   @default("NGN")
   claimantId      String
   complainantId   String   // Alternative field name
@@ -735,10 +735,10 @@ model Dispute {
   relatedOrder    String?
   orderId         String?  // Alternative field name
   relatedItem     String?
-  evidence        String?  @db.Text // JSON
-  timeline        String?  @db.Text // JSON
-  resolution      String?  @db.Text
-  compensation    Decimal? @db.Decimal(10, 2)
+  evidence        String?  // JSON
+  timeline        String?  // JSON
+  resolution      String? 
+  compensation    Decimal?
   dueDate         DateTime?
   resolvedAt      DateTime?
   escalatedAt     DateTime?
@@ -763,11 +763,11 @@ model DisputeMessage {
   senderId     String
   senderRole   String?  // claimant, respondent, mediator, admin
   messageType  String   @default("message") // message, evidence, update
-  message      String   @db.Text // Alternative field name
-  content      String   @db.Text
-  attachments  String?  @db.Text // JSON
+  message      String   // Alternative field name
+  content      String  
+  attachments  String?  // JSON
   isInternal   Boolean  @default(false)
-  readBy       String?  @db.Text // JSON array of user IDs
+  readBy       String?  // JSON array of user IDs
   sentAt       DateTime @default(now())
   createdAt    DateTime @default(now())
 
@@ -787,10 +787,10 @@ model DisputeMediation {
   status          String   @default("scheduled") // scheduled, in_progress, completed, cancelled
   type            String   @default("video") // video, phone, chat, in_person
   meetingLink     String?
-  notes           String?  @db.Text
+  notes           String? 
   outcome         String?  // agreement, no_agreement, escalation
-  agreementTerms  String?  @db.Text
-  nextSteps       String?  @db.Text
+  agreementTerms  String? 
+  nextSteps       String? 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -814,9 +814,9 @@ model ContentModeration {
   reviewedBy     String?
   reviewedAt     DateTime?
   action         String?  // approve, reject, edit, remove, warn_user, ban_user
-  actionReason   String?  @db.Text
+  actionReason   String? 
   appeal         Boolean  @default(false)
-  appealReason   String?  @db.Text
+  appealReason   String? 
   appealedAt     DateTime?
   appealReviewed Boolean  @default(false)
   createdAt      DateTime @default(now())
@@ -830,11 +830,11 @@ model ContentModeration {
 model ModerationRule {
   id          String   @id @default(cuid())
   name        String
-  description String   @db.Text
+  description String  
   category    String   // content_filter, user_behavior, transaction_safety
   type        String   // keyword, pattern, ml_model, manual_review
-  conditions  String   @db.Text // JSON
-  actions     String   @db.Text // JSON
+  conditions  String   // JSON
+  actions     String   // JSON
   severity    String   @default("medium") // low, medium, high, critical
   isActive    Boolean  @default(true)
   priority    Int      @default(0)
@@ -858,8 +858,8 @@ model ModerationQueue {
   status        String   @default("pending") // pending, in_review, completed
   flaggedBy     String   // system, user_report, automated_scan
   reason        String
-  content       String   @db.Text // JSON snapshot of content
-  metadata      String?  @db.Text // JSON
+  content       String   // JSON snapshot of content
+  metadata      String?  // JSON
   assignedAt    DateTime?
   reviewedAt    DateTime?
   completedAt   DateTime?
@@ -878,14 +878,14 @@ model UserTrustProfile {
   userId           String   @unique
   trustScore       Int      @default(50) // 0-100
   trustLevel       String   @default("unverified") // unverified, basic, verified, trusted, premium, expert
-  verificationBadges String @db.Text // JSON array
+  verificationBadges String // JSON array
   reputationScore  Int      @default(0)
   reliabilityScore Int      @default(50)
   activityScore    Int      @default(0)
   socialScore      Int      @default(0)
   profileStrength  String   @default("weak") // weak, fair, good, strong, excellent
   riskLevel        String   @default("low") // low, medium, high
-  riskFlags        String?  @db.Text // JSON array
+  riskFlags        String?  // JSON array
   accountAge       Int      @default(0) // days
   lastActivity     DateTime?
   profileCompletion Int     @default(0) // percentage
@@ -895,8 +895,8 @@ model UserTrustProfile {
   negativeReviews  Int      @default(0)
   endorsementCount Int      @default(0)
   warnings         Int      @default(0)
-  restrictions     String?  @db.Text // JSON
-  notes            String?  @db.Text
+  restrictions     String?  // JSON
+  notes            String? 
   lastUpdated      DateTime @default(now())
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
@@ -915,7 +915,7 @@ model UserEndorsement {
   endorseeId   String
   category     String   // reliability, communication, quality, timeliness
   rating       Int      // 1-5
-  comment      String?  @db.Text
+  comment      String? 
   relatedOrder String?
   verified     Boolean  @default(false)
   helpful      Int      @default(0)
@@ -935,14 +935,14 @@ model TrustAlert {
   alertType   String   // score_drop, verification_expired, suspicious_activity
   severity    String   @default("info") // info, warning, critical
   title       String
-  description String   @db.Text
-  message     String   @db.Text
+  description String  
+  message     String  
   isResolved  Boolean  @default(false)
   actionRequired Boolean @default(false)
   dismissed   Boolean  @default(false)
   dismissedAt DateTime?
   expiresAt   DateTime?
-  metadata    String?  @db.Text // JSON
+  metadata    String?  // JSON
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -962,13 +962,13 @@ model DeliveryAgent {
   licenseNumber   String?
   phoneNumber     String
   emergencyContact String?
-  bankDetails     String?  @db.Text // JSON
+  bankDetails     String?  // JSON
   isVerified      Boolean  @default(false)
   isAvailable     Boolean  @default(true)
-  currentLocation String?  @db.Text // JSON with lat/lng
-  rating          Decimal? @db.Decimal(3, 2)
+  currentLocation String?  // JSON with lat/lng
+  rating          Decimal?
   totalDeliveries Int      @default(0)
-  earnings        Decimal  @default(0) @db.Decimal(10, 2)
+  earnings        Decimal  @default(0)
   joinedAt        DateTime @default(now())
   lastActiveAt    DateTime?
   status          String   @default("active") // active, suspended, inactive
@@ -990,25 +990,25 @@ model Shipment {
   shippingOption    String   // standard, express, same_day, scheduled
   estimatedDelivery DateTime?
   actualDelivery    DateTime?
-  pickupAddress     String   @db.Text
-  deliveryAddress   String   @db.Text
-  pickupCoordinates String?  @db.Text // JSON
-  deliveryCoordinates String? @db.Text // JSON
-  currentLocation   String?  @db.Text // JSON
+  pickupAddress     String  
+  deliveryAddress   String  
+  pickupCoordinates String?  // JSON
+  deliveryCoordinates String? // JSON
+  currentLocation   String?  // JSON
   recipientName     String
   recipientPhone    String
-  deliveryNotes     String?  @db.Text
-  packageDetails    String   @db.Text // JSON
-  deliveryFee       Decimal  @db.Decimal(8, 2)
+  deliveryNotes     String? 
+  packageDetails    String   // JSON
+  deliveryFee       Decimal 
   agentId           String?
   zoneId            String?
   assignedAt        DateTime?
   pickedUpAt        DateTime?
   deliveredAt       DateTime?
-  deliveryProof     String?  @db.Text // JSON with images/signature
+  deliveryProof     String?  // JSON with images/signature
   rating            Int?
-  feedback          String?  @db.Text
-  events            String?  @db.Text // JSON array of tracking events
+  feedback          String? 
+  events            String?  // JSON array of tracking events
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -1024,9 +1024,9 @@ model DeliveryZone {
   name        String
   description String?
   isActive    Boolean  @default(true)
-  coordinates String   @db.Text // JSON polygon coordinates
-  baseFee     Decimal  @db.Decimal(8, 2)
-  feePerKm    Decimal  @default(0) @db.Decimal(8, 2)
+  coordinates String   // JSON polygon coordinates
+  baseFee     Decimal 
+  feePerKm    Decimal  @default(0)
   maxDistance Int      @default(50) // km
   priority    Int      @default(0)
   createdAt   DateTime @default(now())
@@ -1046,7 +1046,7 @@ model Payment {
   sellerId        String?
   orderId         String?
   serviceRequestId String?
-  amount          Decimal  @db.Decimal(10, 2)
+  amount          Decimal 
   currency        String   @default("NGN")
   method          String   // card, bank_transfer, ussd, qr, mobile_money
   status          String   @default("pending") // pending, processing, completed, failed, refunded
@@ -1055,11 +1055,11 @@ model Payment {
   description     String?
   escrow          Boolean  @default(false)
   escrowStatus    String?  // held, released, disputed
-  platformCut     Decimal  @default(0) @db.Decimal(8, 2)
-  sellerNet       Decimal  @default(0) @db.Decimal(10, 2)
-  processingFee   Decimal  @default(0) @db.Decimal(8, 2)
-  tax             Decimal  @default(0) @db.Decimal(8, 2)
-  metadata        String?  @db.Text // JSON
+  platformCut     Decimal  @default(0)
+  sellerNet       Decimal  @default(0)
+  processingFee   Decimal  @default(0)
+  tax             Decimal  @default(0)
+  metadata        String?  // JSON
   paidAt          DateTime?
   failureReason   String?
   createdAt       DateTime @default(now())
@@ -1075,7 +1075,7 @@ model Payment {
 model PaymentRefund {
   id            String   @id @default(cuid())
   paymentId     String
-  amount        Decimal  @db.Decimal(10, 2)
+  amount        Decimal 
   reason        String
   status        String   @default("pending") // pending, processing, completed, failed
   providerRef   String?
@@ -1095,12 +1095,12 @@ model PaymentRefund {
 model Payout {
   id             String   @id @default(cuid())
   sellerId       String
-  totalAmount    Decimal  @db.Decimal(10, 2)
+  totalAmount    Decimal 
   currency       String   @default("NGN")
   status         String   @default("scheduled") // scheduled, processing, completed, failed
   provider       String   // paystack, flutterwave, etc
   providerRef    String?
-  bankDetails    String   @db.Text // JSON
+  bankDetails    String   // JSON
   scheduledAt    DateTime
   processedAt    DateTime?
   failureReason  String?
@@ -1116,9 +1116,9 @@ model PayoutItem {
   id         String  @id @default(cuid())
   payoutId   String
   paymentId  String
-  amount     Decimal @db.Decimal(10, 2)
-  commission Decimal @db.Decimal(8, 2)
-  net        Decimal @db.Decimal(10, 2)
+  amount     Decimal
+  commission Decimal
+  net        Decimal
 
   payout Payout @relation(fields: [payoutId], references: [id], onDelete: Cascade)
 
@@ -1131,12 +1131,12 @@ model Invoice {
   paymentId   String
   invoiceNumber String @unique
   type        String   // sale, service, refund
-  amount      Decimal  @db.Decimal(10, 2)
-  tax         Decimal  @default(0) @db.Decimal(8, 2)
+  amount      Decimal 
+  tax         Decimal  @default(0)
   status      String   @default("issued") // issued, paid, overdue, cancelled
   dueDate     DateTime?
   paidAt      DateTime?
-  details     String   @db.Text // JSON
+  details     String   // JSON
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -1149,11 +1149,11 @@ model TaxRule {
   id          String  @id @default(cuid())
   name        String
   type        String  // vat, sales_tax, service_tax
-  rate        Decimal @db.Decimal(5, 4)
+  rate        Decimal
   category    String? // product, service, digital
   region      String? // state, country code
   isActive    Boolean @default(true)
-  description String? @db.Text
+  description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -1164,10 +1164,10 @@ model RevenueShareScheme {
   id                String  @id @default(cuid())
   name              String
   category          String  // product, service, premium
-  platformPercentage Decimal @db.Decimal(5, 4)
-  sellerPercentage  Decimal @db.Decimal(5, 4)
-  minimumFee        Decimal @default(0) @db.Decimal(8, 2)
-  maximumFee        Decimal? @db.Decimal(8, 2)
+  platformPercentage Decimal
+  sellerPercentage  Decimal
+  minimumFee        Decimal @default(0)
+  maximumFee        Decimal?
   userType          String? // regular, premium, verified
   isActive          Boolean @default(true)
   effectiveFrom     DateTime @default(now())
@@ -1184,7 +1184,7 @@ model Notification {
   id              String   @id @default(cuid())
   userId          String
   title           String
-  message         String   @db.Text
+  message         String  
   type            String   // info, warning, success, error
   category        String   // order, payment, security, system
   priority        String   @default("normal") // low, normal, high, urgent
@@ -1192,7 +1192,7 @@ model Notification {
   read            Boolean  @default(false)
   actionUrl       String?
   actionLabel     String?
-  metadata        String?  @db.Text // JSON
+  metadata        String?  // JSON
   scheduledFor    DateTime?
   sentAt          DateTime?
   readAt          DateTime?
@@ -1238,8 +1238,8 @@ model UserNotificationPreference {
   push      Boolean @default(true)
   inApp     Boolean @default(true)
   whatsapp  Boolean @default(false)
-  categories String? @db.Text // JSON object
-  quietHours String? @db.Text // JSON object
+  categories String? // JSON object
+  quietHours String? // JSON object
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1255,7 +1255,7 @@ model DataExportRequest {
   userId        String
   requestType   String   @default("full_export") // full_export, partial_export, portability
   status        String   @default("pending") // pending, processing, completed, failed
-  dataTypes     String   @db.Text // JSON array
+  dataTypes     String   // JSON array
   format        String   @default("json") // json, csv, xml
   downloadUrl   String?
   expiresAt     DateTime?
@@ -1277,8 +1277,8 @@ model DataDeletionRequest {
   userId            String
   requestType       String   @default("full_deletion") // full_deletion, partial_deletion, anonymization
   status            String   @default("pending") // pending, processing, completed, rejected
-  reason            String?  @db.Text
-  dataTypes         String?  @db.Text // JSON array for partial deletion
+  reason            String? 
+  dataTypes         String?  // JSON array for partial deletion
   retentionPeriod   Int?     // days to keep before permanent deletion
   requestDate       DateTime @default(now())
   requestedBy       DateTime @default(now()) // Alternative field name
@@ -1290,7 +1290,7 @@ model DataDeletionRequest {
   processedAt       DateTime?
   completedAt       DateTime?
   backupCreated     Boolean  @default(false)
-  notes             String?  @db.Text
+  notes             String? 
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -1308,10 +1308,10 @@ model ConsentRecord {
   consentDate     DateTime @default(now())
   consentMethod   String   @default("explicit") // explicit, implicit, inferred
   ipAddress       String?
-  userAgent       String?  @db.Text
+  userAgent       String? 
   version         String   // version of document consented to
   withdrawnAt     DateTime?
-  withdrawalReason String?  @db.Text
+  withdrawalReason String? 
   isActive        Boolean  @default(true)
   legalBasis      String?  // consent, legitimate_interest, contract, etc.
   createdAt       DateTime @default(now())
@@ -1330,15 +1330,15 @@ model ChatMessage {
   roomId      String?
   senderId    String
   recipientId String
-  content     String   @db.Text
+  content     String  
   messageType String   @default("text") // text, image, file, system
-  attachments String?  @db.Text // JSON
+  attachments String?  // JSON
   isRead      Boolean  @default(false)
   isEdited    Boolean  @default(false)
   editedAt    DateTime?
   replyToId   String?
-  reactions   String?  @db.Text // JSON
-  metadata    String?  @db.Text // JSON
+  reactions   String?  // JSON
+  metadata    String?  // JSON
   readAt      DateTime?
   deliveredAt DateTime?
   createdAt   DateTime @default(now())
@@ -1357,7 +1357,7 @@ model VerificationBadge {
   userId      String
   badgeType   String   // email_verified, phone_verified, identity_verified, etc.
   badgeName   String
-  description String?  @db.Text
+  description String? 
   iconUrl     String?
   color       String?  @default("#10B981")
   isActive    Boolean  @default(true)
@@ -1365,8 +1365,8 @@ model VerificationBadge {
   earnedAt    DateTime @default(now())
   expiresAt   DateTime?
   verifiedBy  String?
-  criteria    String?  @db.Text // JSON
-  metadata    String?  @db.Text // JSON
+  criteria    String?  // JSON
+  metadata    String?  // JSON
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -1384,8 +1384,8 @@ model Endorsement {
   category       String   // skill, reliability, communication, quality
   rating         Int      // 1-5
   title          String?
-  comment        String?  @db.Text
-  description    String?  @db.Text
+  comment        String? 
+  description    String? 
   isPublic       Boolean  @default(true)
   isVerified     Boolean  @default(false)
   verifiedBy     String?
@@ -1415,7 +1415,7 @@ model SocialConnection {
   followers   Int?
   following   Int?
   lastSynced  DateTime?
-  metadata    String?  @db.Text // JSON
+  metadata    String?  // JSON
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -1429,11 +1429,11 @@ model CommunityPost {
   id            String   @id @default(cuid())
   authorId      String
   title         String
-  content       String   @db.Text
+  content       String  
   postType      String   @default("discussion") // discussion, question, announcement, review
   category      String?
-  tags          String?  @db.Text // JSON array
-  images        String?  @db.Text // JSON array
+  tags          String?  // JSON array
+  images        String?  // JSON array
   isPublic      Boolean  @default(true)
   isLocked      Boolean  @default(false)
   isPinned      Boolean  @default(false)
@@ -1458,13 +1458,13 @@ model ReviewAuthenticity {
   reviewId      String   @unique
   authenticityScore Float  // 0.0 to 1.0
   confidence    Float    // 0.0 to 1.0
-  riskFactors   String?  @db.Text // JSON array
+  riskFactors   String?  // JSON array
   verificationMethod String? // ai_analysis, manual_review, user_verification
   isAuthentic   Boolean?
   flaggedReason String?
   reviewedBy    String?
   reviewedAt    DateTime?
-  metadata      String?  @db.Text // JSON
+  metadata      String?  // JSON
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -1481,15 +1481,15 @@ model SecurityFinding {
   findingType String   // vulnerability, misconfiguration, compliance_issue
   severity    String   // info, low, medium, high, critical
   title       String
-  description String   @db.Text
-  remediation String?  @db.Text
+  description String  
+  remediation String? 
   status      String   @default("open") // open, acknowledged, remediated, false_positive
   assignedTo  String?
   dueDate     DateTime?
   closedAt    DateTime?
   closedBy    String?
-  evidence    String?  @db.Text // JSON
-  metadata    String?  @db.Text // JSON
+  evidence    String?  // JSON
+  metadata    String?  // JSON
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -1501,22 +1501,22 @@ model SecurityFinding {
 model VulnerabilityAssessment {
   id              String   @id @default(cuid())
   title           String
-  description     String   @db.Text
+  description     String  
   severity        String   // info, low, medium, high, critical
   cvssScore       Float?
   cveId           String?
-  affectedSystems String   @db.Text // JSON array
+  affectedSystems String   // JSON array
   status          String   @default("identified") // identified, confirmed, patched, mitigated
   discoveredBy    String?
   discoveredAt    DateTime @default(now())
   patchAvailable  Boolean  @default(false)
   patchVersion    String?
-  mitigationSteps String?  @db.Text
+  mitigationSteps String? 
   assignedTo      String?
   dueDate         DateTime?
   resolvedAt      DateTime?
   resolvedBy      String?
-  notes           String?  @db.Text
+  notes           String? 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -1530,13 +1530,13 @@ model SecurityLog {
   eventType   String   // login, logout, permission_change, data_access
   action      String
   resource    String?
-  details     String?  @db.Text
+  details     String? 
   ipAddress   String?
-  userAgent   String?  @db.Text
+  userAgent   String? 
   success     Boolean
   errorCode   String?
-  errorMessage String? @db.Text
-  metadata    String?  @db.Text // JSON
+  errorMessage String?
+  metadata    String?  // JSON
   riskScore   Int?     @default(0)
   flagged     Boolean  @default(false)
   timestamp   DateTime @default(now())
@@ -1551,14 +1551,14 @@ model SecurityLog {
 model BlockedIP {
   id          String   @id @default(cuid())
   ipAddress   String   @unique
-  reason      String   @db.Text
+  reason      String  
   blockedBy   String
   blockedAt   DateTime @default(now())
   expiresAt   DateTime?
   isActive    Boolean  @default(true)
   attempts    Int      @default(1)
   lastAttempt DateTime @default(now())
-  metadata    String?  @db.Text // JSON
+  metadata    String?  // JSON
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -1570,14 +1570,14 @@ model SecurityScan {
   scanType      String   // port_scan, vulnerability_scan, malware_scan
   target        String   // ip_address, domain, user_upload
   status        String   @default("queued") // queued, running, completed, failed
-  findings      String?  @db.Text // JSON
+  findings      String?  // JSON
   riskScore     Int?     @default(0)
   startedAt     DateTime?
   completedAt   DateTime?
   duration      Int?     // seconds
   scanEngine    String?
   engineVersion String?
-  metadata      String?  @db.Text // JSON
+  metadata      String?  // JSON
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -1592,9 +1592,9 @@ model UserActivity {
   activityType String  // login, logout, purchase, listing, message, etc.
   action      String
   resource    String?
-  metadata    String?  @db.Text // JSON
+  metadata    String?  // JSON
   ipAddress   String?
-  userAgent   String?  @db.Text
+  userAgent   String? 
   duration    Int?     // seconds for session activities
   createdAt   DateTime @default(now())
 
@@ -1613,7 +1613,7 @@ model EmergencyContact {
   relationship String   // family, friend, colleague, etc.
   phone        String
   email        String?
-  address      String?  @db.Text
+  address      String? 
   isPrimary    Boolean  @default(false)
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
@@ -1654,7 +1654,7 @@ model SafetySettings {
 model MeetingGuidelines {
   id          String   @id @default(cuid())
   title       String
-  content     String   @db.Text
+  content     String  
   category    String   // first_meeting, public_spaces, safety_tips
   type        String   @default("general") // general, product_specific, location_specific
   isActive    Boolean  @default(true)
@@ -1681,7 +1681,7 @@ model TrustMetric {
   weight         Float    // importance in overall trust score
   lastCalculated DateTime @default(now())
   period         String   @default("all_time") // all_time, last_30_days, last_year
-  metadata       String?  @db.Text // JSON
+  metadata       String?  // JSON
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -1697,8 +1697,8 @@ model PolicyViolation {
   violationType String   // spam, fraud, harassment, fake_listing
   severity      String   // minor, major, critical
   status        String   @default("reported") // reported, investigating, confirmed, dismissed
-  description   String   @db.Text
-  evidence      String?  @db.Text // JSON
+  description   String  
+  evidence      String?  // JSON
   reportedBy    String?
   reviewedBy    String?
   actionTaken   String?  // warning, suspension, ban, content_removal
@@ -1719,12 +1719,12 @@ model RiskAssessment {
   riskScore       Int      // 0-100
   riskLevel       String   // low, medium, high, critical
   overallRisk     String   // low, medium, high, critical (alternative field name)
-  factors         String   @db.Text // JSON array of risk factors
-  riskFactors     String   @db.Text // JSON array (alternative field name)
-  recommendations String?  @db.Text // JSON array
+  factors         String   // JSON array of risk factors
+  riskFactors     String   // JSON array (alternative field name)
+  recommendations String?  // JSON array
   assessedBy      String   // system, manual_review
   validUntil      DateTime?
-  notes           String?  @db.Text
+  notes           String? 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -1741,12 +1741,12 @@ model ReputationChange {
   previousScore Int      @default(0)
   newScore      Int      @default(0)
   delta         Int      @default(0)
-  reason        String   @db.Text
+  reason        String  
   source        String   // review, transaction, admin_action, system_calculation
   relatedEntity String?  // order_id, review_id, etc.
   triggeredBy   String?
   timestamp     DateTime @default(now())
-  metadata      String?  @db.Text // JSON
+  metadata      String?  // JSON
   createdBy     String?
   createdAt     DateTime @default(now())
 
@@ -1762,7 +1762,7 @@ model IdentityVerification {
   userId            String
   documentType      String   // passport, drivers_license, national_id, etc.
   documentNumber    String?
-  documentImages    String   @db.Text // JSON array of image URLs
+  documentImages    String   // JSON array of image URLs
   selfieImage       String?
   verificationMethod String  @default("manual") // manual, automated, hybrid
   verificationType  String   @default("identity") // identity, address, phone
@@ -1772,9 +1772,9 @@ model IdentityVerification {
   verifiedAt        DateTime?
   expiresAt         DateTime?
   submittedAt       DateTime @default(now())
-  rejectionReason   String?  @db.Text
-  notes             String?  @db.Text
-  metadata          String?  @db.Text // JSON
+  rejectionReason   String? 
+  notes             String? 
+  metadata          String?  // JSON
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -1792,13 +1792,13 @@ model BackgroundCheck {
   status        String   @default("pending") // pending, in_progress, completed, failed
   result        String?  // clear, flagged, inconclusive
   score         Int?     // 0-100
-  findings      String?  @db.Text // JSON
+  findings      String?  // JSON
   requestedBy   String
   requestedAt   DateTime @default(now())
   completedAt   DateTime?
   expiresAt     DateTime?
-  cost          Decimal? @db.Decimal(8, 2)
-  notes         String?  @db.Text
+  cost          Decimal?
+  notes         String? 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -1812,18 +1812,18 @@ model BackgroundCheck {
 model UserProfile {
   id              String   @id @default(cuid())
   userId          String   @unique
-  bio             String?  @db.Text
+  bio             String? 
   website         String?
   location        String?
   dateOfBirth     DateTime?
   gender          String?
-  interests       String?  @db.Text // JSON array
-  languages       String?  @db.Text // JSON array
+  interests       String?  // JSON array
+  languages       String?  // JSON array
   timezone        String   @default("UTC")
   profilePicture  String?
   coverPicture    String?
-  socialLinks     String?  @db.Text // JSON object
-  preferences     String?  @db.Text // JSON object
+  socialLinks     String?  // JSON object
+  preferences     String?  // JSON object
   isPublic        Boolean  @default(true)
   lastActiveAt    DateTime?
   verifiedDate    DateTime?
@@ -1841,7 +1841,7 @@ model ContentItem {
   id          String   @id @default(cuid())
   itemId      String   // External reference ID
   contentType String   // product, review, message, listing
-  content     String   @db.Text
+  content     String  
   title       String?
   authorId    String
   status      String   @default("pending") // pending, approved, rejected, flagged
@@ -1871,8 +1871,8 @@ model ContentFlag {
   flagType      String   @default("inappropriate") // inappropriate, spam, fake, etc.
   reviewedBy    String?
   reviewedAt    DateTime?
-  reviewNotes   String?  @db.Text
-  description   String?  @db.Text
+  reviewNotes   String? 
+  description   String? 
   flaggedAt     DateTime @default(now())
 
   content ContentItem @relation(fields: [contentId], references: [id], onDelete: Cascade)
@@ -1886,7 +1886,7 @@ model ContentViolation {
   violationType String
   severity     String
   confidence   Float?
-  description  String   @db.Text
+  description  String  
   detectedAt   DateTime @default(now())
   detectedBy   String   // system, user, moderator
 
@@ -1902,12 +1902,12 @@ model ContentReview {
   reviewerId   String
   decision     String   // approve, reject, flag
   confidence   String?  // high, medium, low
-  reasoning    String?  @db.Text
-  actionsTaken String?  @db.Text // JSON array
+  reasoning    String? 
+  actionsTaken String?  // JSON array
   reviewTime   Int?     // time in seconds
   qualityScore Float?
-  notes        String?  @db.Text
-  reason       String?  @db.Text // Alternative field name
+  notes        String? 
+  reason       String?  // Alternative field name
   reviewedAt   DateTime @default(now())
   verifiedAt   DateTime @default(now())
 
@@ -1920,8 +1920,8 @@ model DisputeEvidence {
   submittedBy  String
   evidenceType String
   title        String
-  description  String   @db.Text
-  fileUrls     String   @db.Text // JSON array
+  description  String  
+  fileUrls     String   // JSON array
   createdAt    DateTime @default(now())
 
   @@map("dispute_evidence")
@@ -1933,8 +1933,8 @@ model DisputeResolution {
   resolvedBy   String
   resolutionType String
   outcome      String
-  description  String   @db.Text
-  compensation String?  @db.Text // JSON
+  description  String  
+  compensation String?  // JSON
   resolvedAt   DateTime @default(now())
 
   dispute Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
@@ -1967,8 +1967,8 @@ model PushSubscription {
   auth         String?
   isActive     Boolean  @default(true)
   active       Boolean  @default(true)  // Alternative field name
-  userAgent    String?  @db.Text
-  deviceInfo   String?  @db.Text // JSON
+  userAgent    String? 
+  deviceInfo   String?  // JSON
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -1982,11 +1982,11 @@ model ScheduledNotification {
   type         String
   category     String?  // order, payment, delivery, system
   title        String
-  message      String   @db.Text
+  message      String  
   scheduledFor DateTime
   sent         Boolean  @default(false)
   sentAt       DateTime?
-  data         String?  @db.Text // JSON
+  data         String?  // JSON
   createdAt    DateTime @default(now())
 
   @@map("scheduled_notifications")
@@ -1998,8 +1998,8 @@ model SafetyAlert {
   alertType   String
   type        String   // Alternative field name
   title       String
-  message     String   @db.Text
-  description String?  @db.Text
+  message     String  
+  description String? 
   severity    String   @default("medium")
   source      String?  // system, manual, automated
   status      String   @default("active")
@@ -2007,7 +2007,7 @@ model SafetyAlert {
   affectedCount Int    @default(1)
   assignedTo  String?
   dueDate     DateTime?
-  metadata    String?  @db.Text // JSON
+  metadata    String?  // JSON
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -2020,13 +2020,13 @@ model SafetyAction {
   actionType String
   target     String   // target entity
   targetId   String
-  reason     String   @db.Text
+  reason     String  
   severity   String
   executedBy String
   performedBy String
   executedAt DateTime @default(now())
   status     String   @default("completed")
-  data       String?  @db.Text // JSON
+  data       String?  // JSON
   createdAt  DateTime @default(now())
 
   @@map("safety_actions")
@@ -2037,10 +2037,10 @@ model ActivityLog {
   userId    String?
   type      String?  // activity type
   action    String
-  details   String   @db.Text
-  metadata  String?  @db.Text // JSON
+  details   String  
+  metadata  String?  // JSON
   ipAddress String?
-  userAgent String?  @db.Text
+  userAgent String? 
   timestamp DateTime @default(now())
   createdAt DateTime @default(now())
 
@@ -2052,7 +2052,7 @@ model ComplianceCheck {
   id          String   @id @default(cuid())
   checkType   String   // gdpr, data_retention, security
   status      String   @default("pending")
-  result      String?  @db.Text // JSON
+  result      String?  // JSON
   performedAt DateTime @default(now()) // Alternative field name
   scheduledAt DateTime
   completedAt DateTime?
@@ -2068,7 +2068,7 @@ model FraudDetection {
   userId       String?  // For user-related fraud
   fraudType    String?  // identity_theft, payment_fraud, listing_fraud
   riskScore    Int      // 0-100
-  riskFactors  String   @db.Text // JSON
+  riskFactors  String   // JSON
   status       String   @default("flagged")
   reviewedBy   String?
   reviewedAt   DateTime?
@@ -2082,7 +2082,7 @@ model UserWarning {
   id            String   @id @default(cuid())
   userId        String
   contentItemId String?  // Related content item
-  reason        String   @db.Text
+  reason        String  
   severity      String   @default("medium")
   issuedBy      String
   issuedAt      DateTime @default(now())
