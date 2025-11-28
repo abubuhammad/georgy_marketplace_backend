@@ -161,15 +161,11 @@ export const getProducts = async (req: Request, res: Response) => {
 
     res.json({
       success: true,
-      data: {
-        data: products,
-        pagination: {
-          page: Number(page),
-          limit: Number(limit),
-          total,
-          pages
-        }
-      }
+      data: products,
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: pages
     });
   } catch (error) {
     console.error('Error fetching products:', error);
