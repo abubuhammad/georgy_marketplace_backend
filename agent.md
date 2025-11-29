@@ -1,7 +1,7 @@
 # Shopping Marketplace - Current State Documentation
 
 ## Project Overview
-A comprehensive shopping marketplace platform built with Node.js, Express, TypeScript, Prisma, and MySQL. The platform supports e-commerce, services marketplace, artisan services, property listings, job boards, and delivery logistics.
+A comprehensive shopping marketplace platform built with Node.js, Express, TypeScript, Prisma, and MongoDB. The platform supports e-commerce, services marketplace, artisan services, property listings, job boards, delivery logistics, and advanced safety/security features including TOTP-based two-factor authentication.
 
 ## Architecture Status: ✅ COMPLETE
 
@@ -30,13 +30,6 @@ A comprehensive shopping marketplace platform built with Node.js, Express, TypeS
 - Chat/messaging system
 - Enhanced user profiles
 
-### Phase 3: Security & Trust ✅ COMPLETE
-- User verification system
-- Escrow payment system
-- Dispute resolution framework
-- Advanced review system
-- Trust scoring mechanisms
-- Identity verification process
 
 ### Phase 4: Business Intelligence ✅ COMPLETE
 - Comprehensive analytics system
@@ -67,10 +60,11 @@ A comprehensive shopping marketplace platform built with Node.js, Express, TypeS
 - Legal document management
 - User safety profiles
 - Content moderation system
-- Platform security measures
+- Platform security measures (rate limiting, IP blocking, security logging)
 - Trust and verification systems
 - Delivery and logistics system
 - Payment processing enhancements
+- TOTP-based two-factor authentication with QR-code setup and authenticator app support
 
 ## Current Database Schema
 
@@ -135,7 +129,19 @@ A comprehensive shopping marketplace platform built with Node.js, Express, TypeS
 
 ### Legal & Safety
 - `GET /api/legal/documents` - Legal documents
-- `POST /api/safety/report` - Report safety incidents
+- `GET /api/safety/profile/:userId` - Fetch full safety profile for a user
+- `PUT /api/safety/profile/:userId` - Update safety profile/settings
+- `GET /api/safety/verification/:userId` - Get user verification status
+- `POST /api/safety/verify-identity` - Start identity verification workflow
+- `POST /api/safety/background-check` - Request background check for current user
+- `POST /api/safety/report-user` - Report another user for safety concerns
+- `POST /api/safety/safety-incident` - Log a safety incident
+- `POST /api/safety/emergency-contact` - Manage emergency contact details
+- `GET /api/safety/safety-score/:userId` - Compute aggregated safety score
+- `POST /api/safety/trigger-emergency` - Trigger emergency protocol via safe word
+- `POST /api/safety/two-factor/setup` - Start TOTP 2FA setup and return QR + secret
+- `POST /api/safety/two-factor/verify` - Verify TOTP code and enable 2FA
+- `POST /api/safety/two-factor/disable` - Disable 2FA (optionally clearing secret)
 - `GET /api/moderation/queue` - Content moderation queue
 
 ### Delivery & Logistics
@@ -174,13 +180,19 @@ All models properly connected with foreign keys:
 - Payment → User, Refunds, Invoices
 - All legal and safety models connected to User
 
-## Recent Achievements
+### Recent Achievements
 
 ### Database Migration Success
-- Complete schema migration to MySQL
-- All Phase 7 models successfully created
-- Foreign key relationships established
+- Migrated core data storage to MongoDB via Prisma (MongoDB provider)
+- All Phase 7 models successfully created and aligned with MongoDB schema
+- Relations and reference fields validated for new data model
 - Delivery zones and logistics infrastructure added
+
+### Security & Safety Enhancements
+- Implemented TOTP-based two-factor authentication using `otplib`
+- Added QR-code generation for authenticator apps via `qrcode`
+- Persist 2FA secrets in `SafetySettings.twoFactorSecret` with enable/disable flow
+- Exposed `/api/safety/two-factor/*` endpoints for setup, verification, and disable flows
 
 ### Code Quality Improvements
 - Fixed TypeScript compilation issues
@@ -247,7 +259,7 @@ All models properly connected with foreign keys:
 
 ### Environment Variables Required
 ```
-DATABASE_URL="mysql://username:password@localhost:3306/georgy_marketplace"
+DATABASE_URL="your-mongodb-connection-string"  # e.g. mongodb+srv://user:pass@cluster/db
 JWT_SECRET="your-jwt-secret"
 PAYSTACK_SECRET_KEY="your-paystack-key"
 FLUTTERWAVE_SECRET_KEY="your-flutterwave-key"
@@ -271,5 +283,5 @@ Total implemented endpoints: 50+
 ## Final Status
 **The shopping marketplace backend is FEATURE COMPLETE and ready for comprehensive testing and frontend integration. All major functionality has been implemented, database schema is fully migrated, and the codebase is TypeScript compliant.**
 
-Last Updated: September 6, 2025 - 11:22 PM UTC
-Status: Ready for Production Testing
+Last Updated: November 28, 2025 - 08:24 PM UTC
+Status: Ready for Production Testing (with TOTP 2FA and MongoDB schema updates)

@@ -1,6 +1,6 @@
-import { Router, Request } from 'express';
+import { Router, Request, Response } from 'express';
 import { authenticateToken } from '../middleware/auth';
-import '../types'; // Import type definitions
+import '../types';
 import { chatService } from '../services/chatService';
 import { validateRequest } from '../middleware/validateRequest';
 import Joi from 'joi';
@@ -25,7 +25,7 @@ const markReadSchema = Joi.object({
 });
 
 // Get user's chat rooms
-router.get('/rooms', authenticateToken, async (req: Request, res) => {
+router.get('/rooms', authenticateToken, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const limit = parseInt(req.query.limit as string) || 20;
@@ -50,7 +50,7 @@ router.get('/rooms', authenticateToken, async (req: Request, res) => {
 router.post('/rooms', 
   authenticateToken, 
   validateRequest(createRoomSchema), 
-  async (req: Request, res) => {
+  async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       const { type, participants, name } = req.body;
@@ -82,7 +82,7 @@ router.post('/rooms',
 );
 
 // Get chat room info
-router.get('/rooms/:roomId', authenticateToken, async (req: Request, res) => {
+router.get('/rooms/:roomId', authenticateToken, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { roomId } = req.params;
@@ -103,7 +103,7 @@ router.get('/rooms/:roomId', authenticateToken, async (req: Request, res) => {
 });
 
 // Get messages for a chat room
-router.get('/rooms/:roomId/messages', authenticateToken, async (req: Request, res) => {
+router.get('/rooms/:roomId/messages', authenticateToken, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { roomId } = req.params;
@@ -134,7 +134,7 @@ router.get('/rooms/:roomId/messages', authenticateToken, async (req: Request, re
 router.post('/rooms/:roomId/messages', 
   authenticateToken, 
   validateRequest(sendMessageSchema), 
-  async (req: Request, res) => {
+  async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       const { roomId } = req.params;
@@ -167,7 +167,7 @@ router.post('/rooms/:roomId/messages',
 router.patch('/rooms/:roomId/read', 
   authenticateToken, 
   validateRequest(markReadSchema), 
-  async (req: Request, res) => {
+  async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       const { roomId } = req.params;
@@ -191,7 +191,7 @@ router.patch('/rooms/:roomId/read',
 );
 
 // Delete a message
-router.delete('/messages/:messageId', authenticateToken, async (req: Request, res) => {
+router.delete('/messages/:messageId', authenticateToken, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { messageId } = req.params;
@@ -212,7 +212,7 @@ router.delete('/messages/:messageId', authenticateToken, async (req: Request, re
 });
 
 // Search messages
-router.get('/search', authenticateToken, async (req: Request, res) => {
+router.get('/search', authenticateToken, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const query = req.query.q as string;
@@ -241,7 +241,7 @@ router.get('/search', authenticateToken, async (req: Request, res) => {
 });
 
 // Get chat statistics (admin only)
-router.get('/stats', authenticateToken, async (req: Request, res) => {
+router.get('/stats', authenticateToken, async (req: Request, res: Response) => {
   try {
     // Check if user is admin
     if (req.user!.role !== 'admin') {
@@ -271,7 +271,7 @@ router.get('/stats', authenticateToken, async (req: Request, res) => {
 });
 
 // Get unread count for a room
-router.get('/rooms/:roomId/unread-count', authenticateToken, async (req: Request, res) => {
+router.get('/rooms/:roomId/unread-count', authenticateToken, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { roomId } = req.params;

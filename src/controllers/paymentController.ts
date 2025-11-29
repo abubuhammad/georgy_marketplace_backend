@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { PaymentService } from '../services/paymentService';
 import { asyncHandler } from '../middleware/errorHandler';
-import '../types'; // Import type definitions
+import '../types';
+
 // Define payment methods enum
 enum PaymentMethod {
   card = 'card',

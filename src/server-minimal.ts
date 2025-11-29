@@ -10,6 +10,8 @@ import { errorHandler } from './middleware/errorHandler';
 import { authRoutes } from './routes/auth';
 import { productRoutes } from './routes/products';
 import { userRoutes } from './routes/users';
+import sellerRoutes from './routes/seller';
+import { adminRoutes } from './routes/adminRoutes';
 
 const app = express();
 const server = createServer(app);
@@ -51,6 +53,8 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/seller', sellerRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check endpoints
 app.get('/health', (req, res) => {

@@ -1,8 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
 import '../types'; // Import type definitions
 
+interface AuthRequest extends Request {
+  user?: {
+    id: string;
+    userId?: string;
+    email: string;
+    role: string;
+    [key: string]: any;
+  };
+}
+
 export const requireRole = (requiredRole: string | string[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,

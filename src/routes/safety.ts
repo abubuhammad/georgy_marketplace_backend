@@ -4,6 +4,7 @@ import { authenticateToken } from '../middleware/auth';
 import { UserSafetyService } from '../services/userSafetyService';
 import { PlatformSecurityService } from '../services/platformSecurityService';
 import { logger } from '../utils/logger';
+import '../types';
 
 const router = Router();
 const prisma = new PrismaClient();

@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { DeliveryService } from '../services/deliveryService';
 import { asyncHandler } from '../middleware/errorHandler';
-import '../types'; // Import type definitions
+import '../types';
+
 // Define missing enums locally
 enum ShipmentStatus {
   PENDING = 'pending',

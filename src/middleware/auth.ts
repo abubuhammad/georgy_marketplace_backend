@@ -40,7 +40,7 @@ export const authenticateToken = async (
       throw createError('User not found', 401);
     }
 
-    req.user = {
+    (req as any).user = {
       id: user.id,
       userId: user.id,
       email: user.email,
@@ -61,11 +61,11 @@ export const authenticateToken = async (
 
 export const authorizeRoles = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.user) {
+    if (!(req as any).user) {
       return next(createError('Authentication required', 401));
     }
 
-    if (!roles.includes(req.user.role)) {
+    if (!roles.includes((req as any).user.role)) {
       return next(createError('Insufficient permissions', 403));
     }
 
@@ -99,7 +99,7 @@ export const optionalAuth = async (
       });
 
       if (user) {
-        req.user = {
+        (req as any).user = {
           id: user.id,
           userId: user.id,
           email: user.email,

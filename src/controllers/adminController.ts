@@ -1,17 +1,7 @@
-﻿import { Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
-
-// Define AuthRequest type
-interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    userId?: string;
-    email: string;
-    role: string;
-    [key: string]: any;
-  };
-}
+import '../types';
 
 const prisma = new PrismaClient();
 
@@ -36,7 +26,7 @@ const taxRuleSchema = z.object({
 });
 
 // Dashboard Analytics
-export const getDashboardStats = async (req: AuthRequest, res: Response) => {
+export const getDashboardStats = async (req: Request, res: Response) => {
   try {
     // Basic counts
     const totalUsers = await prisma.user.count({ where: { isDeleted: false } });
@@ -118,7 +108,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
 };
 
 // User Management
-export const getUsers = async (req: AuthRequest, res: Response) => {
+export const getUsers = async (req: Request, res: Response) => {
   try {
     const { 
       page = 1, 
@@ -209,7 +199,7 @@ export const getUsers = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const getUserDetails = async (req: AuthRequest, res: Response) => {
+export const getUserDetails = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
@@ -283,7 +273,7 @@ export const getUserDetails = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const updateUserStatus = async (req: AuthRequest, res: Response) => {
+export const updateUserStatus = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { 
@@ -341,7 +331,7 @@ export const updateUserStatus = async (req: AuthRequest, res: Response) => {
 };
 
 // Vendor Management
-export const getVendors = async (req: AuthRequest, res: Response) => {
+export const getVendors = async (req: Request, res: Response) => {
   try {
     const { page = 1, limit = 20, status, performance } = req.query;
 
@@ -407,7 +397,7 @@ export const getVendors = async (req: AuthRequest, res: Response) => {
 };
 
 // Commission Management
-export const getCommissionSettings = async (req: AuthRequest, res: Response) => {
+export const getCommissionSettings = async (req: Request, res: Response) => {
   try {
     const schemes = await prisma.revenueShareScheme.findMany({
       where: { isActive: true },
@@ -421,7 +411,7 @@ export const getCommissionSettings = async (req: AuthRequest, res: Response) => 
   }
 };
 
-export const updateCommissionScheme = async (req: AuthRequest, res: Response) => {
+export const updateCommissionScheme = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const {
@@ -463,7 +453,7 @@ export const updateCommissionScheme = async (req: AuthRequest, res: Response) =>
   }
 };
 
-export const createCommissionScheme = async (req: AuthRequest, res: Response) => {
+export const createCommissionScheme = async (req: Request, res: Response) => {
   try {
     const {
       name,
@@ -503,7 +493,7 @@ export const createCommissionScheme = async (req: AuthRequest, res: Response) =>
 };
 
 // Refund Management
-export const getRefunds = async (req: AuthRequest, res: Response) => {
+export const getRefunds = async (req: Request, res: Response) => {
   try {
     const { page = 1, limit = 20, status, priority } = req.query;
 
@@ -551,7 +541,7 @@ export const getRefunds = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const processRefund = async (req: AuthRequest, res: Response) => {
+export const processRefund = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { status, adminNotes, refundAmount } = req.body;
@@ -633,7 +623,7 @@ export const processRefund = async (req: AuthRequest, res: Response) => {
 };
 
 // Platform Analytics
-export const getPlatformAnalytics = async (req: AuthRequest, res: Response) => {
+export const getPlatformAnalytics = async (req: Request, res: Response) => {
   try {
     const { period = '30d' } = req.query;
 
@@ -681,7 +671,7 @@ export const getPlatformAnalytics = async (req: AuthRequest, res: Response) => {
 };
 
 // Content Moderation
-export const getModerationQueue = async (req: AuthRequest, res: Response) => {
+export const getModerationQueue = async (req: Request, res: Response) => {
   try {
     const { page = 1, limit = 20, priority, type } = req.query;
 
@@ -734,7 +724,7 @@ export const getModerationQueue = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const moderateContent = async (req: AuthRequest, res: Response) => {
+export const moderateContent = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { decision, reason, action } = req.body;
@@ -817,7 +807,7 @@ async function executeContentAction(
 }
 
 // System Settings
-export const getSystemSettings = async (req: AuthRequest, res: Response) => {
+export const getSystemSettings = async (req: Request, res: Response) => {
   try {
     // This would typically come from a settings table
     // For now, return hardcoded settings that can be updated
@@ -848,7 +838,7 @@ export const getSystemSettings = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export const updateSystemSettings = async (req: AuthRequest, res: Response) => {
+export const updateSystemSettings = async (req: Request, res: Response) => {
   try {
     const settings = req.body;
     const adminId = req.user?.id;
@@ -874,21 +864,21 @@ export const updateSystemSettings = async (req: AuthRequest, res: Response) => {
 // Export legacy class methods for backward compatibility
 export class AdminController {
   async createRevenueShareScheme(req: Request, res: Response) {
-    return createCommissionScheme(req as AuthRequest, res);
+    return createCommissionScheme(req as any, res);
   }
 
   async getRevenueShareSchemes(req: Request, res: Response) {
-    return getCommissionSettings(req as AuthRequest, res);
+    return getCommissionSettings(req as any, res);
   }
 
   async updateRevenueShareScheme(req: Request, res: Response) {
-    return updateCommissionScheme(req as AuthRequest, res);
+    return updateCommissionScheme(req as any, res);
   }
 
   async deleteRevenueShareScheme(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const adminId = (req as AuthRequest).user?.id;
+      const adminId = (req as any).user?.id;
 
       // Check if scheme is in use - revenue share schemes don't have direct payment relations
       // Just proceed with deletion as the schema doesn't have this relation
@@ -927,7 +917,7 @@ export class AdminController {
   async createTaxRule(req: Request, res: Response) {
     try {
       const data = taxRuleSchema.parse(req.body);
-      const adminId = (req as AuthRequest).user?.id;
+      const adminId = (req as any).user?.id;
       
       const taxRule = await prisma.taxRule.create({ 
         data: {
@@ -1006,7 +996,7 @@ export class AdminController {
     try {
       const { id } = req.params;
       const data = taxRuleSchema.partial().parse(req.body);
-      const adminId = (req as AuthRequest).user?.id;
+      const adminId = (req as any).user?.id;
 
       const updateData: any = {};
       if (data.name) updateData.name = data.name;
@@ -1042,7 +1032,7 @@ export class AdminController {
   async deleteTaxRule(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const adminId = (req as AuthRequest).user?.id;
+      const adminId = (req as any).user?.id;
 
       // Check if tax rule is in use - no direct relation in schema
       // Just proceed with deletion as the schema doesn't have this relation
@@ -1273,7 +1263,7 @@ export class AdminController {
   async processPayouts(req: Request, res: Response) {
     try {
       const { payoutIds, action = 'approve' } = req.body;
-      const adminId = (req as AuthRequest).user?.id;
+      const adminId = (req as any).user?.id;
 
       if (!Array.isArray(payoutIds) || payoutIds.length === 0) {
         return res.status(400).json({ 
@@ -1416,7 +1406,7 @@ export class AdminController {
   async updatePaymentConfig(req: Request, res: Response) {
     try {
       const config = req.body;
-      const adminId = (req as AuthRequest).user?.id;
+      const adminId = (req as any).user?.id;
 
       // Validate the configuration
       const configSchema = z.object({
@@ -1466,6 +1456,46 @@ export class AdminController {
       res.status(500).json({ 
         success: false, 
         error: error instanceof Error ? error.message : 'Failed to update payment configuration' 
+      });
+    }
+  }
+
+  // Get platform overview stats for dashboard
+  async getOverview(req: Request, res: Response) {
+    try {
+      // Basic counts
+      const totalUsers = await prisma.user.count({ where: { isDeleted: false } });
+      const totalOrders = await prisma.order.count();
+      const activeListings = await prisma.product.count({ where: { status: 'active' } });
+      const pendingVerifications = await prisma.user.count({ where: { role: 'seller', emailVerified: false } });
+      
+      // Revenue aggregation
+      const revenueStats = await prisma.payment.aggregate({
+        where: { status: 'completed' },
+        _sum: {
+          platformCut: true,
+        }
+      });
+
+      const totalRevenue = revenueStats._sum?.platformCut ?? 0;
+
+      res.json({
+        success: true,
+        data: {
+          totalUsers,
+          totalOrders,
+          totalRevenue,
+          activeListings,
+          pendingVerifications,
+          reportedIssues: 0
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching overview:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch overview',
+        message: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }

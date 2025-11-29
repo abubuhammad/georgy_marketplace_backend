@@ -1,7 +1,6 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { authenticateToken } from '../middleware/auth';
-import { Request } from 'express';
-import '../types'; // Import type definitions
+import '../types';
 import { notificationService } from '../services/notificationService';
 import { validateRequest } from '../middleware/validateRequest';
 import Joi from 'joi';
@@ -33,7 +32,7 @@ const updatePreferencesSchema = Joi.object({
 });
 
 // Get user notifications
-router.get('/', authenticateToken, async (req: Request, res) => {
+router.get('/', authenticateToken, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const limit = parseInt(req.query.limit as string) || 20;
@@ -60,7 +59,7 @@ router.get('/', authenticateToken, async (req: Request, res) => {
 });
 
 // Get notification preferences
-router.get('/preferences', authenticateToken, async (req: Request, res) => {
+router.get('/preferences', authenticateToken, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const preferences = await notificationService.getUserPreferences(userId);
@@ -82,7 +81,7 @@ router.get('/preferences', authenticateToken, async (req: Request, res) => {
 router.put('/preferences', 
   authenticateToken, 
   validateRequest(updatePreferencesSchema), 
-  async (req: Request, res) => {
+  async (req: Request, res: Response) => {
     try {
       const userId = req.user!.id;
       const preferences = await notificationService.updateUserPreferences(userId, req.body);
@@ -103,7 +102,7 @@ router.put('/preferences',
 );
 
 // Mark notification as read
-router.patch('/:notificationId/read', authenticateToken, async (req: Request, res) => {
+router.patch('/:notificationId/read', authenticateToken, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { notificationId } = req.params;
@@ -124,7 +123,7 @@ router.patch('/:notificationId/read', authenticateToken, async (req: Request, re
 });
 
 // Mark all notifications as read
-router.patch('/read-all', authenticateToken, async (req: Request, res) => {
+router.patch('/read-all', authenticateToken, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     await notificationService.markAllAsRead(userId);
@@ -143,7 +142,7 @@ router.patch('/read-all', authenticateToken, async (req: Request, res) => {
 });
 
 // Delete notification
-router.delete('/:notificationId', authenticateToken, async (req: Request, res) => {
+router.delete('/:notificationId', authenticateToken, async (req: Request, res: Response) => {
   try {
     const userId = req.user!.id;
     const { notificationId } = req.params;
@@ -167,7 +166,7 @@ router.delete('/:notificationId', authenticateToken, async (req: Request, res) =
 router.post('/', 
   authenticateToken, 
   validateRequest(createNotificationSchema), 
-  async (req: Request, res) => {
+  async (req: Request, res: Response) => {
     try {
       // Check if user is admin
       if (req.user!.role !== 'admin') {
@@ -195,7 +194,7 @@ router.post('/',
 );
 
 // Send bulk notifications (admin only)
-router.post('/bulk', authenticateToken, async (req: Request, res) => {
+router.post('/bulk', authenticateToken, async (req: Request, res: Response) => {
   try {
     // Check if user is admin
     if (req.user!.role !== 'admin') {
@@ -236,7 +235,7 @@ router.post('/bulk', authenticateToken, async (req: Request, res) => {
 });
 
 // Get notification statistics (admin only)
-router.get('/stats', authenticateToken, async (req: Request, res) => {
+router.get('/stats', authenticateToken, async (req: Request, res: Response) => {
   try {
     // Check if user is admin
     if (req.user!.role !== 'admin') {

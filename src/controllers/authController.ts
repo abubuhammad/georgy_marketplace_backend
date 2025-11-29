@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { AuthRequest } from '../middleware/auth';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
 import { config } from '../config/config';
@@ -119,7 +120,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 });
 
 // Get current user profile
-export const getProfile = asyncHandler(async (req: Request, res: Response) => {
+export const getProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
   const user = await prisma.user.findUnique({
     where: { id: req.user!.id },
     select: {
@@ -146,7 +147,7 @@ export const getProfile = asyncHandler(async (req: Request, res: Response) => {
 });
 
 // Update user profile
-export const updateProfile = asyncHandler(async (req: Request, res: Response) => {
+export const updateProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { firstName, lastName, avatar } = req.body;
 
   const user = await prisma.user.update({
@@ -178,7 +179,7 @@ export const updateProfile = asyncHandler(async (req: Request, res: Response) =>
 });
 
 // Change password
-export const changePassword = asyncHandler(async (req: Request, res: Response) => {
+export const changePassword = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { currentPassword, newPassword } = req.body;
 
   // Get current user with password

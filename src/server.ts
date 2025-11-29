@@ -1,3 +1,4 @@
+/// <reference path="./types/express-augment.d.ts" />
 import express from 'express';
 import './types'; // Ensure type definitions are loaded
 import { createServer } from 'http';
@@ -20,6 +21,7 @@ import deliveryAnalyticsRoutes from './routes/deliveryAnalytics';
 import { adminRoutes } from './routes/adminRoutes';
 import { notificationRoutes } from './routes/notifications';
 import { chatRoutes } from './routes/chat';
+import sellerRoutes from './routes/seller';
 import { legalRoutes } from './routes/legal';
 import { safetyRoutes } from './routes/safety';
 import { disputeRoutes } from './routes/disputes';
@@ -84,6 +86,7 @@ app.use('/api/delivery-analytics', deliveryAnalyticsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/seller', sellerRoutes);
 app.use('/api/legal', legalRoutes);
 app.use('/api/safety', safetyRoutes);
 app.use('/api/disputes', disputeRoutes);
@@ -151,8 +154,14 @@ app.use(errorHandler);
 
 const PORT = config.port || 5000;
 
-// Initialize Socket.io service
-const socketService = initializeSocketService(server);
+// Initialize Socket.io service (temporarily disabled for debugging)
+let socketService: any = null;
+// try {
+//   socketService = initializeSocketService(server);
+//   console.log('🚀 Socket.io service initialized');
+// } catch (error) {
+//   console.error('⚠️  Error initializing Socket.io service:', error);
+// }
 
 server.listen(PORT, () => {
   console.log(`🚀 Georgy Backend API server running on port ${PORT}`);
@@ -160,6 +169,37 @@ server.listen(PORT, () => {
   console.log(`🌐 API Base URL: http://localhost:${PORT}/api`);
   console.log(`💊 Health Check: http://localhost:${PORT}/health`);
   console.log(`🔌 WebSocket server running on ws://localhost:${PORT}`);
+  console.log('✅ Server initialization complete - waiting for requests...');
+  
+  // Keep the process alive
+  if (config.nodeEnv === 'development') {
+    console.log('📝 Press Ctrl+C to stop the server');
+  }
+});
+
+// Keep process alive indefinitely
+setInterval(() => {
+  // Keep the event loop running
+}, 10000);
+
+// Unhandled promise rejection handler
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit, log and continue
+});
+
+// Uncaught exception handler
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  // Don't exit immediately, give time to log
+  setTimeout(() => {
+    process.exit(1);
+  }, 1000);
+});
+
+// Handle server errors
+server.on('error', (error) => {
+  console.error('❌ Server error:', error);
 });
 
 export default app;

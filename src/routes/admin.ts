@@ -27,6 +27,9 @@ const router = Router();
 router.use(authMiddleware);
 router.use(roleAuth(['admin']));
 
+// Platform Overview
+router.get('/overview', adminController.getOverview.bind(adminController));
+
 // Dashboard & Analytics
 router.get('/dashboard/stats', getDashboardStats as any);
 router.get('/analytics/platform', getPlatformAnalytics as any);
