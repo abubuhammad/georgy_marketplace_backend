@@ -133,9 +133,23 @@ export const getProducts = async (req: Request, res: Response) => {
       }
     }
 
+    // First, get IDs of valid sellers to filter products
+    const validSellerIds = await prisma.seller.findMany({
+      select: { id: true }
+    });
+    const validSellerIdSet = new Set(validSellerIds.map(s => s.id));
+
+    // Only fetch products that have a valid seller
+    const productWhereClause = {
+      ...whereClause,
+      sellerId: {
+        in: Array.from(validSellerIdSet)
+      }
+    };
+
     const [products, total] = await Promise.all([
       prisma.product.findMany({
-        where: whereClause,
+        where: productWhereClause,
         orderBy,
         skip,
         take: Number(limit),
@@ -154,7 +168,7 @@ export const getProducts = async (req: Request, res: Response) => {
           }
         }
       }),
-      prisma.product.count({ where: whereClause })
+      prisma.product.count({ where: productWhereClause })
     ]);
 
     const pages = Math.ceil(total / Number(limit));
@@ -181,6 +195,31 @@ export const getProductById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
+    // First check if the product's seller exists
+    const productBasic = await prisma.product.findUnique({
+      where: { id },
+      select: { sellerId: true }
+    });
+
+    if (!productBasic) {
+      return res.status(404).json({
+        success: false,
+        error: 'Product not found'
+      });
+    }
+
+    // Check if seller exists
+    const sellerExists = await prisma.seller.findUnique({
+      where: { id: productBasic.sellerId }
+    });
+
+    if (!sellerExists) {
+      return res.status(404).json({
+        success: false,
+        error: 'Product not available (seller not found)'
+      });
+    }
+
     const product = await prisma.product.findUnique({
       where: { id },
       include: {
@@ -198,13 +237,6 @@ export const getProductById = async (req: Request, res: Response) => {
         }
       }
     });
-
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        error: 'Product not found'
-      });
-    }
 
     res.json({
       success: true,
