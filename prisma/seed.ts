@@ -79,6 +79,21 @@ async function main() {
     },
   });
 
+  // Create Seller profile for the seller user
+  const seller = await prisma.seller.upsert({
+    where: { userId: sellerUser.id },
+    update: {},
+    create: {
+      userId: sellerUser.id,
+      businessName: 'Test Seller Store',
+      businessDescription: 'A demo seller store for testing',
+      businessAddress: JSON.stringify({ line1: '123 Business Street', city: 'Lagos', state: 'LA', country: 'NG' }),
+      businessPhone: '+234-222-222-2222',
+      businessEmail: 'seller@test.com',
+      isVerified: true,
+    },
+  });
+
   // Create a sample category, product, inventory, address, coupon and cart
 
   // Upsert Category
@@ -107,7 +122,7 @@ async function main() {
       originalPrice: 249.99,
       categoryId: category.id,
       images: JSON.stringify(['https://placehold.co/600x400.png']),
-      sellerId: sellerUser.id,
+      sellerId: seller.id,  // Use Seller.id, not User.id
       featured: true,
       status: 'active',
     },
@@ -243,10 +258,10 @@ async function main() {
     });
   }
 
-  // Create additional sellers
-  const sellers = [sellerUser];
+  // Create additional sellers (both User and Seller profiles)
+  const sellerProfiles = [seller];  // Start with the first seller profile we created
   for (let i = 2; i <= 3; i++) {
-    const newSeller = await prisma.user.upsert({
+    const newSellerUser = await prisma.user.upsert({
       where: { email: `seller${i}@test.com` },
       update: {},
       create: {
@@ -259,7 +274,22 @@ async function main() {
         emailVerified: true,
       },
     });
-    sellers.push(newSeller);
+    
+    // Create Seller profile for each seller user
+    const newSellerProfile = await prisma.seller.upsert({
+      where: { userId: newSellerUser.id },
+      update: {},
+      create: {
+        userId: newSellerUser.id,
+        businessName: `Seller ${i} Store`,
+        businessDescription: `Demo store for Seller ${i}`,
+        businessAddress: JSON.stringify({ line1: `${i}00 Business Ave`, city: 'Lagos', state: 'LA', country: 'NG' }),
+        businessPhone: `+234-${i}${i}${i}-${i}${i}${i}-${i}${i}${i}${i}`,
+        businessEmail: `seller${i}@test.com`,
+        isVerified: true,
+      },
+    });
+    sellerProfiles.push(newSellerProfile);
   }
 
   // Create more products for top sellers analytics
@@ -275,7 +305,7 @@ async function main() {
   ];
 
   for (let i = 0; i < productNames.length; i++) {
-    const seller = sellers[i % sellers.length];
+    const sellerProfile = sellerProfiles[i % sellerProfiles.length];
     const prodName = productNames[i];
 
     await prisma.product.create({
@@ -287,7 +317,7 @@ async function main() {
         originalPrice: Math.floor(Math.random() * 60000) + 10000,
         categoryId: category.id,
         images: JSON.stringify(['https://placehold.co/600x400.png']),
-        sellerId: seller.id,
+        sellerId: sellerProfile.id,  // Use Seller.id, not User.id
         featured: false,
         status: 'active',
       },
