@@ -5,8 +5,8 @@ services:
     region: ohio
     plan: free
     
-    # Build configuration
-    buildCommand: npm run build
+    # Build configuration - includes seeding the database
+    buildCommand: npm run build && npm run db:seed
     startCommand: node dist/server.js
     
     # Environment variables
