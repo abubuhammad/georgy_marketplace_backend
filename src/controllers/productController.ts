@@ -58,6 +58,23 @@ interface CreateProductRequest {
   color?: string;
   material?: string;
   
+  // Vehicle specific fields
+  vehicleType?: string;
+  make?: string;
+  yearOfManufacture?: number;
+  yearOfRegistration?: number;
+  mileage?: number;
+  engineCapacity?: string;
+  transmissionType?: string;
+  fuelType?: string;
+  exteriorColor?: string;
+  interiorFeatures?: string;
+  bodyType?: string;
+  numberOfOwners?: number;
+  registrationStatus?: string;
+  vehicleId?: string;
+  location?: string;
+  
   // Category field (can be subcategory for some categories)
   category?: string;
 }
@@ -321,6 +338,25 @@ export const createProduct = async (req: Request, res: Response) => {
     // Prepare product data for database
     const productTitle = productData.title || productData.productName || 'Untitled Product';
     
+    // Parse location if provided as combined string (e.g., "Lagos, Lagos State")
+    let locationCity = productData.locationCity;
+    let locationState = productData.locationState;
+    let locationStr = productData.location;
+    
+    if (!locationCity && !locationState && productData.location) {
+      // Parse combined location string
+      const parts = productData.location.split(',').map((p: string) => p.trim());
+      if (parts.length >= 2) {
+        locationCity = parts[0];
+        locationState = parts[1];
+      } else {
+        locationCity = productData.location;
+      }
+      locationStr = productData.location;
+    } else if (locationCity && locationState) {
+      locationStr = `${locationCity}, ${locationState}`;
+    }
+    
     // Create the product with dynamic fields stored as JSON
     const newProduct = await prisma.product.create({
       data: {
@@ -338,12 +374,10 @@ export const createProduct = async (req: Request, res: Response) => {
         isNegotiable: productData.isNegotiable || false,
         
         // Location fields
-        locationCity: productData.locationCity,
-        locationState: productData.locationState,
+        locationCity: locationCity,
+        locationState: locationState,
         locationCountry: productData.locationCountry || 'Nigeria',
-        location: productData.locationCity && productData.locationState 
-          ? `${productData.locationCity}, ${productData.locationState}` 
-          : undefined,
+        location: locationStr,
         
         // Store all category-specific fields as JSON in dynamicFields
         dynamicFields: JSON.stringify({
@@ -383,6 +417,24 @@ export const createProduct = async (req: Request, res: Response) => {
           size: productData.size,
           color: productData.color,
           material: productData.material,
+          
+          // Vehicle fields
+          vehicleType: productData.vehicleType,
+          make: productData.make,
+          model: productData.model,
+          yearOfManufacture: productData.yearOfManufacture,
+          yearOfRegistration: productData.yearOfRegistration,
+          mileage: productData.mileage,
+          engineCapacity: productData.engineCapacity,
+          transmissionType: productData.transmissionType,
+          fuelType: productData.fuelType,
+          exteriorColor: productData.exteriorColor,
+          interiorFeatures: productData.interiorFeatures,
+          bodyType: productData.bodyType,
+          numberOfOwners: productData.numberOfOwners,
+          registrationStatus: productData.registrationStatus,
+          vehicleId: productData.vehicleId,
+          location: productData.location,
           
           // Additional category field
           category: productData.category
