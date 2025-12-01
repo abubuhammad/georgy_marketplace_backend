@@ -6,7 +6,8 @@ import {
   createProduct, 
   updateProduct, 
   deleteProduct, 
-  getSellerProducts 
+  getSellerProducts,
+  getProductsDebug
 } from '../controllers/productController';
 import { body } from 'express-validator';
 
@@ -20,6 +21,7 @@ const validateProduct = [
 ];
 
 // Public routes
+router.get('/debug', getProductsDebug); // Debug endpoint - must be before /:id
 router.get('/', optionalAuth, getProducts);
 router.get('/:id', optionalAuth, getProductById);
 

@@ -62,6 +62,45 @@ interface CreateProductRequest {
   category?: string;
 }
 
+// Debug endpoint to check database status
+export const getProductsDebug = async (req: Request, res: Response) => {
+  try {
+    const productCount = await prisma.product.count();
+    const sellerCount = await prisma.seller.count();
+    const userCount = await prisma.user.count();
+    
+    // Get sample products without any filters
+    const sampleProducts = await prisma.product.findMany({
+      take: 5,
+      select: {
+        id: true,
+        title: true,
+        price: true,
+        isActive: true,
+        sellerId: true,
+        createdAt: true
+      }
+    });
+
+    res.json({
+      success: true,
+      debug: {
+        productCount,
+        sellerCount,
+        userCount,
+        sampleProducts
+      }
+    });
+  } catch (error) {
+    console.error('Debug error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Debug query failed',
+      details: (error as Error).message
+    });
+  }
+};
+
 // Get all products with optional filters
 export const getProducts = async (req: Request, res: Response) => {
   try {
@@ -139,23 +178,13 @@ export const getProducts = async (req: Request, res: Response) => {
       }
     }
 
-    // First, get IDs of valid sellers to filter products
-    const validSellerIds = await prisma.seller.findMany({
-      select: { id: true }
-    });
-    const validSellerIdSet = new Set(validSellerIds.map(s => s.id));
+    // Log for debugging
+    console.log('🔍 Product query whereClause:', JSON.stringify(whereClause));
 
-    // Only fetch products that have a valid seller
-    const productWhereClause = {
-      ...whereClause,
-      sellerId: {
-        in: Array.from(validSellerIdSet)
-      }
-    };
-
+    // Get all products first (without seller filter for now to debug)
     const [products, total] = await Promise.all([
       prisma.product.findMany({
-        where: productWhereClause,
+        where: whereClause,
         orderBy,
         skip,
         take: Number(limit),
@@ -174,8 +203,10 @@ export const getProducts = async (req: Request, res: Response) => {
           }
         }
       }),
-      prisma.product.count({ where: productWhereClause })
+      prisma.product.count({ where: whereClause })
     ]);
+
+    console.log(`📦 Found ${total} products in database`);
 
     const pages = Math.ceil(total / Number(limit));
 
