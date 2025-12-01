@@ -1,27 +1,9 @@
 import { Request, Response } from 'express';
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
+import { cloudinaryService } from '../services/cloudinaryService';
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(process.cwd(), 'uploads');
-    
-    // Create uploads directory if it doesn't exist
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    // Generate unique filename
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-  }
-});
+// Configure multer for memory storage (for Cloudinary uploads)
+const storage = multer.memoryStorage();
 
 // File filter to allow only images
 const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
@@ -41,7 +23,7 @@ export const upload = multer({
   }
 });
 
-// Upload single image
+// Upload single image to Cloudinary
 export const uploadSingleImage = async (req: Request, res: Response) => {
   try {
     if (!req.file) {
@@ -51,15 +33,21 @@ export const uploadSingleImage = async (req: Request, res: Response) => {
       });
     }
 
-    const imageUrl = `/uploads/${req.file.filename}`;
+    // Get folder from query or default to 'products'
+    const folder = (req.query.folder as string) || 'products';
+    
+    // Upload to Cloudinary
+    const result = await cloudinaryService.uploadBuffer(req.file.buffer, folder);
 
     res.json({
       success: true,
       data: {
-        filename: req.file.filename,
-        originalName: req.file.originalname,
-        size: req.file.size,
-        imageUrl: imageUrl
+        publicId: result.public_id,
+        url: result.secure_url,
+        width: result.width,
+        height: result.height,
+        format: result.format,
+        size: result.bytes
       }
     });
   } catch (error) {
@@ -71,7 +59,7 @@ export const uploadSingleImage = async (req: Request, res: Response) => {
   }
 };
 
-// Upload multiple images
+// Upload multiple images to Cloudinary
 export const uploadMultipleImages = async (req: Request, res: Response) => {
   try {
     if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
@@ -82,11 +70,22 @@ export const uploadMultipleImages = async (req: Request, res: Response) => {
     }
 
     const files = req.files as Express.Multer.File[];
-    const uploadedImages = files.map(file => ({
-      filename: file.filename,
-      originalName: file.originalname,
-      size: file.size,
-      imageUrl: `/uploads/${file.filename}`
+    const folder = (req.query.folder as string) || 'products';
+    
+    // Upload all files to Cloudinary in parallel
+    const uploadPromises = files.map(file => 
+      cloudinaryService.uploadBuffer(file.buffer, folder)
+    );
+    
+    const results = await Promise.all(uploadPromises);
+    
+    const uploadedImages = results.map(result => ({
+      publicId: result.public_id,
+      url: result.secure_url,
+      width: result.width,
+      height: result.height,
+      format: result.format,
+      size: result.bytes
     }));
 
     res.json({
@@ -102,27 +101,79 @@ export const uploadMultipleImages = async (req: Request, res: Response) => {
   }
 };
 
-// Delete uploaded image
-export const deleteImage = async (req: Request, res: Response) => {
+// Upload images from base64 strings (for frontend that sends base64)
+export const uploadBase64Images = async (req: Request, res: Response) => {
   try {
-    const { filename } = req.params;
-    const filePath = path.join(process.cwd(), 'uploads', filename);
-
-    // Check if file exists
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({
+    const { images, folder = 'products' } = req.body;
+    
+    if (!images || !Array.isArray(images) || images.length === 0) {
+      return res.status(400).json({
         success: false,
-        error: 'File not found'
+        error: 'No images provided'
       });
     }
 
-    // Delete the file
-    fs.unlinkSync(filePath);
+    if (images.length > 10) {
+      return res.status(400).json({
+        success: false,
+        error: 'Maximum 10 images allowed per upload'
+      });
+    }
+
+    // Upload all base64 images to Cloudinary
+    const uploadPromises = images.map((base64: string) => 
+      cloudinaryService.uploadBase64(base64, folder)
+    );
+    
+    const results = await Promise.all(uploadPromises);
+    
+    const uploadedImages = results.map(result => ({
+      publicId: result.public_id,
+      url: result.secure_url,
+      width: result.width,
+      height: result.height,
+      format: result.format,
+      size: result.bytes
+    }));
 
     res.json({
       success: true,
-      message: 'Image deleted successfully'
+      data: uploadedImages
     });
+  } catch (error) {
+    console.error('Error uploading base64 images:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to upload images'
+    });
+  }
+};
+
+// Delete image from Cloudinary
+export const deleteImage = async (req: Request, res: Response) => {
+  try {
+    const { publicId } = req.params;
+    
+    if (!publicId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Public ID is required'
+      });
+    }
+
+    const success = await cloudinaryService.deleteImage(publicId);
+    
+    if (success) {
+      res.json({
+        success: true,
+        message: 'Image deleted successfully'
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        error: 'Image not found or already deleted'
+      });
+    }
   } catch (error) {
     console.error('Error deleting image:', error);
     res.status(500).json({
