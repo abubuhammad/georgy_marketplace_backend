@@ -1,12 +1,21 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { config } from '../config/config';
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: config.cloudinary.cloudName,
-  api_key: config.cloudinary.apiKey,
-  api_secret: config.cloudinary.apiSecret
-});
+// Configure Cloudinary - supports both URL and individual credentials
+if (process.env.CLOUDINARY_URL) {
+  // CLOUDINARY_URL format: cloudinary://api_key:api_secret@cloud_name
+  console.log('☁️ Configuring Cloudinary from CLOUDINARY_URL');
+} else {
+  // Individual credentials
+  cloudinary.config({
+    cloud_name: config.cloudinary.cloudName,
+    api_key: config.cloudinary.apiKey,
+    api_secret: config.cloudinary.apiSecret
+  });
+  console.log('☁️ Configuring Cloudinary from individual credentials');
+}
+
+console.log('☁️ Cloudinary cloud name:', cloudinary.config().cloud_name || 'Not configured');
 
 export interface CloudinaryUploadResult {
   public_id: string;
