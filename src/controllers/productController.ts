@@ -311,6 +311,9 @@ export const createProduct = async (req: Request, res: Response) => {
     }
 
     const productData: CreateProductRequest = req.body;
+    
+    // Log incoming data for debugging
+    console.log('📦 Creating product with data:', JSON.stringify(productData, null, 2));
 
     // Find or verify seller profile
     let seller = await prisma.seller.findUnique({
@@ -357,14 +360,20 @@ export const createProduct = async (req: Request, res: Response) => {
       locationStr = `${locationCity}, ${locationState}`;
     }
     
+    // Ensure numeric fields are properly converted
+    const price = typeof productData.price === 'string' ? parseFloat(productData.price) : productData.price;
+    const originalPrice = productData.originalPrice 
+      ? (typeof productData.originalPrice === 'string' ? parseFloat(productData.originalPrice) : productData.originalPrice)
+      : undefined;
+    
     // Create the product with dynamic fields stored as JSON
     const newProduct = await prisma.product.create({
       data: {
         title: productTitle,
         productName: productData.productName,
-        description: productData.description,
-        price: productData.price,
-        originalPrice: productData.originalPrice,
+        description: productData.description || '',
+        price: price,
+        originalPrice: originalPrice,
         categoryId: productData.categoryId,
         subcategoryId: productData.subcategoryId,
         brand: productData.brand,
@@ -463,11 +472,12 @@ export const createProduct = async (req: Request, res: Response) => {
       message: 'Product created successfully',
       data: newProduct
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating product:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to create product'
+      error: 'Failed to create product',
+      details: error.message || String(error)
     });
   }
 };
