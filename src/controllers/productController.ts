@@ -213,9 +213,46 @@ export const getProducts = async (req: Request, res: Response) => {
 
     const pages = Math.ceil(total / Number(limit));
 
+    // Parse images and dynamicFields for each product
+    const formattedProducts = products.map(product => {
+      let parsedImages: string[] = [];
+      let stockQuantity = 0;
+      
+      // Parse images from JSON string to array
+      try {
+        if (product.images) {
+          parsedImages = typeof product.images === 'string' 
+            ? JSON.parse(product.images) 
+            : product.images;
+        }
+      } catch (e) {
+        console.error('Error parsing images for product', product.id, e);
+        parsedImages = [];
+      }
+      
+      // Extract stockQuantity from dynamicFields
+      try {
+        if (product.dynamicFields) {
+          const dynamicData = typeof product.dynamicFields === 'string'
+            ? JSON.parse(product.dynamicFields)
+            : product.dynamicFields;
+          stockQuantity = parseInt(dynamicData.stockQuantity) || 0;
+        }
+      } catch (e) {
+        console.error('Error parsing dynamicFields for product', product.id, e);
+      }
+      
+      return {
+        ...product,
+        images: parsedImages,
+        stockQuantity,
+        inStock: stockQuantity > 0
+      };
+    });
+
     res.json({
       success: true,
-      data: products,
+      data: formattedProducts,
       total,
       page: Number(page),
       limit: Number(limit),
@@ -278,9 +315,46 @@ export const getProductById = async (req: Request, res: Response) => {
       }
     });
 
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        error: 'Product not found'
+      });
+    }
+
+    // Parse images and dynamicFields
+    let parsedImages: string[] = [];
+    let stockQuantity = 0;
+    
+    try {
+      if (product.images) {
+        parsedImages = typeof product.images === 'string' 
+          ? JSON.parse(product.images) 
+          : product.images;
+      }
+    } catch (e) {
+      parsedImages = [];
+    }
+    
+    try {
+      if (product.dynamicFields) {
+        const dynamicData = typeof product.dynamicFields === 'string'
+          ? JSON.parse(product.dynamicFields)
+          : product.dynamicFields;
+        stockQuantity = parseInt(dynamicData.stockQuantity) || 0;
+      }
+    } catch (e) {
+      // ignore
+    }
+
     res.json({
       success: true,
-      data: product
+      data: {
+        ...product,
+        images: parsedImages,
+        stockQuantity,
+        inStock: stockQuantity > 0
+      }
     });
   } catch (error) {
     console.error('Error fetching product:', error);
@@ -381,6 +455,8 @@ export const createProduct = async (req: Request, res: Response) => {
         sellerId: seller.id,
         images: JSON.stringify(productData.images || []),
         isNegotiable: productData.isNegotiable || false,
+        // Stock quantity from form (stored in dynamicFields but also track here for queries)
+        viewCount: 0,
         
         // Location fields
         locationCity: locationCity,
