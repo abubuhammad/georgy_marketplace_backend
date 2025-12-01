@@ -118,6 +118,19 @@ export const optionalAuth = async (
 // Export alias for backward compatibility
 export const authMiddleware = authenticateToken;
 
+// Admin-only middleware
+export const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
+  if (!(req as any).user) {
+    return next(createError('Authentication required', 401));
+  }
+
+  if ((req as any).user.role !== 'admin') {
+    return next(createError('Admin access required', 403));
+  }
+
+  next();
+};
+
 // Export AuthRequest interface
 export interface AuthRequest extends Request {
   user?: {

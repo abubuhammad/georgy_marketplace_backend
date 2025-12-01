@@ -27,6 +27,7 @@ import { safetyRoutes } from './routes/safety';
 import { disputeRoutes } from './routes/disputes';
 import { moderationRoutes } from './routes/moderation';
 import { uploadRoutes } from './routes/uploadRoutes';
+import { categoryRoutes } from './routes/categories';
 import { initializeSocketService } from './services/socketService';
 import path from 'path';
 
@@ -92,6 +93,7 @@ app.use('/api/safety', safetyRoutes);
 app.use('/api/disputes', disputeRoutes);
 app.use('/api/moderation', moderationRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // Health check endpoints
 app.get('/health', (req, res) => {

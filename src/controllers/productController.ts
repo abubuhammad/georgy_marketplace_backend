@@ -74,6 +74,7 @@ export const getProducts = async (req: Request, res: Response) => {
       condition,
       location,
       sortBy,
+      featured,
       page = 1,
       limit = 20
     } = req.query;
@@ -84,6 +85,11 @@ export const getProducts = async (req: Request, res: Response) => {
     const whereClause: any = {
       isActive: true
     };
+
+    // Filter for featured products
+    if (featured === 'true') {
+      whereClause.featured = true;
+    }
 
     if (search) {
       whereClause.OR = [
