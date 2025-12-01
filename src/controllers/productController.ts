@@ -181,27 +181,13 @@ export const getProducts = async (req: Request, res: Response) => {
     // Log for debugging
     console.log('🔍 Product query whereClause:', JSON.stringify(whereClause));
 
-    // Get all products first (without seller filter for now to debug)
+    // Get all products (seller include is optional - may be null if seller doesn't exist)
     const [products, total] = await Promise.all([
       prisma.product.findMany({
         where: whereClause,
         orderBy,
         skip,
         take: Number(limit),
-        include: {
-          seller: {
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  firstName: true,
-                  lastName: true,
-                  email: true
-                }
-              }
-            }
-          }
-        }
       }),
       prisma.product.count({ where: whereClause })
     ]);
