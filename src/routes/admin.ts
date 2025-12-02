@@ -18,7 +18,17 @@ import {
   getModerationQueue,
   moderateContent,
   getSystemSettings,
-  updateSystemSettings
+  updateSystemSettings,
+  // Seller Approval & Split Payment endpoints
+  getPendingSellers,
+  approveSeller,
+  rejectSeller,
+  suspendSeller,
+  getAllSellers,
+  getPlatformSettings,
+  updatePlatformSettings,
+  getBankList,
+  verifyBankAccount
 } from '../controllers/adminController';
 
 const router = Router();
@@ -66,5 +76,22 @@ router.put('/revenue-schemes/:id', adminController.updateRevenueShareScheme);
 router.post('/tax-rules', adminController.createTaxRule);
 router.get('/tax-rules', adminController.getTaxRules);
 router.get('/payouts/pending', adminController.getPendingPayouts);
+
+// ==================== SELLER APPROVAL & SPLIT PAYMENT ROUTES ====================
+
+// Seller Management
+router.get('/sellers', getAllSellers as any);
+router.get('/sellers/pending', getPendingSellers as any);
+router.post('/sellers/:sellerId/approve', approveSeller as any);
+router.post('/sellers/:sellerId/reject', rejectSeller as any);
+router.post('/sellers/:sellerId/suspend', suspendSeller as any);
+
+// Platform Settings (Commission Configuration)
+router.get('/platform-settings', getPlatformSettings as any);
+router.put('/platform-settings', updatePlatformSettings as any);
+
+// Bank Utilities
+router.get('/banks', getBankList as any);
+router.post('/verify-bank', verifyBankAccount as any);
 
 export { router as adminRoutes };

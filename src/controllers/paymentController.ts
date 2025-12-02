@@ -1,11 +1,13 @@
 import { Request, Response } from 'express';
+import { PrismaClient } from '@prisma/client';
 import { PaymentService } from '../services/paymentService';
 import { PaystackService } from '../services/paystack.service';
 import { asyncHandler } from '../middleware/errorHandler';
 import '../types';
 
-// Initialize Paystack service
+// Initialize Paystack service and Prisma
 const paystackService = new PaystackService();
+const prisma = new PrismaClient();
 
 // Define payment methods enum
 enum PaymentMethod {
@@ -17,7 +19,7 @@ enum PaymentMethod {
   bank = 'bank'
 }
 
-// Initialize payment with Paystack
+// Initialize payment with Paystack (supports split payments)
 export const initiatePayment = asyncHandler(async (req: Request, res: Response) => {
   const {
     orderId,
@@ -28,7 +30,9 @@ export const initiatePayment = asyncHandler(async (req: Request, res: Response) 
     method = 'card',
     description,
     escrow = false,
-    metadata
+    metadata,
+    sellerId, // For single seller orders
+    cartItems // For multi-seller orders: [{ sellerId, amount }]
   } = req.body;
 
   // Validate required fields
@@ -53,8 +57,81 @@ export const initiatePayment = asyncHandler(async (req: Request, res: Response) 
     // Amount in kobo (multiply by 100)
     const amountInKobo = Math.round(parseFloat(amount) * 100);
 
-    // Initialize with Paystack
-    const paystackResponse = await paystackService.initializePayment({
+    // Get platform settings for commission
+    let platformSettings = await prisma.platformSettings.findFirst({
+      where: { id: 'default' }
+    });
+    const platformFeePercent = platformSettings?.platformFeePercent ?? 10;
+
+    // Determine split payment configuration
+    let subaccountCode: string | undefined;
+    let splitCode: string | undefined;
+
+    // Single seller order - use subaccount for split
+    if (sellerId && !cartItems) {
+      const seller = await prisma.seller.findUnique({
+        where: { id: sellerId }
+      });
+
+      if (seller?.status === 'active' && seller.paystackSubaccountCode) {
+        subaccountCode = seller.paystackSubaccountCode;
+      }
+    }
+
+    // Multi-seller order - create dynamic split
+    if (cartItems && Array.isArray(cartItems) && cartItems.length > 1) {
+      // Group items by seller and calculate split
+      const sellerTotals: { [sellerId: string]: number } = {};
+      for (const item of cartItems) {
+        if (item.sellerId) {
+          sellerTotals[item.sellerId] = (sellerTotals[item.sellerId] || 0) + item.amount;
+        }
+      }
+
+      // Get sellers with subaccounts
+      const sellerIds = Object.keys(sellerTotals);
+      const sellers = await prisma.seller.findMany({
+        where: {
+          id: { in: sellerIds },
+          status: 'active',
+          paystackSubaccountCode: { not: null }
+        }
+      });
+
+      // If all sellers have subaccounts, create a split
+      if (sellers.length > 1) {
+        const subaccounts = sellers.map(seller => {
+          const sellerAmount = sellerTotals[seller.id] || 0;
+          const sellerShare = Math.round((sellerAmount / parseFloat(amount)) * 100);
+          return {
+            subaccount: seller.paystackSubaccountCode!,
+            share: sellerShare
+          };
+        });
+
+        try {
+          const splitResponse = await paystackService.createSplit({
+            name: `Order_${reference}`,
+            type: 'percentage',
+            currency: 'NGN',
+            subaccounts,
+            bearer_type: 'account' // Platform bears Paystack fees
+          });
+
+          if (splitResponse.status && splitResponse.data?.split_code) {
+            splitCode = splitResponse.data.split_code;
+          }
+        } catch (splitError) {
+          console.warn('Failed to create split, proceeding without split:', splitError);
+        }
+      } else if (sellers.length === 1) {
+        // Only one active seller with subaccount
+        subaccountCode = sellers[0].paystackSubaccountCode!;
+      }
+    }
+
+    // Initialize with Paystack (with or without split)
+    const paymentData: any = {
       amount: amountInKobo,
       email,
       reference,
@@ -63,6 +140,8 @@ export const initiatePayment = asyncHandler(async (req: Request, res: Response) 
         orderId,
         serviceRequestId,
         userId: req.user?.id,
+        sellerId,
+        platformFeePercent,
         custom_fields: [
           {
             display_name: 'Order ID',
@@ -72,7 +151,17 @@ export const initiatePayment = asyncHandler(async (req: Request, res: Response) 
         ],
         ...metadata
       }
-    });
+    };
+
+    // Add split payment parameters
+    if (splitCode) {
+      paymentData.split_code = splitCode;
+    } else if (subaccountCode) {
+      paymentData.subaccount = subaccountCode;
+      paymentData.bearer = 'account'; // Platform bears Paystack transaction fees
+    }
+
+    const paystackResponse = await paystackService.initializeSplitPayment(paymentData);
 
     if (!paystackResponse.status) {
       return res.status(400).json({
@@ -87,7 +176,8 @@ export const initiatePayment = asyncHandler(async (req: Request, res: Response) 
       data: {
         authorization_url: paystackResponse.data.authorization_url,
         access_code: paystackResponse.data.access_code,
-        reference: paystackResponse.data.reference
+        reference: paystackResponse.data.reference,
+        splitEnabled: !!(splitCode || subaccountCode)
       }
     });
 

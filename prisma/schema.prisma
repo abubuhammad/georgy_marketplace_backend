@@ -144,10 +144,32 @@ model Seller {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
+  // Split Payment Fields
+  status                  String   @default("pending") // pending, active, rejected, suspended
+  paystackSubaccountCode  String?  // Paystack subaccount code for split payments
+  bankAccountNumber       String?  // Seller's bank account number
+  bankCode                String?  // Bank code for Paystack
+  bankName                String?  // Bank name for display
+  approvedAt              DateTime?
+  approvedBy              String?  // Admin userId who approved
+
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   products Product[]
 
   @@map("sellers")
+}
+
+// Platform Settings for admin-configurable commission
+model PlatformSettings {
+  id                   String   @id @default("default") @map("_id")
+  platformFeePercent   Float    @default(10) // Default 10% platform commission
+  minPayoutAmount      Float    @default(1000) // Minimum payout amount in Naira
+  payoutFrequency      String   @default("weekly") // daily, weekly, monthly
+  paystackSplitCode    String?  // Pre-configured split code if using split groups
+  updatedAt            DateTime @updatedAt
+  updatedBy            String?  // Admin userId who last updated
+
+  @@map("platform_settings")
 }
 
 model Product {

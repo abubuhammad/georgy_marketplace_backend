@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import '../types';
+import { PaystackService } from '../services/paystack.service';
 
 const prisma = new PrismaClient();
 
@@ -1502,6 +1503,475 @@ export class AdminController {
 }
 
 export const adminController = new AdminController();
+
+// ==================== SELLER APPROVAL & SPLIT PAYMENT ENDPOINTS ====================
+
+const paystackService = new PaystackService();
+
+// Get pending sellers awaiting approval
+export const getPendingSellers = async (req: Request, res: Response) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const [sellers, total] = await Promise.all([
+      prisma.seller.findMany({
+        where: { status: 'pending' },
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+              phone: true,
+              createdAt: true
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: Number(limit)
+      }),
+      prisma.seller.count({ where: { status: 'pending' } })
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        sellers,
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total,
+          totalPages: Math.ceil(total / Number(limit))
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get pending sellers error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch pending sellers'
+    });
+  }
+};
+
+// Approve seller and create Paystack subaccount
+export const approveSeller = async (req: Request, res: Response) => {
+  try {
+    const { sellerId } = req.params;
+    const { bankCode, bankAccountNumber, bankName } = req.body;
+    const adminUserId = req.user?.id;
+
+    if (!bankCode || !bankAccountNumber) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bank code and account number are required for approval'
+      });
+    }
+
+    // Get seller with user info
+    const seller = await prisma.seller.findUnique({
+      where: { id: sellerId },
+      include: { user: true }
+    });
+
+    if (!seller) {
+      return res.status(404).json({
+        success: false,
+        error: 'Seller not found'
+      });
+    }
+
+    if (seller.status === 'active') {
+      return res.status(400).json({
+        success: false,
+        error: 'Seller is already approved'
+      });
+    }
+
+    // Get platform settings for commission percentage
+    let platformSettings = await prisma.platformSettings.findFirst({
+      where: { id: 'default' }
+    });
+
+    if (!platformSettings) {
+      // Create default settings if not exists
+      platformSettings = await prisma.platformSettings.create({
+        data: {
+          id: 'default',
+          platformFeePercent: 10,
+          minPayoutAmount: 1000,
+          payoutFrequency: 'weekly'
+        }
+      });
+    }
+
+    // Verify bank account with Paystack
+    let accountName = seller.businessName;
+    try {
+      const verification = await paystackService.verifyAccountNumber({
+        account_number: bankAccountNumber,
+        bank_code: bankCode
+      });
+      if (verification.status && verification.data?.account_name) {
+        accountName = verification.data.account_name;
+      }
+    } catch (verifyError) {
+      console.warn('Bank account verification failed, using business name:', verifyError);
+    }
+
+    // Create Paystack subaccount
+    let subaccountCode: string | null = null;
+    try {
+      const subaccountResponse = await paystackService.createSubaccount({
+        business_name: seller.businessName,
+        settlement_bank: bankCode,
+        account_number: bankAccountNumber,
+        percentage_charge: platformSettings.platformFeePercent,
+        primary_contact_email: seller.user.email,
+        primary_contact_phone: seller.businessPhone || seller.user.phone || undefined,
+        metadata: {
+          sellerId: seller.id,
+          userId: seller.userId
+        }
+      });
+
+      if (subaccountResponse.status && subaccountResponse.data?.subaccount_code) {
+        subaccountCode = subaccountResponse.data.subaccount_code;
+      }
+    } catch (subaccountError: any) {
+      console.error('Paystack subaccount creation failed:', subaccountError);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to create Paystack subaccount: ' + (subaccountError.message || 'Unknown error')
+      });
+    }
+
+    // Update seller record
+    const updatedSeller = await prisma.seller.update({
+      where: { id: sellerId },
+      data: {
+        status: 'active',
+        isVerified: true,
+        paystackSubaccountCode: subaccountCode,
+        bankAccountNumber,
+        bankCode,
+        bankName: bankName || null,
+        approvedAt: new Date(),
+        approvedBy: adminUserId
+      },
+      include: { user: { select: { email: true, firstName: true, lastName: true } } }
+    });
+
+    res.json({
+      success: true,
+      message: 'Seller approved successfully',
+      data: {
+        seller: updatedSeller,
+        subaccountCode
+      }
+    });
+  } catch (error) {
+    console.error('Approve seller error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to approve seller'
+    });
+  }
+};
+
+// Reject seller application
+export const rejectSeller = async (req: Request, res: Response) => {
+  try {
+    const { sellerId } = req.params;
+    const { reason } = req.body;
+    const adminUserId = req.user?.id;
+
+    const seller = await prisma.seller.findUnique({
+      where: { id: sellerId }
+    });
+
+    if (!seller) {
+      return res.status(404).json({
+        success: false,
+        error: 'Seller not found'
+      });
+    }
+
+    const updatedSeller = await prisma.seller.update({
+      where: { id: sellerId },
+      data: {
+        status: 'rejected',
+        approvedBy: adminUserId,
+        approvedAt: new Date()
+      }
+    });
+
+    res.json({
+      success: true,
+      message: 'Seller application rejected',
+      data: { seller: updatedSeller, reason }
+    });
+  } catch (error) {
+    console.error('Reject seller error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to reject seller'
+    });
+  }
+};
+
+// Suspend an active seller
+export const suspendSeller = async (req: Request, res: Response) => {
+  try {
+    const { sellerId } = req.params;
+    const { reason } = req.body;
+
+    const seller = await prisma.seller.findUnique({
+      where: { id: sellerId }
+    });
+
+    if (!seller) {
+      return res.status(404).json({
+        success: false,
+        error: 'Seller not found'
+      });
+    }
+
+    const updatedSeller = await prisma.seller.update({
+      where: { id: sellerId },
+      data: { status: 'suspended' }
+    });
+
+    res.json({
+      success: true,
+      message: 'Seller suspended',
+      data: { seller: updatedSeller, reason }
+    });
+  } catch (error) {
+    console.error('Suspend seller error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to suspend seller'
+    });
+  }
+};
+
+// Get all sellers with status filter
+export const getAllSellers = async (req: Request, res: Response) => {
+  try {
+    const { status, page = 1, limit = 20 } = req.query;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const where: any = {};
+    if (status && status !== 'all') {
+      where.status = status;
+    }
+
+    const [sellers, total] = await Promise.all([
+      prisma.seller.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+              phone: true
+            }
+          },
+          _count: { select: { products: true } }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: Number(limit)
+      }),
+      prisma.seller.count({ where })
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        sellers,
+        pagination: {
+          page: Number(page),
+          limit: Number(limit),
+          total,
+          totalPages: Math.ceil(total / Number(limit))
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get all sellers error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch sellers'
+    });
+  }
+};
+
+// ==================== PLATFORM SETTINGS ENDPOINTS ====================
+
+// Get platform settings
+export const getPlatformSettings = async (req: Request, res: Response) => {
+  try {
+    let settings = await prisma.platformSettings.findFirst({
+      where: { id: 'default' }
+    });
+
+    if (!settings) {
+      settings = await prisma.platformSettings.create({
+        data: {
+          id: 'default',
+          platformFeePercent: 10,
+          minPayoutAmount: 1000,
+          payoutFrequency: 'weekly'
+        }
+      });
+    }
+
+    res.json({
+      success: true,
+      data: settings
+    });
+  } catch (error) {
+    console.error('Get platform settings error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch platform settings'
+    });
+  }
+};
+
+// Update platform settings
+export const updatePlatformSettings = async (req: Request, res: Response) => {
+  try {
+    const { platformFeePercent, minPayoutAmount, payoutFrequency } = req.body;
+    const adminUserId = req.user?.id;
+
+    // Validate inputs
+    if (platformFeePercent !== undefined && (platformFeePercent < 0 || platformFeePercent > 100)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Platform fee must be between 0 and 100 percent'
+      });
+    }
+
+    const updateData: any = { updatedBy: adminUserId };
+    if (platformFeePercent !== undefined) updateData.platformFeePercent = platformFeePercent;
+    if (minPayoutAmount !== undefined) updateData.minPayoutAmount = minPayoutAmount;
+    if (payoutFrequency !== undefined) updateData.payoutFrequency = payoutFrequency;
+
+    const settings = await prisma.platformSettings.upsert({
+      where: { id: 'default' },
+      update: updateData,
+      create: {
+        id: 'default',
+        platformFeePercent: platformFeePercent ?? 10,
+        minPayoutAmount: minPayoutAmount ?? 1000,
+        payoutFrequency: payoutFrequency ?? 'weekly',
+        updatedBy: adminUserId
+      }
+    });
+
+    // Update all existing Paystack subaccounts with new commission rate
+    if (platformFeePercent !== undefined) {
+      const activeSellers = await prisma.seller.findMany({
+        where: {
+          status: 'active',
+          paystackSubaccountCode: { not: null }
+        }
+      });
+
+      for (const seller of activeSellers) {
+        if (seller.paystackSubaccountCode) {
+          try {
+            await paystackService.updateSubaccount(seller.paystackSubaccountCode, {
+              percentage_charge: platformFeePercent
+            });
+          } catch (updateError) {
+            console.warn(`Failed to update subaccount ${seller.paystackSubaccountCode}:`, updateError);
+          }
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Platform settings updated successfully',
+      data: settings
+    });
+  } catch (error) {
+    console.error('Update platform settings error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update platform settings'
+    });
+  }
+};
+
+// Get bank list from Paystack
+export const getBankList = async (req: Request, res: Response) => {
+  try {
+    const response = await paystackService.getBanks();
+    
+    if (response.status && response.data) {
+      res.json({
+        success: true,
+        data: response.data
+      });
+    } else {
+      throw new Error('Failed to fetch bank list');
+    }
+  } catch (error) {
+    console.error('Get bank list error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch bank list'
+    });
+  }
+};
+
+// Verify bank account
+export const verifyBankAccount = async (req: Request, res: Response) => {
+  try {
+    const { accountNumber, bankCode } = req.body;
+
+    if (!accountNumber || !bankCode) {
+      return res.status(400).json({
+        success: false,
+        error: 'Account number and bank code are required'
+      });
+    }
+
+    const response = await paystackService.verifyAccountNumber({
+      account_number: accountNumber,
+      bank_code: bankCode
+    });
+
+    if (response.status && response.data) {
+      res.json({
+        success: true,
+        data: {
+          accountName: response.data.account_name,
+          accountNumber: response.data.account_number,
+          bankId: response.data.bank_id
+        }
+      });
+    } else {
+      throw new Error('Invalid account details');
+    }
+  } catch (error: any) {
+    console.error('Verify bank account error:', error);
+    res.status(400).json({
+      success: false,
+      error: error.message || 'Failed to verify bank account'
+    });
+  }
+};
 
 
 

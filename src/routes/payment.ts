@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { paymentController } from '../controllers/paymentController';
+import { webhookController } from '../controllers/webhookController';
 import { authenticateToken } from '../middleware/auth';
 
 const router = Router();
@@ -13,8 +14,9 @@ router.post('/initiate', authenticateToken, paymentController.initiatePayment);
 // Payment verification
 router.get('/verify/:reference', paymentController.verifyPayment);
 
-// Payment webhook (public endpoint)
-router.post('/webhook/:provider', paymentController.handleWebhook);
+// Payment webhooks (public endpoints - no auth required)
+router.post('/webhook/paystack', webhookController.handlePaystackWebhook);
+router.post('/webhook/:provider', paymentController.handleWebhook); // Legacy fallback
 
 // Escrow management (requires auth)
 router.post('/escrow/release', authenticateToken, paymentController.releaseEscrow);
