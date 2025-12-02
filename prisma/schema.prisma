@@ -11,106 +11,116 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(cuid()) @map("_id")
-  email         String   @unique
-  password      String
-  firstName     String
-  lastName      String
-  phone         String?
-  role          String   @default("customer") // customer, seller, admin, realtor, employer, employee, artisan
-  avatar        String?
-  emailVerified Boolean  @default(false)
-  phoneVerified Boolean  @default(false)
-  identityVerified Boolean @default(false)
-  addressVerified Boolean @default(false)
-  isActive      Boolean  @default(true)
-  isSuspended   Boolean  @default(false)
-  suspendedAt   DateTime?
-  isBanned      Boolean  @default(false)
-  bannedAt      DateTime?
-  isFrozen      Boolean  @default(false)
-  frozenAt      DateTime?
-  isDeleted     Boolean  @default(false)
-  deletedAt     DateTime?
-  verifiedDate  DateTime?
-  lastLoginAt   DateTime?
-  specializations String? // JSON array for mediators
-  activeDisputes  Int     @default(0)
-  storeCredit     Float @default(0)
-  moderationStats String? // JSON object
-  
+  id        String  @id @default(cuid()) @map("_id")
+  email     String  @unique
+  password  String
+  firstName String
+  lastName  String
+  phone     String?
+  role      String  @default("customer") // customer, seller, admin, agent, owner, developer, employer
+  avatar    String?
+
+  // Account status for admin vetting (pending accounts cannot create listings/jobs)
+  accountStatus       String    @default("active") // pending, active, rejected, suspended
+  accountStatusReason String? // Reason for rejection/suspension
+  accountApprovedAt   DateTime?
+  accountApprovedBy   String? // Admin userId who approved
+
+  // Job seeker flag - any user can set this without admin approval
+  jobSeeker Boolean @default(false)
+
+  emailVerified    Boolean   @default(false)
+  phoneVerified    Boolean   @default(false)
+  identityVerified Boolean   @default(false)
+  addressVerified  Boolean   @default(false)
+  isActive         Boolean   @default(true)
+  isSuspended      Boolean   @default(false)
+  suspendedAt      DateTime?
+  isBanned         Boolean   @default(false)
+  bannedAt         DateTime?
+  isFrozen         Boolean   @default(false)
+  frozenAt         DateTime?
+  isDeleted        Boolean   @default(false)
+  deletedAt        DateTime?
+  verifiedDate     DateTime?
+  lastLoginAt      DateTime?
+  specializations  String? // JSON array for mediators
+  activeDisputes   Int       @default(0)
+  storeCredit      Float     @default(0)
+  moderationStats  String? // JSON object
+
   // Customer activity tracking
-  profileViews    Int     @default(0)
+  profileViews        Int @default(0)
   itemsViewedThisWeek Int @default(0)
-  searchesPerformed Int @default(0)
-  messagesSent    Int     @default(0)
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  searchesPerformed   Int @default(0)
+  messagesSent        Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  passwordResets PasswordReset[]
-  seller         Seller?
-  orders         Order[]
-  reviews        Review[]
-  listings       Listing[]
-  properties     Property[]
-  jobs           Job[]
-  applications   JobApplication[]
-  artisanProfile ArtisanProfile?
-  serviceRequests ServiceRequest[]
-  chats          Chat[]
-  messages       Message[]
-  messagesReceived Message[] @relation("MessageRecipient")
-  
+  passwordResets   PasswordReset[]
+  seller           Seller?
+  orders           Order[]
+  reviews          Review[]
+  listings         Listing[]
+  properties       Property[]
+  jobs             Job[]
+  applications     JobApplication[]
+  artisanProfile   ArtisanProfile?
+  serviceRequests  ServiceRequest[]
+  chats            Chat[]
+  messages         Message[]
+  messagesReceived Message[]        @relation("MessageRecipient")
+
   // Phase 7: Legal Framework & Safety Relations
-  consents            UserConsent[]
-  gdprRequests        GDPRRequest[]
-  privacySettings     UserPrivacySettings?
-  verification        UserVerification?
-  safetyProfile       UserSafetyProfile?
-  reportsMade         UserReport[]         @relation("ReportsMade")
-  disputesAsClaimant   Dispute[]           @relation("DisputeClaimant")
-  disputesAsComplainant Dispute[]          @relation("DisputeComplainant")
-  disputesAsRespondent Dispute[]           @relation("DisputeRespondent")
-  disputeMessages     DisputeMessage[]
-  disputeMediations   DisputeMediation[]
-  contentModerations  ContentModeration[]
-  moderationQueue     ModerationQueue[]
-  trustProfile        UserTrustProfile?
-  endorsementsGiven   UserEndorsement[]    @relation("EndorsementsGiven")
-  
+  consents              UserConsent[]
+  gdprRequests          GDPRRequest[]
+  privacySettings       UserPrivacySettings?
+  verification          UserVerification?
+  safetyProfile         UserSafetyProfile?
+  reportsMade           UserReport[]         @relation("ReportsMade")
+  disputesAsClaimant    Dispute[]            @relation("DisputeClaimant")
+  disputesAsComplainant Dispute[]            @relation("DisputeComplainant")
+  disputesAsRespondent  Dispute[]            @relation("DisputeRespondent")
+  disputeMessages       DisputeMessage[]
+  disputeMediations     DisputeMediation[]
+  contentModerations    ContentModeration[]
+  moderationQueue       ModerationQueue[]
+  trustProfile          UserTrustProfile?
+  endorsementsGiven     UserEndorsement[]    @relation("EndorsementsGiven")
+
   // Delivery & Payment Relations
-  deliveryAgent       DeliveryAgent?
-  payments            Payment[]
+  deliveryAgent DeliveryAgent?
+  payments      Payment[]
 
   // New Relations
-  notifications               Notification[]
-  notificationPreferences     NotificationPreference?
-  userNotificationPreference  UserNotificationPreference?
-  dataExportRequests          DataExportRequest[]
-  dataDeletionRequests        DataDeletionRequest[]
-  consentRecords              ConsentRecord[]
-  sentMessages                ChatMessage[] @relation("SentMessages")
-  receivedMessages            ChatMessage[] @relation("ReceivedMessages")
-  verificationBadges          VerificationBadge[]
-  endorsementsGiven2          Endorsement[] @relation("EndorsementsGiven")
-  endorsementsReceived        Endorsement[] @relation("EndorsementsReceived")
-  socialConnections           SocialConnection[]
-  communityPosts              CommunityPost[]
-  userActivities              UserActivity[]
-  emergencyContacts           EmergencyContact[]
-  safetySettings              SafetySettings?
-  trustMetrics                TrustMetric[]
-  policyViolations            PolicyViolation[]
-  riskAssessments             RiskAssessment[]
-  reputationChanges           ReputationChange[]
-  identityVerifications       IdentityVerification[]
-  backgroundChecks            BackgroundCheck[]
-  profile                     UserProfile?
-  reportsReceived             UserReport[] @relation("ReportsReceived")
-  addresses                   Address[]
-  carts                       Cart[]
+  notifications              Notification[]
+  notificationPreferences    NotificationPreference?
+  userNotificationPreference UserNotificationPreference?
+  dataExportRequests         DataExportRequest[]
+  dataDeletionRequests       DataDeletionRequest[]
+  consentRecords             ConsentRecord[]
+  sentMessages               ChatMessage[]               @relation("SentMessages")
+  receivedMessages           ChatMessage[]               @relation("ReceivedMessages")
+  verificationBadges         VerificationBadge[]
+  endorsementsGiven2         Endorsement[]               @relation("EndorsementsGiven")
+  endorsementsReceived       Endorsement[]               @relation("EndorsementsReceived")
+  socialConnections          SocialConnection[]
+  communityPosts             CommunityPost[]
+  userActivities             UserActivity[]
+  emergencyContacts          EmergencyContact[]
+  safetySettings             SafetySettings?
+  trustMetrics               TrustMetric[]
+  policyViolations           PolicyViolation[]
+  riskAssessments            RiskAssessment[]
+  reputationChanges          ReputationChange[]
+  identityVerifications      IdentityVerification[]
+  backgroundChecks           BackgroundCheck[]
+  profile                    UserProfile?
+  reportsReceived            UserReport[]                @relation("ReportsReceived")
+  addresses                  Address[]
+  carts                      Cart[]
 
   @@map("users")
 }
@@ -132,26 +142,26 @@ model Seller {
   id                  String   @id @default(cuid()) @map("_id")
   userId              String   @unique
   businessName        String
-  businessDescription String  
-  businessAddress     String   // JSON object with address details
+  businessDescription String
+  businessAddress     String // JSON object with address details
   businessPhone       String?
   businessEmail       String?
   logo                String?
   rating              Float?
   reviewCount         Int      @default(0)
   isVerified          Boolean  @default(false)
-  documents           String?  // JSON array of verification documents
+  documents           String? // JSON array of verification documents
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
   // Split Payment Fields
-  status                  String   @default("pending") // pending, active, rejected, suspended
-  paystackSubaccountCode  String?  // Paystack subaccount code for split payments
-  bankAccountNumber       String?  // Seller's bank account number
-  bankCode                String?  // Bank code for Paystack
-  bankName                String?  // Bank name for display
-  approvedAt              DateTime?
-  approvedBy              String?  // Admin userId who approved
+  status                 String    @default("pending") // pending, active, rejected, suspended
+  paystackSubaccountCode String? // Paystack subaccount code for split payments
+  bankAccountNumber      String? // Seller's bank account number
+  bankCode               String? // Bank code for Paystack
+  bankName               String? // Bank name for display
+  approvedAt             DateTime?
+  approvedBy             String? // Admin userId who approved
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   products Product[]
@@ -161,56 +171,56 @@ model Seller {
 
 // Platform Settings for admin-configurable commission
 model PlatformSettings {
-  id                   String   @id @default("default") @map("_id")
-  platformFeePercent   Float    @default(10) // Default 10% platform commission
-  minPayoutAmount      Float    @default(1000) // Minimum payout amount in Naira
-  payoutFrequency      String   @default("weekly") // daily, weekly, monthly
-  paystackSplitCode    String?  // Pre-configured split code if using split groups
-  updatedAt            DateTime @updatedAt
-  updatedBy            String?  // Admin userId who last updated
+  id                 String   @id @default("default") @map("_id")
+  platformFeePercent Float    @default(10) // Default 10% platform commission
+  minPayoutAmount    Float    @default(1000) // Minimum payout amount in Naira
+  payoutFrequency    String   @default("weekly") // daily, weekly, monthly
+  paystackSplitCode  String? // Pre-configured split code if using split groups
+  updatedAt          DateTime @updatedAt
+  updatedBy          String? // Admin userId who last updated
 
   @@map("platform_settings")
 }
 
 model Product {
-  id            String   @id @default(cuid()) @map("_id")
-  title         String
-  productName   String?
-  description   String  
-  price         Float 
-  originalPrice Float?
-  categoryId    String
-  subcategoryId String?
-  brand         String?
-  condition     String   @default("new") // new, used, refurbished, like-new, excellent, good, fair
-  images        String   // JSON array of image URLs
-  sellerId      String
-  featured      Boolean  @default(false)
-  status        String   @default("active") // active, sold, inactive
-  isActive      Boolean  @default(true)
-  location      String?
-  locationCity  String?
-  locationState String?
+  id              String  @id @default(cuid()) @map("_id")
+  title           String
+  productName     String?
+  description     String
+  price           Float
+  originalPrice   Float?
+  categoryId      String
+  subcategoryId   String?
+  brand           String?
+  condition       String  @default("new") // new, used, refurbished, like-new, excellent, good, fair
+  images          String // JSON array of image URLs
+  sellerId        String
+  featured        Boolean @default(false)
+  status          String  @default("active") // active, sold, inactive
+  isActive        Boolean @default(true)
+  location        String?
+  locationCity    String?
+  locationState   String?
   locationCountry String?
-  isNegotiable  Boolean  @default(false)
-  
-  // Analytics and engagement fields
-  viewCount     Int      @default(0)
-  rating        Float?
-  reviewCount   Int      @default(0)
-  
-  // Dynamic fields stored as JSON to accommodate category-specific fields
-  dynamicFields String?  // JSON object containing category-specific fields
-  
-  // For backwards compatibility
-  category      String   @default("") // Keep for existing queries
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  isNegotiable    Boolean @default(false)
 
-  seller Seller  @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  orders Order[]
-  reviews Review[]
+  // Analytics and engagement fields
+  viewCount   Int    @default(0)
+  rating      Float?
+  reviewCount Int    @default(0)
+
+  // Dynamic fields stored as JSON to accommodate category-specific fields
+  dynamicFields String? // JSON object containing category-specific fields
+
+  // For backwards compatibility
+  category String @default("") // Keep for existing queries
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  seller    Seller     @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  orders    Order[]
+  reviews   Review[]
   inventory Inventory?
   cartItems CartItem[]
 
@@ -224,7 +234,7 @@ model Category {
   slug        String   @unique
   parentId    String?
   description String?
-  metadata    String?  // JSON
+  metadata    String? // JSON
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -234,8 +244,8 @@ model Category {
 model Address {
   id         String   @id @default(cuid()) @map("_id")
   userId     String
-  label      String?  // home, work, etc.
-  address    String   // JSON or freeform string
+  label      String? // home, work, etc.
+  address    String // JSON or freeform string
   city       String?
   state      String?
   country    String?
@@ -252,34 +262,34 @@ model Address {
 }
 
 model Coupon {
-  id             String   @id @default(cuid()) @map("_id")
-  code           String   @unique
+  id             String    @id @default(cuid()) @map("_id")
+  code           String    @unique
   description    String?
-  discountType   String   @default("percentage") // percentage, fixed
+  discountType   String    @default("percentage") // percentage, fixed
   amount         Float
-  maxUses        Int?     
-  usedCount      Int      @default(0)
-  minOrderAmount Float?   
+  maxUses        Int?
+  usedCount      Int       @default(0)
+  minOrderAmount Float?
   validFrom      DateTime?
   validTo        DateTime?
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@map("coupons")
 }
 
 model Inventory {
-  id         String   @id @default(cuid()) @map("_id")
-  productId  String   @unique
-  sku        String?
-  stock      Int      @default(0)
-  reserved   Int      @default(0)
-  threshold  Int      @default(0)
-  location   String?
-  metadata   String?  // JSON
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id        String   @id @default(cuid()) @map("_id")
+  productId String   @unique
+  sku       String?
+  stock     Int      @default(0)
+  reserved  Int      @default(0)
+  threshold Int      @default(0)
+  location  String?
+  metadata  String? // JSON
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
@@ -287,14 +297,14 @@ model Inventory {
 }
 
 model Cart {
-  id        String     @id @default(cuid()) @map("_id")
-  userId    String     @unique
-  total     Float?     @default(0)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id        String   @id @default(cuid()) @map("_id")
+  userId    String   @unique
+  total     Float?   @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   items CartItem[]
-  user  User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("carts")
 }
@@ -305,7 +315,7 @@ model CartItem {
   productId String
   quantity  Int      @default(1)
   price     Float
-  metadata  String?  // JSON
+  metadata  String? // JSON
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -316,26 +326,26 @@ model CartItem {
 }
 
 model Order {
-  id                  String   @id @default(cuid()) @map("_id")
-  productId           String
-  buyerId             String
-  sellerId            String
-  quantity            Int      @default(1)
-  totalAmount         Float 
-  status              String   @default("pending") // pending, confirmed, shipped, delivered, cancelled
-  paymentStatus       String   @default("pending") // pending, paid, failed, refunded
-  paymentMethod       String?
-  shippingAddress     String  
-  deliveryDate        DateTime?
+  id                   String    @id @default(cuid()) @map("_id")
+  productId            String
+  buyerId              String
+  sellerId             String
+  quantity             Int       @default(1)
+  totalAmount          Float
+  status               String    @default("pending") // pending, confirmed, shipped, delivered, cancelled
+  paymentStatus        String    @default("pending") // pending, paid, failed, refunded
+  paymentMethod        String?
+  shippingAddress      String
+  deliveryDate         DateTime?
   expectedDeliveryDate DateTime?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  buyer   User    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
-  refunds Refund[]
+  product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  buyer     User       @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  refunds   Refund[]
   shipments Shipment[]
-  disputes Dispute[]
+  disputes  Dispute[]
 
   @@map("orders")
 }
@@ -344,8 +354,8 @@ model Refund {
   id          String   @id @default(cuid()) @map("_id")
   orderId     String
   reason      String
-  description String  
-  amount      Float 
+  description String
+  amount      Float
   status      String   @default("pending") // pending, approved, rejected, processed, completed
   requestedBy String
   processedBy String?
@@ -362,12 +372,12 @@ model Review {
   productId String
   userId    String
   rating    Int
-  comment   String? 
+  comment   String?
   createdAt DateTime @default(now())
 
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   authenticity ReviewAuthenticity?
 
   @@map("reviews")
@@ -376,12 +386,12 @@ model Review {
 model Listing {
   id          String   @id @default(cuid()) @map("_id")
   title       String
-  description String  
+  description String
   category    String
   price       Float?
   negotiable  Boolean  @default(false)
   condition   String   @default("new")
-  images      String   // JSON array
+  images      String // JSON array
   location    String
   userId      String
   featured    Boolean  @default(false)
@@ -395,44 +405,55 @@ model Listing {
 }
 
 model Property {
-  id            String   @id @default(cuid()) @map("_id")
-  title         String
-  description   String  
-  type          String   // sale, lease, rent
-  propertyType  String   // house, apartment, commercial, land
-  price         Float 
-  bedrooms      Int?
-  bathrooms     Int?
-  area          Float?
-  location      String
-  address       String  
-  latitude      Float?
-  longitude     Float?
-  images        String   // JSON array
-  virtualTour   String?  // JSON object
-  amenities     String?  // JSON array
-  ownerId       String
-  agentId       String?
-  featured      Boolean  @default(false)
-  status        String   @default("available")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String  @id @default(cuid()) @map("_id")
+  title        String
+  description  String
+  type         String // sale, lease, rent
+  propertyType String // house, apartment, commercial, land
+  price        Float
+  currency     String  @default("NGN")
+  bedrooms     Int?
+  bathrooms    Int?
+  area         Float?
+  location     String
+  address      String // JSON object with structured address
+  latitude     Float?
+  longitude    Float?
+  images       String // JSON array
+  virtualTour  String? // JSON object
+  amenities    String? // JSON array
+  ownerId      String
+  agentId      String?
+  featured     Boolean @default(false)
 
-  owner User  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  // Status for admin vetting: new listings default to pending
+  status       String    @default("pending") // pending, active, sold, removed, rejected
+  statusReason String? // Reason for rejection/removal
+  approvedAt   DateTime?
+  approvedBy   String? // Admin userId who approved
+
+  // Verification documents
+  verificationDocs  String? // JSON array of document URLs
+  documentsVerified Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner    User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   viewings PropertyViewing[]
 
   @@map("properties")
 }
 
 model PropertyViewing {
-  id         String   @id @default(cuid()) @map("_id")
-  propertyId String
-  viewerId   String
-  agentId    String?
+  id          String   @id @default(cuid()) @map("_id")
+  propertyId  String
+  viewerId    String
+  agentId     String?
   scheduledAt DateTime
-  status     String   @default("scheduled") // scheduled, completed, cancelled
-  notes      String? 
-  createdAt  DateTime @default(now())
+  status      String   @default("scheduled") // scheduled, completed, cancelled
+  notes       String?
+  createdAt   DateTime @default(now())
 
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
@@ -440,23 +461,31 @@ model PropertyViewing {
 }
 
 model Job {
-  id           String   @id @default(cuid()) @map("_id")
+  id           String  @id @default(cuid()) @map("_id")
   title        String
-  description  String  
-  company      String
+  description  String
+  companyName  String // Company name
   location     String
-  type         String   // full-time, part-time, contract, remote
-  salary       Float?
-  salaryType   String?  // hourly, monthly, yearly
-  requirements String  
-  benefits     String? 
+  type         String // full-time, part-time, contract, remote
+  salaryMin    Float? // Minimum salary
+  salaryMax    Float? // Maximum salary
+  salaryType   String? // hourly, monthly, yearly
+  currency     String  @default("NGN")
+  requirements String // JSON array or text
+  benefits     String? // JSON array or text
   employerId   String
-  featured     Boolean  @default(false)
-  status       String   @default("active") // active, closed, draft
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  featured     Boolean @default(false)
 
-  employer User             @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  // Status for admin vetting: new jobs default to pending
+  status       String    @default("pending") // pending, active, closed, rejected
+  statusReason String? // Reason for rejection
+  approvedAt   DateTime?
+  approvedBy   String? // Admin userId who approved
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employer     User             @relation(fields: [employerId], references: [id], onDelete: Cascade)
   applications JobApplication[]
 
   @@map("jobs")
@@ -466,11 +495,11 @@ model JobApplication {
   id          String   @id @default(cuid()) @map("_id")
   jobId       String
   applicantId String
-  coverLetter String? 
-  resume      String?  // URL to resume file
+  coverLetter String?
+  resume      String? // URL to resume file
   status      String   @default("applied") // applied, screening, interviewing, offer, hired, rejected
   score       Int?
-  notes       String? 
+  notes       String?
   appliedAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -484,47 +513,47 @@ model ArtisanProfile {
   id           String   @id @default(cuid()) @map("_id")
   userId       String   @unique
   businessName String?
-  category     String   // plumber, electrician, carpenter, etc.
-  skills       String   // JSON array
-  experience   Int      // years
+  category     String // plumber, electrician, carpenter, etc.
+  skills       String // JSON array
+  experience   Int // years
   hourlyRate   Float?
   location     String
   latitude     Float?
   longitude    Float?
-  portfolio    String?  // JSON array of work images
-  bio          String? 
+  portfolio    String? // JSON array of work images
+  bio          String?
   verified     Boolean  @default(false)
   rating       Float?
   totalJobs    Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  user User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   serviceRequests ServiceRequest[]
 
   @@map("artisan_profiles")
 }
 
 model ServiceRequest {
-  id          String   @id @default(cuid()) @map("_id")
+  id          String    @id @default(cuid()) @map("_id")
   customerId  String
   artisanId   String?
   category    String
   title       String
-  description String  
+  description String
   location    String
   latitude    Float?
   longitude   Float?
   budget      Float?
-  urgency     String   @default("normal") // low, normal, high, urgent
-  images      String?  // JSON array
-  status      String   @default("open") // open, quoted, assigned, in_progress, completed, cancelled
+  urgency     String    @default("normal") // low, normal, high, urgent
+  images      String? // JSON array
+  status      String    @default("open") // open, quoted, assigned, in_progress, completed, cancelled
   scheduledAt DateTime?
   completedAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  customer User           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customer User            @relation(fields: [customerId], references: [id], onDelete: Cascade)
   artisan  ArtisanProfile? @relation(fields: [artisanId], references: [id], onDelete: SetNull)
   quotes   ServiceQuote[]
   chats    Chat[]
@@ -533,16 +562,16 @@ model ServiceRequest {
 }
 
 model ServiceQuote {
-  id               String   @id @default(cuid()) @map("_id")
-  serviceRequestId String
-  artisanId        String
-  amount           Float 
-  description      String  
+  id                String   @id @default(cuid()) @map("_id")
+  serviceRequestId  String
+  artisanId         String
+  amount            Float
+  description       String
   estimatedDuration String
-  materials        String? 
-  status           String   @default("pending") // pending, accepted, rejected, expired
-  validUntil       DateTime
-  createdAt        DateTime @default(now())
+  materials         String?
+  status            String   @default("pending") // pending, accepted, rejected, expired
+  validUntil        DateTime
+  createdAt         DateTime @default(now())
 
   serviceRequest ServiceRequest @relation(fields: [serviceRequestId], references: [id], onDelete: Cascade)
 
@@ -550,13 +579,13 @@ model ServiceQuote {
 }
 
 model Chat {
-  id               String  @id @default(cuid()) @map("_id")
+  id               String    @id @default(cuid()) @map("_id")
   serviceRequestId String?
   customerId       String
   artisanId        String
-  status           String  @default("active") // active, closed
+  status           String    @default("active") // active, closed
   lastMessageAt    DateTime?
-  createdAt        DateTime @default(now())
+  createdAt        DateTime  @default(now())
 
   serviceRequest ServiceRequest? @relation(fields: [serviceRequestId], references: [id], onDelete: SetNull)
   customer       User            @relation(fields: [customerId], references: [id], onDelete: Cascade)
@@ -566,16 +595,16 @@ model Chat {
 }
 
 model Message {
-  id          String   @id @default(cuid()) @map("_id")
+  id          String    @id @default(cuid()) @map("_id")
   chatId      String
   senderId    String
   recipientId String
-  content     String  
-  messageType String   @default("text") // text, image, file
+  content     String
+  messageType String    @default("text") // text, image, file
   fileUrl     String?
   readAt      DateTime?
-  sentAt      DateTime @default(now())
-  createdAt   DateTime @default(now())
+  sentAt      DateTime  @default(now())
+  createdAt   DateTime  @default(now())
 
   chat      Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
   sender    User @relation(fields: [senderId], references: [id], onDelete: Cascade)
@@ -589,10 +618,10 @@ model Message {
 // Legal Documentation Models
 model LegalDocument {
   id            String   @id @default(cuid()) @map("_id")
-  type          String   // terms_of_service, privacy_policy, user_agreement, community_guidelines
+  type          String // terms_of_service, privacy_policy, user_agreement, community_guidelines
   version       String
   title         String
-  content       String  
+  content       String
   language      String   @default("en")
   jurisdiction  String   @default("NG")
   effectiveDate DateTime
@@ -610,18 +639,18 @@ model LegalDocument {
 }
 
 model UserConsent {
-  id               String   @id @default(cuid()) @map("_id")
-  userId           String
-  documentId       String
-  documentVersion  String
-  documentType     String   // privacy_policy, terms_of_service, etc.
-  consentGiven     Boolean
-  consentDate      DateTime @default(now())
-  consentMethod    String   @default("explicit") // explicit, implicit
-  ipAddress        String?
-  userAgent        String? 
-  withdrawnAt      DateTime?
-  method           String   @default("explicit") // explicit, implicit
+  id              String    @id @default(cuid()) @map("_id")
+  userId          String
+  documentId      String
+  documentVersion String
+  documentType    String // privacy_policy, terms_of_service, etc.
+  consentGiven    Boolean
+  consentDate     DateTime  @default(now())
+  consentMethod   String    @default("explicit") // explicit, implicit
+  ipAddress       String?
+  userAgent       String?
+  withdrawnAt     DateTime?
+  method          String    @default("explicit") // explicit, implicit
 
   user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   document LegalDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
@@ -630,44 +659,40 @@ model UserConsent {
   @@map("user_consents")
 }
 
-
-
 // GDPR Compliance Models
 model GDPRRequest {
-  id            String   @id @default(cuid()) @map("_id")
-  userId        String
-  requestType   String   // export, deletion, rectification, portability
-  status        String   @default("pending") // pending, processing, completed, rejected
-  reason        String? 
-  requestData   String?  // JSON
-  processedBy   String?
-  processedAt   DateTime?
-  completedAt   DateTime?
-  expiresAt     DateTime?
-  notes         String? 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String    @id @default(cuid()) @map("_id")
+  userId      String
+  requestType String // export, deletion, rectification, portability
+  status      String    @default("pending") // pending, processing, completed, rejected
+  reason      String?
+  requestData String? // JSON
+  processedBy String?
+  processedAt DateTime?
+  completedAt DateTime?
+  expiresAt   DateTime?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("gdpr_requests")
 }
 
-
-
 model UserPrivacySettings {
-  id                    String   @id @default(cuid()) @map("_id")
-  userId                String   @unique
-  profileVisible        Boolean  @default(true)
-  emailVisible          Boolean  @default(false)
-  phoneVisible          Boolean  @default(false)
-  locationVisible       Boolean  @default(true)
-  activityVisible       Boolean  @default(true)
-  marketingConsent      Boolean  @default(false)
-  analyticsConsent      Boolean  @default(true)
-  thirdPartySharing     Boolean  @default(false)
-  dataRetentionConsent  Boolean  @default(true)
-  updatedAt             DateTime @updatedAt
+  id                   String   @id @default(cuid()) @map("_id")
+  userId               String   @unique
+  profileVisible       Boolean  @default(true)
+  emailVisible         Boolean  @default(false)
+  phoneVisible         Boolean  @default(false)
+  locationVisible      Boolean  @default(true)
+  activityVisible      Boolean  @default(true)
+  marketingConsent     Boolean  @default(false)
+  analyticsConsent     Boolean  @default(true)
+  thirdPartySharing    Boolean  @default(false)
+  dataRetentionConsent Boolean  @default(true)
+  updatedAt            DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -676,19 +701,19 @@ model UserPrivacySettings {
 
 // User Safety & Security Models
 model UserVerification {
-  id                String   @id @default(cuid()) @map("_id")
-  userId            String   @unique
-  identityVerified  Boolean  @default(false)
-  phoneVerified     Boolean  @default(false)
-  emailVerified     Boolean  @default(false)
-  addressVerified   Boolean  @default(false)
-  documentsVerified Boolean  @default(false)
-  backgroundCheck   String   @default("pending") // pending, passed, failed, not_required
-  verificationScore Int      @default(0)
+  id                String    @id @default(cuid()) @map("_id")
+  userId            String    @unique
+  identityVerified  Boolean   @default(false)
+  phoneVerified     Boolean   @default(false)
+  emailVerified     Boolean   @default(false)
+  addressVerified   Boolean   @default(false)
+  documentsVerified Boolean   @default(false)
+  backgroundCheck   String    @default("pending") // pending, passed, failed, not_required
+  verificationScore Int       @default(0)
   lastVerifiedAt    DateTime?
-  verificationNotes String? 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  verificationNotes String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -696,21 +721,21 @@ model UserVerification {
 }
 
 model UserSafetyProfile {
-  id                 String   @id @default(cuid()) @map("_id")
-  userId             String   @unique
-  safetyScore        Int      @default(50)
-  riskLevel          String   @default("low") // low, medium, high, critical
-  emergencyContact   String?  // JSON
-  safetyPreferences  String?  // JSON
-  blockedUsers       String?  // JSON array of user IDs
+  id                 String    @id @default(cuid()) @map("_id")
+  userId             String    @unique
+  safetyScore        Int       @default(50)
+  riskLevel          String    @default("low") // low, medium, high, critical
+  emergencyContact   String? // JSON
+  safetyPreferences  String? // JSON
+  blockedUsers       String? // JSON array of user IDs
   lastSafetyUpdate   DateTime?
-  safetyAlerts       Boolean  @default(true)
-  locationSharing    Boolean  @default(false)
-  meetingPreferences String?  // JSON
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  safetyAlerts       Boolean   @default(true)
+  locationSharing    Boolean   @default(false)
+  meetingPreferences String? // JSON
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   safetyIncidents SafetyIncident[]
   reports         UserReport[]
 
@@ -718,28 +743,28 @@ model UserSafetyProfile {
 }
 
 model SafetyIncident {
-  id              String   @id @default(cuid()) @map("_id")
-  userId          String
-  incidentType    String   // harassment, fraud, violence, inappropriate_content
-  severity        String   @default("low") // low, medium, high, critical
-  status          String   @default("reported") // reported, investigating, resolved, dismissed
-  description     String  
-  evidence        String?  // JSON array of evidence
-  location        String?
-  reportedBy      String
-  assignedTo      String?
-  investigatedBy  String?  // Alternative field name
-  resolvedBy      String?
-  resolution      String? 
-  resolvedAt      DateTime?
-  followUpDate    DateTime?
-  affectedUsers   String   // JSON array of user IDs
-  title           String?  // Incident title
-  tags            String?  // JSON array
+  id                  String    @id @default(cuid()) @map("_id")
+  userId              String
+  incidentType        String // harassment, fraud, violence, inappropriate_content
+  severity            String    @default("low") // low, medium, high, critical
+  status              String    @default("reported") // reported, investigating, resolved, dismissed
+  description         String
+  evidence            String? // JSON array of evidence
+  location            String?
+  reportedBy          String
+  assignedTo          String?
+  investigatedBy      String? // Alternative field name
+  resolvedBy          String?
+  resolution          String?
+  resolvedAt          DateTime?
+  followUpDate        DateTime?
+  affectedUsers       String // JSON array of user IDs
+  title               String? // Incident title
+  tags                String? // JSON array
   estimatedResolution DateTime?
-  timestamp       DateTime @default(now())
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  timestamp           DateTime  @default(now())
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   userProfile UserSafetyProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -747,23 +772,23 @@ model SafetyIncident {
 }
 
 model UserReport {
-  id            String   @id @default(cuid()) @map("_id")
-  reporterId    String
+  id             String    @id @default(cuid()) @map("_id")
+  reporterId     String
   reportedUserId String
-  reportedUser  String
-  category      String   // spam, harassment, fraud, inappropriate_content, fake_profile
-  reason        String  
-  description   String  
-  reportType    String   // user, content, transaction
-  evidence      String?  // JSON
-  status        String   @default("pending") // pending, reviewing, resolved, dismissed
-  priority      String   @default("normal") // low, normal, high, urgent
-  assignedTo    String?
-  resolution    String? 
-  actionTaken   String?  // warning, suspension, ban, content_removal
-  resolvedAt    DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  reportedUser   String
+  category       String // spam, harassment, fraud, inappropriate_content, fake_profile
+  reason         String
+  description    String
+  reportType     String // user, content, transaction
+  evidence       String? // JSON
+  status         String    @default("pending") // pending, reviewing, resolved, dismissed
+  priority       String    @default("normal") // low, normal, high, urgent
+  assignedTo     String?
+  resolution     String?
+  actionTaken    String? // warning, suspension, ban, content_removal
+  resolvedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   reporter        User              @relation("ReportsMade", fields: [reporterId], references: [id], onDelete: Cascade)
   reportedUserRef User              @relation("ReportsReceived", fields: [reportedUserId], references: [id], onDelete: Cascade)
@@ -774,24 +799,24 @@ model UserReport {
 
 // Platform Security Models
 model SecurityAudit {
-  id              String   @id @default(cuid()) @map("_id")
-  auditType       String   // vulnerability_scan, penetration_test, compliance_check
-  status          String   @default("scheduled") // scheduled, in_progress, completed, failed
-  severity        String   @default("info") // info, low, medium, high, critical
-  category        String   // authentication, authorization, data_protection, infrastructure
-  description     String  
-  findings        String?  // JSON
-  recommendations String?  // JSON
-  remediation     String? 
-  targetSystem    String?  // system being audited
-  conductedBy     String?  // auditor
+  id              String    @id @default(cuid()) @map("_id")
+  auditType       String // vulnerability_scan, penetration_test, compliance_check
+  status          String    @default("scheduled") // scheduled, in_progress, completed, failed
+  severity        String    @default("info") // info, low, medium, high, critical
+  category        String // authentication, authorization, data_protection, infrastructure
+  description     String
+  findings        String? // JSON
+  recommendations String? // JSON
+  remediation     String?
+  targetSystem    String? // system being audited
+  conductedBy     String? // auditor
   conductedAt     DateTime?
   assignedTo      String?
   scheduledAt     DateTime?
   completedAt     DateTime?
   nextAuditDate   DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   securityFindings SecurityFinding[]
 
@@ -799,45 +824,45 @@ model SecurityAudit {
 }
 
 model SecurityIncident {
-  id              String   @id @default(cuid()) @map("_id")
-  incidentType    String   // breach, unauthorized_access, ddos, malware
+  id              String    @id @default(cuid()) @map("_id")
+  incidentType    String // breach, unauthorized_access, ddos, malware
   title           String
-  severity        String   // low, medium, high, critical
-  status          String   @default("detected") // detected, investigating, contained, resolved
-  description     String  
-  affectedSystems String?  // JSON array
-  affectedUsers   Int      @default(0)
+  severity        String // low, medium, high, critical
+  status          String    @default("detected") // detected, investigating, contained, resolved
+  description     String
+  affectedSystems String? // JSON array
+  affectedUsers   Int       @default(0)
   reportedBy      String?
-  detectedAt      DateTime @default(now())
+  detectedAt      DateTime  @default(now())
   containedAt     DateTime?
   resolvedAt      DateTime?
   assignedTo      String?
-  response        String? 
-  lessons         String? 
-  publicNotice    Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  response        String?
+  lessons         String?
+  publicNotice    Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@map("security_incidents")
 }
 
 model AccessControl {
-  id          String   @id @default(cuid()) @map("_id")
-  userId      String
-  resource    String   // API endpoint, admin panel, user data
-  permission  String   // read, write, delete, admin
-  action      String   @default("read") // read, write, delete, execute
-  granted     Boolean  @default(false)
-  isActive    Boolean  @default(true)
-  grantedBy   String?
-  grantedAt   DateTime?
-  expiresAt   DateTime?
-  reason      String? 
-  conditions  String?  // JSON
-  lastUsedAt  DateTime?
-  usageCount  Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String    @id @default(cuid()) @map("_id")
+  userId     String
+  resource   String // API endpoint, admin panel, user data
+  permission String // read, write, delete, admin
+  action     String    @default("read") // read, write, delete, execute
+  granted    Boolean   @default(false)
+  isActive   Boolean   @default(true)
+  grantedBy  String?
+  grantedAt  DateTime?
+  expiresAt  DateTime?
+  reason     String?
+  conditions String? // JSON
+  lastUsedAt DateTime?
+  usageCount Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   @@unique([userId, resource, permission])
   @@map("access_controls")
@@ -845,62 +870,62 @@ model AccessControl {
 
 // Dispute Resolution Models
 model Dispute {
-  id              String   @id @default(cuid()) @map("_id")
-  disputeId       String   @unique @default(cuid()) // Alternative ID field
-  disputeNumber   String   @unique
-  type            String   // transaction, product, service, delivery, refund
-  disputeType     String   // Additional type field
-  status          String   @default("open") // open, investigating, mediation, resolved, closed, escalated
-  priority        String   @default("normal") // low, normal, high, urgent
-  subject         String
-  description     String  
-  amount          Float?
-  currency        String   @default("NGN")
-  claimantId      String
-  complainantId   String   // Alternative field name
-  respondentId    String
-  assignedTo      String?
+  id                 String    @id @default(cuid()) @map("_id")
+  disputeId          String    @unique @default(cuid()) // Alternative ID field
+  disputeNumber      String    @unique
+  type               String // transaction, product, service, delivery, refund
+  disputeType        String // Additional type field
+  status             String    @default("open") // open, investigating, mediation, resolved, closed, escalated
+  priority           String    @default("normal") // low, normal, high, urgent
+  subject            String
+  description        String
+  amount             Float?
+  currency           String    @default("NGN")
+  claimantId         String
+  complainantId      String // Alternative field name
+  respondentId       String
+  assignedTo         String?
   assignedMediatorId String?
-  category        String
-  subcategory     String?
-  relatedOrder    String?
-  orderId         String?  // Alternative field name
-  relatedItem     String?
-  evidence        String?  // JSON
-  timeline        String?  // JSON
-  resolution      String? 
-  compensation    Float?
-  dueDate         DateTime?
-  resolvedAt      DateTime?
-  escalatedAt     DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  category           String
+  subcategory        String?
+  relatedOrder       String?
+  orderId            String? // Alternative field name
+  relatedItem        String?
+  evidence           String? // JSON
+  timeline           String? // JSON
+  resolution         String?
+  compensation       Float?
+  dueDate            DateTime?
+  resolvedAt         DateTime?
+  escalatedAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  claimant   User @relation("DisputeClaimant", fields: [claimantId], references: [id], onDelete: Cascade)
-  complainant User @relation("DisputeComplainant", fields: [complainantId], references: [id], onDelete: Cascade) 
-  respondent User @relation("DisputeRespondent", fields: [respondentId], references: [id], onDelete: Cascade)
-  
+  claimant    User @relation("DisputeClaimant", fields: [claimantId], references: [id], onDelete: Cascade)
+  complainant User @relation("DisputeComplainant", fields: [complainantId], references: [id], onDelete: Cascade)
+  respondent  User @relation("DisputeRespondent", fields: [respondentId], references: [id], onDelete: Cascade)
+
   messages    DisputeMessage[]
   mediations  DisputeMediation[]
   resolutions DisputeResolution[]
-  order       Order? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  order       Order?              @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
   @@map("disputes")
 }
 
 model DisputeMessage {
-  id           String   @id @default(cuid()) @map("_id")
-  disputeId    String
-  senderId     String
-  senderRole   String?  // claimant, respondent, mediator, admin
-  messageType  String   @default("message") // message, evidence, update
-  message      String   // Alternative field name
-  content      String  
-  attachments  String?  // JSON
-  isInternal   Boolean  @default(false)
-  readBy       String?  // JSON array of user IDs
-  sentAt       DateTime @default(now())
-  createdAt    DateTime @default(now())
+  id          String   @id @default(cuid()) @map("_id")
+  disputeId   String
+  senderId    String
+  senderRole  String? // claimant, respondent, mediator, admin
+  messageType String   @default("message") // message, evidence, update
+  message     String // Alternative field name
+  content     String
+  attachments String? // JSON
+  isInternal  Boolean  @default(false)
+  readBy      String? // JSON array of user IDs
+  sentAt      DateTime @default(now())
+  createdAt   DateTime @default(now())
 
   dispute Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
   sender  User    @relation(fields: [senderId], references: [id], onDelete: Cascade)
@@ -909,21 +934,21 @@ model DisputeMessage {
 }
 
 model DisputeMediation {
-  id              String   @id @default(cuid()) @map("_id")
-  disputeId       String
-  mediatorId      String
-  scheduledAt     DateTime
-  startedAt       DateTime?
-  endedAt         DateTime?
-  status          String   @default("scheduled") // scheduled, in_progress, completed, cancelled
-  type            String   @default("video") // video, phone, chat, in_person
-  meetingLink     String?
-  notes           String? 
-  outcome         String?  // agreement, no_agreement, escalation
-  agreementTerms  String? 
-  nextSteps       String? 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String    @id @default(cuid()) @map("_id")
+  disputeId      String
+  mediatorId     String
+  scheduledAt    DateTime
+  startedAt      DateTime?
+  endedAt        DateTime?
+  status         String    @default("scheduled") // scheduled, in_progress, completed, cancelled
+  type           String    @default("video") // video, phone, chat, in_person
+  meetingLink    String?
+  notes          String?
+  outcome        String? // agreement, no_agreement, escalation
+  agreementTerms String?
+  nextSteps      String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   dispute  Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
   mediator User    @relation(fields: [mediatorId], references: [id], onDelete: Cascade)
@@ -933,25 +958,25 @@ model DisputeMediation {
 
 // Content Moderation Models
 model ContentModeration {
-  id             String   @id @default(cuid()) @map("_id")
-  contentType    String   // product, review, message, profile, listing
+  id             String    @id @default(cuid()) @map("_id")
+  contentType    String // product, review, message, profile, listing
   contentId      String
   authorId       String
-  status         String   @default("pending") // pending, approved, rejected, flagged, removed
-  moderationType String   @default("automated") // automated, manual, hybrid
-  flaggedReason  String?  // spam, inappropriate, fraud, violence, adult_content
-  severity       String   @default("low") // low, medium, high, critical
-  confidence     Float?   // AI confidence score
+  status         String    @default("pending") // pending, approved, rejected, flagged, removed
+  moderationType String    @default("automated") // automated, manual, hybrid
+  flaggedReason  String? // spam, inappropriate, fraud, violence, adult_content
+  severity       String    @default("low") // low, medium, high, critical
+  confidence     Float? // AI confidence score
   reviewedBy     String?
   reviewedAt     DateTime?
-  action         String?  // approve, reject, edit, remove, warn_user, ban_user
-  actionReason   String? 
-  appeal         Boolean  @default(false)
-  appealReason   String? 
+  action         String? // approve, reject, edit, remove, warn_user, ban_user
+  actionReason   String?
+  appeal         Boolean   @default(false)
+  appealReason   String?
   appealedAt     DateTime?
-  appealReviewed Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  appealReviewed Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
@@ -959,45 +984,45 @@ model ContentModeration {
 }
 
 model ModerationRule {
-  id          String   @id @default(cuid()) @map("_id")
+  id          String    @id @default(cuid()) @map("_id")
   name        String
-  description String  
-  category    String   // content_filter, user_behavior, transaction_safety
-  type        String   // keyword, pattern, ml_model, manual_review
-  conditions  String   // JSON
-  actions     String   // JSON
-  severity    String   @default("medium") // low, medium, high, critical
-  isActive    Boolean  @default(true)
-  priority    Int      @default(0)
+  description String
+  category    String // content_filter, user_behavior, transaction_safety
+  type        String // keyword, pattern, ml_model, manual_review
+  conditions  String // JSON
+  actions     String // JSON
+  severity    String    @default("medium") // low, medium, high, critical
+  isActive    Boolean   @default(true)
+  priority    Int       @default(0)
   createdBy   String
   lastUsed    DateTime?
-  usageCount  Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  usageCount  Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@map("moderation_rules")
 }
 
 model ModerationQueue {
-  id            String   @id @default(cuid()) @map("_id")
+  id            String    @id @default(cuid()) @map("_id")
   contentType   String
   contentId     String
-  contentItemId String?  // Alternative field name
+  contentItemId String? // Alternative field name
   authorId      String
-  priority      String   @default("normal") // low, normal, high, urgent
+  priority      String    @default("normal") // low, normal, high, urgent
   assignedTo    String?
-  status        String   @default("pending") // pending, in_review, completed
-  flaggedBy     String   // system, user_report, automated_scan
+  status        String    @default("pending") // pending, in_review, completed
+  flaggedBy     String // system, user_report, automated_scan
   reason        String
-  content       String   // JSON snapshot of content
-  metadata      String?  // JSON
+  content       String // JSON snapshot of content
+  metadata      String? // JSON
   assignedAt    DateTime?
   reviewedAt    DateTime?
   completedAt   DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author      User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
   contentItem ContentItem? @relation(fields: [contentId], references: [id], onDelete: Cascade)
 
   @@map("moderation_queue")
@@ -1005,35 +1030,35 @@ model ModerationQueue {
 
 // User Trust & Verification Models
 model UserTrustProfile {
-  id               String   @id @default(cuid()) @map("_id")
-  userId           String   @unique
-  trustScore       Int      @default(50) // 0-100
-  trustLevel       String   @default("unverified") // unverified, basic, verified, trusted, premium, expert
+  id                 String    @id @default(cuid()) @map("_id")
+  userId             String    @unique
+  trustScore         Int       @default(50) // 0-100
+  trustLevel         String    @default("unverified") // unverified, basic, verified, trusted, premium, expert
   verificationBadges String // JSON array
-  reputationScore  Int      @default(0)
-  reliabilityScore Int      @default(50)
-  activityScore    Int      @default(0)
-  socialScore      Int      @default(0)
-  profileStrength  String   @default("weak") // weak, fair, good, strong, excellent
-  riskLevel        String   @default("low") // low, medium, high
-  riskFlags        String?  // JSON array
-  accountAge       Int      @default(0) // days
-  lastActivity     DateTime?
-  profileCompletion Int     @default(0) // percentage
-  transactionCount Int      @default(0)
-  disputeRate      Float    @default(0.0)
-  positiveReviews  Int      @default(0)
-  negativeReviews  Int      @default(0)
-  endorsementCount Int      @default(0)
-  warnings         Int      @default(0)
-  restrictions     String?  // JSON
-  notes            String? 
-  lastUpdated      DateTime @default(now())
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  reputationScore    Int       @default(0)
+  reliabilityScore   Int       @default(50)
+  activityScore      Int       @default(0)
+  socialScore        Int       @default(0)
+  profileStrength    String    @default("weak") // weak, fair, good, strong, excellent
+  riskLevel          String    @default("low") // low, medium, high
+  riskFlags          String? // JSON array
+  accountAge         Int       @default(0) // days
+  lastActivity       DateTime?
+  profileCompletion  Int       @default(0) // percentage
+  transactionCount   Int       @default(0)
+  disputeRate        Float     @default(0.0)
+  positiveReviews    Int       @default(0)
+  negativeReviews    Int       @default(0)
+  endorsementCount   Int       @default(0)
+  warnings           Int       @default(0)
+  restrictions       String? // JSON
+  notes              String?
+  lastUpdated        DateTime  @default(now())
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   endorsements UserEndorsement[]
   trustAlerts  TrustAlert[]
 
@@ -1044,16 +1069,16 @@ model UserEndorsement {
   id           String   @id @default(cuid()) @map("_id")
   endorserId   String
   endorseeId   String
-  category     String   // reliability, communication, quality, timeliness
-  rating       Int      // 1-5
-  comment      String? 
+  category     String // reliability, communication, quality, timeliness
+  rating       Int // 1-5
+  comment      String?
   relatedOrder String?
   verified     Boolean  @default(false)
   helpful      Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  endorser User             @relation("EndorsementsGiven", fields: [endorserId], references: [id], onDelete: Cascade)
+  endorser     User             @relation("EndorsementsGiven", fields: [endorserId], references: [id], onDelete: Cascade)
   trustProfile UserTrustProfile @relation(fields: [endorseeId], references: [userId], onDelete: Cascade)
 
   @@unique([endorserId, endorseeId, category])
@@ -1061,21 +1086,21 @@ model UserEndorsement {
 }
 
 model TrustAlert {
-  id          String   @id @default(cuid()) @map("_id")
-  userId      String
-  alertType   String   // score_drop, verification_expired, suspicious_activity
-  severity    String   @default("info") // info, warning, critical
-  title       String
-  description String  
-  message     String  
-  isResolved  Boolean  @default(false)
-  actionRequired Boolean @default(false)
-  dismissed   Boolean  @default(false)
-  dismissedAt DateTime?
-  expiresAt   DateTime?
-  metadata    String?  // JSON
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String    @id @default(cuid()) @map("_id")
+  userId         String
+  alertType      String // score_drop, verification_expired, suspicious_activity
+  severity       String    @default("info") // info, warning, critical
+  title          String
+  description    String
+  message        String
+  isResolved     Boolean   @default(false)
+  actionRequired Boolean   @default(false)
+  dismissed      Boolean   @default(false)
+  dismissedAt    DateTime?
+  expiresAt      DateTime?
+  metadata       String? // JSON
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   trustProfile UserTrustProfile @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
@@ -1085,26 +1110,26 @@ model TrustAlert {
 // ==================== DELIVERY & LOGISTICS MODELS ====================
 
 model DeliveryAgent {
-  id              String   @id @default(cuid()) @map("_id")
-  userId          String   @unique
-  businessName    String?
-  vehicleType     String   // bike, car, van, truck
-  licensePlate    String?
-  licenseNumber   String?
-  phoneNumber     String
+  id               String    @id @default(cuid()) @map("_id")
+  userId           String    @unique
+  businessName     String?
+  vehicleType      String // bike, car, van, truck
+  licensePlate     String?
+  licenseNumber    String?
+  phoneNumber      String
   emergencyContact String?
-  bankDetails     String?  // JSON
-  isVerified      Boolean  @default(false)
-  isAvailable     Boolean  @default(true)
-  currentLocation String?  // JSON with lat/lng
-  rating          Float?
-  totalDeliveries Int      @default(0)
-  earnings        Float  @default(0)
-  joinedAt        DateTime @default(now())
-  lastActiveAt    DateTime?
-  status          String   @default("active") // active, suspended, inactive
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  bankDetails      String? // JSON
+  isVerified       Boolean   @default(false)
+  isAvailable      Boolean   @default(true)
+  currentLocation  String? // JSON with lat/lng
+  rating           Float?
+  totalDeliveries  Int       @default(0)
+  earnings         Float     @default(0)
+  joinedAt         DateTime  @default(now())
+  lastActiveAt     DateTime?
+  status           String    @default("active") // active, suspended, inactive
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   shipments Shipment[]
@@ -1113,39 +1138,39 @@ model DeliveryAgent {
 }
 
 model Shipment {
-  id                String   @id @default(cuid()) @map("_id")
-  orderId           String?
-  serviceRequestId  String?
-  trackingNumber    String   @unique
-  status            String   @default("pending") // pending, assigned, picked_up, in_transit, delivered, cancelled
-  shippingOption    String   // standard, express, same_day, scheduled
-  estimatedDelivery DateTime?
-  actualDelivery    DateTime?
-  pickupAddress     String  
-  deliveryAddress   String  
-  pickupCoordinates String?  // JSON
+  id                  String    @id @default(cuid()) @map("_id")
+  orderId             String?
+  serviceRequestId    String?
+  trackingNumber      String    @unique
+  status              String    @default("pending") // pending, assigned, picked_up, in_transit, delivered, cancelled
+  shippingOption      String // standard, express, same_day, scheduled
+  estimatedDelivery   DateTime?
+  actualDelivery      DateTime?
+  pickupAddress       String
+  deliveryAddress     String
+  pickupCoordinates   String? // JSON
   deliveryCoordinates String? // JSON
-  currentLocation   String?  // JSON
-  recipientName     String
-  recipientPhone    String
-  deliveryNotes     String? 
-  packageDetails    String   // JSON
-  deliveryFee       Float 
-  agentId           String?
-  zoneId            String?
-  assignedAt        DateTime?
-  pickedUpAt        DateTime?
-  deliveredAt       DateTime?
-  deliveryProof     String?  // JSON with images/signature
-  rating            Int?
-  feedback          String? 
-  events            String?  // JSON array of tracking events
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  currentLocation     String? // JSON
+  recipientName       String
+  recipientPhone      String
+  deliveryNotes       String?
+  packageDetails      String // JSON
+  deliveryFee         Float
+  agentId             String?
+  zoneId              String?
+  assignedAt          DateTime?
+  pickedUpAt          DateTime?
+  deliveredAt         DateTime?
+  deliveryProof       String? // JSON with images/signature
+  rating              Int?
+  feedback            String?
+  events              String? // JSON array of tracking events
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   agent DeliveryAgent? @relation(fields: [agentId], references: [id], onDelete: SetNull)
-  zone  DeliveryZone?    @relation(fields: [zoneId], references: [id], onDelete: SetNull)
-  order Order?          @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  zone  DeliveryZone?  @relation(fields: [zoneId], references: [id], onDelete: SetNull)
+  order Order?         @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
   @@map("shipments")
 }
@@ -1155,9 +1180,9 @@ model DeliveryZone {
   name        String
   description String?
   isActive    Boolean  @default(true)
-  coordinates String   // JSON polygon coordinates
-  baseFee     Float 
-  feePerKm    Float  @default(0)
+  coordinates String // JSON polygon coordinates
+  baseFee     Float
+  feePerKm    Float    @default(0)
   maxDistance Int      @default(50) // km
   priority    Int      @default(0)
   createdAt   DateTime @default(now())
@@ -1171,52 +1196,52 @@ model DeliveryZone {
 // ==================== PAYMENT MODELS ====================
 
 model Payment {
-  id              String   @id @default(cuid()) @map("_id")
-  reference       String   @unique
-  userId          String
-  sellerId        String?
-  orderId         String?
+  id               String    @id @default(cuid()) @map("_id")
+  reference        String    @unique
+  userId           String
+  sellerId         String?
+  orderId          String?
   serviceRequestId String?
-  amount          Float 
-  currency        String   @default("NGN")
-  method          String   // card, bank_transfer, ussd, qr, mobile_money
-  status          String   @default("pending") // pending, processing, completed, failed, refunded
-  provider        String   // paystack, flutterwave, etc
-  providerRef     String?
-  description     String?
-  escrow          Boolean  @default(false)
-  escrowStatus    String?  // held, released, disputed
-  platformCut     Float  @default(0)
-  sellerNet       Float  @default(0)
-  processingFee   Float  @default(0)
-  tax             Float  @default(0)
-  metadata        String?  // JSON
-  paidAt          DateTime?
-  failureReason   String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  amount           Float
+  currency         String    @default("NGN")
+  method           String // card, bank_transfer, ussd, qr, mobile_money
+  status           String    @default("pending") // pending, processing, completed, failed, refunded
+  provider         String // paystack, flutterwave, etc
+  providerRef      String?
+  description      String?
+  escrow           Boolean   @default(false)
+  escrowStatus     String? // held, released, disputed
+  platformCut      Float     @default(0)
+  sellerNet        Float     @default(0)
+  processingFee    Float     @default(0)
+  tax              Float     @default(0)
+  metadata         String? // JSON
+  paidAt           DateTime?
+  failureReason    String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  user    User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  refunds PaymentRefund[]
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  refunds  PaymentRefund[]
   invoices Invoice[]
 
   @@map("payments")
 }
 
 model PaymentRefund {
-  id            String   @id @default(cuid()) @map("_id")
+  id            String    @id @default(cuid()) @map("_id")
   paymentId     String
-  amount        Float 
+  amount        Float
   reason        String
-  status        String   @default("pending") // pending, processing, completed, failed
+  status        String    @default("pending") // pending, processing, completed, failed
   providerRef   String?
   processedBy   String?
   requestedBy   String
   approvedAt    DateTime?
   completedAt   DateTime?
   failureReason String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
 
@@ -1224,19 +1249,19 @@ model PaymentRefund {
 }
 
 model Payout {
-  id             String   @id @default(cuid()) @map("_id")
-  sellerId       String
-  totalAmount    Float 
-  currency       String   @default("NGN")
-  status         String   @default("scheduled") // scheduled, processing, completed, failed
-  provider       String   // paystack, flutterwave, etc
-  providerRef    String?
-  bankDetails    String   // JSON
-  scheduledAt    DateTime
-  processedAt    DateTime?
-  failureReason  String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id            String    @id @default(cuid()) @map("_id")
+  sellerId      String
+  totalAmount   Float
+  currency      String    @default("NGN")
+  status        String    @default("scheduled") // scheduled, processing, completed, failed
+  provider      String // paystack, flutterwave, etc
+  providerRef   String?
+  bankDetails   String // JSON
+  scheduledAt   DateTime
+  processedAt   DateTime?
+  failureReason String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   items PayoutItem[]
 
@@ -1244,7 +1269,7 @@ model Payout {
 }
 
 model PayoutItem {
-  id         String  @id @default(cuid()) @map("_id")
+  id         String @id @default(cuid()) @map("_id")
   payoutId   String
   paymentId  String
   amount     Float
@@ -1258,18 +1283,18 @@ model PayoutItem {
 }
 
 model Invoice {
-  id          String   @id @default(cuid()) @map("_id")
-  paymentId   String
-  invoiceNumber String @unique
-  type        String   // sale, service, refund
-  amount      Float 
-  tax         Float  @default(0)
-  status      String   @default("issued") // issued, paid, overdue, cancelled
-  dueDate     DateTime?
-  paidAt      DateTime?
-  details     String   // JSON
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String    @id @default(cuid()) @map("_id")
+  paymentId     String
+  invoiceNumber String    @unique
+  type          String // sale, service, refund
+  amount        Float
+  tax           Float     @default(0)
+  status        String    @default("issued") // issued, paid, overdue, cancelled
+  dueDate       DateTime?
+  paidAt        DateTime?
+  details       String // JSON
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   payment Payment @relation(fields: [paymentId], references: [id], onDelete: Cascade)
 
@@ -1277,13 +1302,13 @@ model Invoice {
 }
 
 model TaxRule {
-  id          String  @id @default(cuid()) @map("_id")
+  id          String   @id @default(cuid()) @map("_id")
   name        String
-  type        String  // vat, sales_tax, service_tax
+  type        String // vat, sales_tax, service_tax
   rate        Float
   category    String? // product, service, digital
   region      String? // state, country code
-  isActive    Boolean @default(true)
+  isActive    Boolean  @default(true)
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -1292,19 +1317,19 @@ model TaxRule {
 }
 
 model RevenueShareScheme {
-  id                String  @id @default(cuid()) @map("_id")
-  name              String
-  category          String  // product, service, premium
+  id                 String    @id @default(cuid()) @map("_id")
+  name               String
+  category           String // product, service, premium
   platformPercentage Float
-  sellerPercentage  Float
-  minimumFee        Float @default(0)
-  maximumFee        Float?
-  userType          String? // regular, premium, verified
-  isActive          Boolean @default(true)
-  effectiveFrom     DateTime @default(now())
-  effectiveTo       DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  sellerPercentage   Float
+  minimumFee         Float     @default(0)
+  maximumFee         Float?
+  userType           String? // regular, premium, verified
+  isActive           Boolean   @default(true)
+  effectiveFrom      DateTime  @default(now())
+  effectiveTo        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   @@map("revenue_share_schemes")
 }
@@ -1312,24 +1337,24 @@ model RevenueShareScheme {
 // ==================== NOTIFICATION MODELS ====================
 
 model Notification {
-  id              String   @id @default(cuid()) @map("_id")
-  userId          String
-  title           String
-  message         String  
-  type            String   // info, warning, success, error
-  category        String   // order, payment, security, system
-  priority        String   @default("normal") // low, normal, high, urgent
-  isRead          Boolean  @default(false)
-  read            Boolean  @default(false)
-  actionUrl       String?
-  actionLabel     String?
-  metadata        String?  // JSON
-  scheduledFor    DateTime?
-  sentAt          DateTime?
-  readAt          DateTime?
-  expiresAt       DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id           String    @id @default(cuid()) @map("_id")
+  userId       String
+  title        String
+  message      String
+  type         String // info, warning, success, error
+  category     String // order, payment, security, system
+  priority     String    @default("normal") // low, normal, high, urgent
+  isRead       Boolean   @default(false)
+  read         Boolean   @default(false)
+  actionUrl    String?
+  actionLabel  String?
+  metadata     String? // JSON
+  scheduledFor DateTime?
+  sentAt       DateTime?
+  readAt       DateTime?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1337,24 +1362,24 @@ model Notification {
 }
 
 model NotificationPreference {
-  id                  String  @id @default(cuid()) @map("_id")
-  userId              String  @unique
-  emailNotifications  Boolean @default(true)
-  smsNotifications    Boolean @default(true)
-  pushNotifications   Boolean @default(true)
-  orderUpdates        Boolean @default(true)
-  paymentAlerts       Boolean @default(true)
-  securityAlerts      Boolean @default(true)
-  marketingEmails     Boolean @default(false)
-  weeklyDigest        Boolean @default(true)
-  promotionalOffers   Boolean @default(true)
-  systemMaintenance   Boolean @default(true)
-  frequency           String  @default("immediate") // immediate, daily, weekly
-  quietHoursStart     String? // HH:MM format
-  quietHoursEnd       String? // HH:MM format
-  timezone            String  @default("UTC")
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id                 String   @id @default(cuid()) @map("_id")
+  userId             String   @unique
+  emailNotifications Boolean  @default(true)
+  smsNotifications   Boolean  @default(true)
+  pushNotifications  Boolean  @default(true)
+  orderUpdates       Boolean  @default(true)
+  paymentAlerts      Boolean  @default(true)
+  securityAlerts     Boolean  @default(true)
+  marketingEmails    Boolean  @default(false)
+  weeklyDigest       Boolean  @default(true)
+  promotionalOffers  Boolean  @default(true)
+  systemMaintenance  Boolean  @default(true)
+  frequency          String   @default("immediate") // immediate, daily, weekly
+  quietHoursStart    String? // HH:MM format
+  quietHoursEnd      String? // HH:MM format
+  timezone           String   @default("UTC")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1362,17 +1387,17 @@ model NotificationPreference {
 }
 
 model UserNotificationPreference {
-  id        String @id @default(cuid()) @map("_id")
-  userId    String @unique
-  email     Boolean @default(true)
-  sms       Boolean @default(true)
-  push      Boolean @default(true)
-  inApp     Boolean @default(true)
-  whatsapp  Boolean @default(false)
+  id         String   @id @default(cuid()) @map("_id")
+  userId     String   @unique
+  email      Boolean  @default(true)
+  sms        Boolean  @default(true)
+  push       Boolean  @default(true)
+  inApp      Boolean  @default(true)
+  whatsapp   Boolean  @default(false)
   categories String? // JSON object
   quietHours String? // JSON object
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1382,21 +1407,21 @@ model UserNotificationPreference {
 // ==================== GDPR & COMPLIANCE MODELS ====================
 
 model DataExportRequest {
-  id            String   @id @default(cuid()) @map("_id")
-  userId        String
-  requestType   String   @default("full_export") // full_export, partial_export, portability
-  status        String   @default("pending") // pending, processing, completed, failed
-  dataTypes     String   // JSON array
-  format        String   @default("json") // json, csv, xml
-  downloadUrl   String?
-  expiresAt     DateTime?
-  requestedBy   DateTime @default(now()) // Alternative field name
-  requestedAt   DateTime @default(now())
-  processedAt   DateTime?
-  completedAt   DateTime?
-  fileSize      Int?     // in bytes
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String    @id @default(cuid()) @map("_id")
+  userId      String
+  requestType String    @default("full_export") // full_export, partial_export, portability
+  status      String    @default("pending") // pending, processing, completed, failed
+  dataTypes   String // JSON array
+  format      String    @default("json") // json, csv, xml
+  downloadUrl String?
+  expiresAt   DateTime?
+  requestedBy DateTime  @default(now()) // Alternative field name
+  requestedAt DateTime  @default(now())
+  processedAt DateTime?
+  completedAt DateTime?
+  fileSize    Int? // in bytes
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1404,26 +1429,26 @@ model DataExportRequest {
 }
 
 model DataDeletionRequest {
-  id                String   @id @default(cuid()) @map("_id")
+  id                String    @id @default(cuid()) @map("_id")
   userId            String
-  requestType       String   @default("full_deletion") // full_deletion, partial_deletion, anonymization
-  status            String   @default("pending") // pending, processing, completed, rejected
-  reason            String? 
-  dataTypes         String?  // JSON array for partial deletion
-  retentionPeriod   Int?     // days to keep before permanent deletion
-  requestDate       DateTime @default(now())
-  requestedBy       DateTime @default(now()) // Alternative field name
+  requestType       String    @default("full_deletion") // full_deletion, partial_deletion, anonymization
+  status            String    @default("pending") // pending, processing, completed, rejected
+  reason            String?
+  dataTypes         String? // JSON array for partial deletion
+  retentionPeriod   Int? // days to keep before permanent deletion
+  requestDate       DateTime  @default(now())
+  requestedBy       DateTime  @default(now()) // Alternative field name
   scheduledDate     DateTime?
   scheduledFor      DateTime?
   verificationToken String?
-  deletionMethod    String   @default("soft_delete") // soft_delete, hard_delete, anonymization
+  deletionMethod    String    @default("soft_delete") // soft_delete, hard_delete, anonymization
   processedBy       String?
   processedAt       DateTime?
   completedAt       DateTime?
-  backupCreated     Boolean  @default(false)
-  notes             String? 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  backupCreated     Boolean   @default(false)
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1431,22 +1456,22 @@ model DataDeletionRequest {
 }
 
 model ConsentRecord {
-  id              String   @id @default(cuid()) @map("_id")
-  userId          String
-  consentType     String   // privacy_policy, terms_of_service, marketing, cookies
-  consentSource   String   @default("website") // website, app, email, phone
-  consentGiven    Boolean
-  consentDate     DateTime @default(now())
-  consentMethod   String   @default("explicit") // explicit, implicit, inferred
-  ipAddress       String?
-  userAgent       String? 
-  version         String   // version of document consented to
-  withdrawnAt     DateTime?
-  withdrawalReason String? 
-  isActive        Boolean  @default(true)
-  legalBasis      String?  // consent, legitimate_interest, contract, etc.
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id               String    @id @default(cuid()) @map("_id")
+  userId           String
+  consentType      String // privacy_policy, terms_of_service, marketing, cookies
+  consentSource    String    @default("website") // website, app, email, phone
+  consentGiven     Boolean
+  consentDate      DateTime  @default(now())
+  consentMethod    String    @default("explicit") // explicit, implicit, inferred
+  ipAddress        String?
+  userAgent        String?
+  version          String // version of document consented to
+  withdrawnAt      DateTime?
+  withdrawalReason String?
+  isActive         Boolean   @default(true)
+  legalBasis       String? // consent, legitimate_interest, contract, etc.
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1456,24 +1481,24 @@ model ConsentRecord {
 // ==================== COMMUNICATION MODELS ====================
 
 model ChatMessage {
-  id          String   @id @default(cuid()) @map("_id")
+  id          String    @id @default(cuid()) @map("_id")
   chatId      String
   roomId      String?
   senderId    String
   recipientId String
-  content     String  
-  messageType String   @default("text") // text, image, file, system
-  attachments String?  // JSON
-  isRead      Boolean  @default(false)
-  isEdited    Boolean  @default(false)
+  content     String
+  messageType String    @default("text") // text, image, file, system
+  attachments String? // JSON
+  isRead      Boolean   @default(false)
+  isEdited    Boolean   @default(false)
   editedAt    DateTime?
   replyToId   String?
-  reactions   String?  // JSON
-  metadata    String?  // JSON
+  reactions   String? // JSON
+  metadata    String? // JSON
   readAt      DateTime?
   deliveredAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   sender    User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
   recipient User @relation("ReceivedMessages", fields: [recipientId], references: [id], onDelete: Cascade)
@@ -1484,22 +1509,22 @@ model ChatMessage {
 // ==================== TRUST & VERIFICATION MODELS ====================
 
 model VerificationBadge {
-  id          String   @id @default(cuid()) @map("_id")
+  id          String    @id @default(cuid()) @map("_id")
   userId      String
-  badgeType   String   // email_verified, phone_verified, identity_verified, etc.
+  badgeType   String // email_verified, phone_verified, identity_verified, etc.
   badgeName   String
-  description String? 
+  description String?
   iconUrl     String?
-  color       String?  @default("#10B981")
-  isActive    Boolean  @default(true)
-  status      String   @default("active") // active, expired, revoked
-  earnedAt    DateTime @default(now())
+  color       String?   @default("#10B981")
+  isActive    Boolean   @default(true)
+  status      String    @default("active") // active, expired, revoked
+  earnedAt    DateTime  @default(now())
   expiresAt   DateTime?
   verifiedBy  String?
-  criteria    String?  // JSON
-  metadata    String?  // JSON
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  criteria    String? // JSON
+  metadata    String? // JSON
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1508,25 +1533,25 @@ model VerificationBadge {
 }
 
 model Endorsement {
-  id             String   @id @default(cuid()) @map("_id")
-  endorserId     String
-  endorseeId     String
-  endorsementType String  // skill, reliability, communication, quality
-  category       String   // skill, reliability, communication, quality
-  rating         Int      // 1-5
-  title          String?
-  comment        String? 
-  description    String? 
-  isPublic       Boolean  @default(true)
-  isVerified     Boolean  @default(false)
-  verifiedBy     String?
-  relatedOrder   String?
-  helpful        Int      @default(0)
-  reportCount    Int      @default(0)
-  status         String   @default("active") // active, hidden, reported, removed
-  weight         Float?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id              String   @id @default(cuid()) @map("_id")
+  endorserId      String
+  endorseeId      String
+  endorsementType String // skill, reliability, communication, quality
+  category        String // skill, reliability, communication, quality
+  rating          Int // 1-5
+  title           String?
+  comment         String?
+  description     String?
+  isPublic        Boolean  @default(true)
+  isVerified      Boolean  @default(false)
+  verifiedBy      String?
+  relatedOrder    String?
+  helpful         Int      @default(0)
+  reportCount     Int      @default(0)
+  status          String   @default("active") // active, hidden, reported, removed
+  weight          Float?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   endorser User @relation("EndorsementsGiven", fields: [endorserId], references: [id], onDelete: Cascade)
   endorsee User @relation("EndorsementsReceived", fields: [endorseeId], references: [id], onDelete: Cascade)
@@ -1536,19 +1561,19 @@ model Endorsement {
 }
 
 model SocialConnection {
-  id          String   @id @default(cuid()) @map("_id")
-  userId      String
-  platform    String   // facebook, twitter, linkedin, instagram, etc.
-  username    String
-  profileUrl  String?
-  isVerified  Boolean  @default(false)
-  isPublic    Boolean  @default(true)
-  followers   Int?
-  following   Int?
-  lastSynced  DateTime?
-  metadata    String?  // JSON
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String    @id @default(cuid()) @map("_id")
+  userId     String
+  platform   String // facebook, twitter, linkedin, instagram, etc.
+  username   String
+  profileUrl String?
+  isVerified Boolean   @default(false)
+  isPublic   Boolean   @default(true)
+  followers  Int?
+  following  Int?
+  lastSynced DateTime?
+  metadata   String? // JSON
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1557,27 +1582,27 @@ model SocialConnection {
 }
 
 model CommunityPost {
-  id            String   @id @default(cuid()) @map("_id")
-  authorId      String
-  title         String
-  content       String  
-  postType      String   @default("discussion") // discussion, question, announcement, review
-  category      String?
-  tags          String?  // JSON array
-  images        String?  // JSON array
-  isPublic      Boolean  @default(true)
-  isLocked      Boolean  @default(false)
-  isPinned      Boolean  @default(false)
-  viewCount     Int      @default(0)
-  likeCount     Int      @default(0)
-  commentCount  Int      @default(0)
-  shareCount    Int      @default(0)
-  reportCount   Int      @default(0)
-  status        String   @default("published") // draft, published, hidden, removed
-  moderatedAt   DateTime?
-  moderatedBy   String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String    @id @default(cuid()) @map("_id")
+  authorId     String
+  title        String
+  content      String
+  postType     String    @default("discussion") // discussion, question, announcement, review
+  category     String?
+  tags         String? // JSON array
+  images       String? // JSON array
+  isPublic     Boolean   @default(true)
+  isLocked     Boolean   @default(false)
+  isPinned     Boolean   @default(false)
+  viewCount    Int       @default(0)
+  likeCount    Int       @default(0)
+  commentCount Int       @default(0)
+  shareCount   Int       @default(0)
+  reportCount  Int       @default(0)
+  status       String    @default("published") // draft, published, hidden, removed
+  moderatedAt  DateTime?
+  moderatedBy  String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
@@ -1585,19 +1610,19 @@ model CommunityPost {
 }
 
 model ReviewAuthenticity {
-  id            String   @id @default(cuid()) @map("_id")
-  reviewId      String   @unique
-  authenticityScore Float  // 0.0 to 1.0
-  confidence    Float    // 0.0 to 1.0
-  riskFactors   String?  // JSON array
+  id                 String    @id @default(cuid()) @map("_id")
+  reviewId           String    @unique
+  authenticityScore  Float // 0.0 to 1.0
+  confidence         Float // 0.0 to 1.0
+  riskFactors        String? // JSON array
   verificationMethod String? // ai_analysis, manual_review, user_verification
-  isAuthentic   Boolean?
-  flaggedReason String?
-  reviewedBy    String?
-  reviewedAt    DateTime?
-  metadata      String?  // JSON
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  isAuthentic        Boolean?
+  flaggedReason      String?
+  reviewedBy         String?
+  reviewedAt         DateTime?
+  metadata           String? // JSON
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
@@ -1607,22 +1632,22 @@ model ReviewAuthenticity {
 // ==================== SECURITY & MONITORING MODELS ====================
 
 model SecurityFinding {
-  id          String   @id @default(cuid()) @map("_id")
+  id          String    @id @default(cuid()) @map("_id")
   auditId     String
-  findingType String   // vulnerability, misconfiguration, compliance_issue
-  severity    String   // info, low, medium, high, critical
+  findingType String // vulnerability, misconfiguration, compliance_issue
+  severity    String // info, low, medium, high, critical
   title       String
-  description String  
-  remediation String? 
-  status      String   @default("open") // open, acknowledged, remediated, false_positive
+  description String
+  remediation String?
+  status      String    @default("open") // open, acknowledged, remediated, false_positive
   assignedTo  String?
   dueDate     DateTime?
   closedAt    DateTime?
   closedBy    String?
-  evidence    String?  // JSON
-  metadata    String?  // JSON
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  evidence    String? // JSON
+  metadata    String? // JSON
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   audit SecurityAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
 
@@ -1630,48 +1655,48 @@ model SecurityFinding {
 }
 
 model VulnerabilityAssessment {
-  id              String   @id @default(cuid()) @map("_id")
+  id              String    @id @default(cuid()) @map("_id")
   title           String
-  description     String  
-  severity        String   // info, low, medium, high, critical
+  description     String
+  severity        String // info, low, medium, high, critical
   cvssScore       Float?
   cveId           String?
-  affectedSystems String   // JSON array
-  status          String   @default("identified") // identified, confirmed, patched, mitigated
+  affectedSystems String // JSON array
+  status          String    @default("identified") // identified, confirmed, patched, mitigated
   discoveredBy    String?
-  discoveredAt    DateTime @default(now())
-  patchAvailable  Boolean  @default(false)
+  discoveredAt    DateTime  @default(now())
+  patchAvailable  Boolean   @default(false)
   patchVersion    String?
-  mitigationSteps String? 
+  mitigationSteps String?
   assignedTo      String?
   dueDate         DateTime?
   resolvedAt      DateTime?
   resolvedBy      String?
-  notes           String? 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   @@map("vulnerability_assessments")
 }
 
 model SecurityLog {
-  id          String   @id @default(cuid()) @map("_id")
-  userId      String?
-  sessionId   String?
-  eventType   String   // login, logout, permission_change, data_access
-  action      String
-  resource    String?
-  details     String? 
-  ipAddress   String?
-  userAgent   String? 
-  success     Boolean
-  errorCode   String?
+  id           String   @id @default(cuid()) @map("_id")
+  userId       String?
+  sessionId    String?
+  eventType    String // login, logout, permission_change, data_access
+  action       String
+  resource     String?
+  details      String?
+  ipAddress    String?
+  userAgent    String?
+  success      Boolean
+  errorCode    String?
   errorMessage String?
-  metadata    String?  // JSON
-  riskScore   Int?     @default(0)
-  flagged     Boolean  @default(false)
-  timestamp   DateTime @default(now())
-  createdAt   DateTime @default(now())
+  metadata     String? // JSON
+  riskScore    Int?     @default(0)
+  flagged      Boolean  @default(false)
+  timestamp    DateTime @default(now())
+  createdAt    DateTime @default(now())
 
   @@index([userId])
   @@index([eventType])
@@ -1680,37 +1705,37 @@ model SecurityLog {
 }
 
 model BlockedIP {
-  id          String   @id @default(cuid()) @map("_id")
-  ipAddress   String   @unique
-  reason      String  
+  id          String    @id @default(cuid()) @map("_id")
+  ipAddress   String    @unique
+  reason      String
   blockedBy   String
-  blockedAt   DateTime @default(now())
+  blockedAt   DateTime  @default(now())
   expiresAt   DateTime?
-  isActive    Boolean  @default(true)
-  attempts    Int      @default(1)
-  lastAttempt DateTime @default(now())
-  metadata    String?  // JSON
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive    Boolean   @default(true)
+  attempts    Int       @default(1)
+  lastAttempt DateTime  @default(now())
+  metadata    String? // JSON
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@map("blocked_ips")
 }
 
 model SecurityScan {
-  id            String   @id @default(cuid()) @map("_id")
-  scanType      String   // port_scan, vulnerability_scan, malware_scan
-  target        String   // ip_address, domain, user_upload
-  status        String   @default("queued") // queued, running, completed, failed
-  findings      String?  // JSON
-  riskScore     Int?     @default(0)
+  id            String    @id @default(cuid()) @map("_id")
+  scanType      String // port_scan, vulnerability_scan, malware_scan
+  target        String // ip_address, domain, user_upload
+  status        String    @default("queued") // queued, running, completed, failed
+  findings      String? // JSON
+  riskScore     Int?      @default(0)
   startedAt     DateTime?
   completedAt   DateTime?
-  duration      Int?     // seconds
+  duration      Int? // seconds
   scanEngine    String?
   engineVersion String?
-  metadata      String?  // JSON
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  metadata      String? // JSON
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@map("security_scans")
 }
@@ -1718,16 +1743,16 @@ model SecurityScan {
 // ==================== ADDITIONAL USER & ACTIVITY MODELS ====================
 
 model UserActivity {
-  id          String   @id @default(cuid()) @map("_id")
-  userId      String
-  activityType String  // login, logout, purchase, listing, message, etc.
-  action      String
-  resource    String?
-  metadata    String?  // JSON
-  ipAddress   String?
-  userAgent   String? 
-  duration    Int?     // seconds for session activities
-  createdAt   DateTime @default(now())
+  id           String   @id @default(cuid()) @map("_id")
+  userId       String
+  activityType String // login, logout, purchase, listing, message, etc.
+  action       String
+  resource     String?
+  metadata     String? // JSON
+  ipAddress    String?
+  userAgent    String?
+  duration     Int? // seconds for session activities
+  createdAt    DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1741,10 +1766,10 @@ model EmergencyContact {
   id           String   @id @default(cuid()) @map("_id")
   userId       String
   name         String
-  relationship String   // family, friend, colleague, etc.
+  relationship String // family, friend, colleague, etc.
   phone        String
   email        String?
-  address      String? 
+  address      String?
   isPrimary    Boolean  @default(false)
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
@@ -1756,28 +1781,28 @@ model EmergencyContact {
 }
 
 model SafetySettings {
-  id                   String   @id @default(cuid()) @map("_id")
-  userId               String   @unique
-  locationSharing      Boolean  @default(false)
-  meetingReminders     Boolean  @default(true)
-  emergencyContacts    Boolean  @default(true)
-  safetyTips           Boolean  @default(true)
-  incidentReporting    Boolean  @default(true)
-  riskAssessment       Boolean  @default(true)
-  backgroundChecks     Boolean  @default(false)
-  identityVerification Boolean  @default(false)
-  twoFactorAuth        Boolean  @default(false)
+  id                        String   @id @default(cuid()) @map("_id")
+  userId                    String   @unique
+  locationSharing           Boolean  @default(false)
+  meetingReminders          Boolean  @default(true)
+  emergencyContacts         Boolean  @default(true)
+  safetyTips                Boolean  @default(true)
+  incidentReporting         Boolean  @default(true)
+  riskAssessment            Boolean  @default(true)
+  backgroundChecks          Boolean  @default(false)
+  identityVerification      Boolean  @default(false)
+  twoFactorAuth             Boolean  @default(false)
   /// TOTP secret for authenticator apps (Base32)
-  twoFactorSecret      String?
-  loginAlerts          Boolean  @default(true)
-  profileVisibilityLevel String @default("public") // public, friends, private
-  allowContactFromStrangers Boolean @default(true)
-  shareLocationData    Boolean  @default(false)
-  emergencyModeEnabled Boolean  @default(false)
-  safeWord             String?
-  safeWordEnabled      Boolean  @default(false)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  twoFactorSecret           String?
+  loginAlerts               Boolean  @default(true)
+  profileVisibilityLevel    String   @default("public") // public, friends, private
+  allowContactFromStrangers Boolean  @default(true)
+  shareLocationData         Boolean  @default(false)
+  emergencyModeEnabled      Boolean  @default(false)
+  safeWord                  String?
+  safeWordEnabled           Boolean  @default(false)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1785,20 +1810,20 @@ model SafetySettings {
 }
 
 model MeetingGuidelines {
-  id          String   @id @default(cuid()) @map("_id")
-  title       String
-  content     String  
-  category    String   // first_meeting, public_spaces, safety_tips
-  type        String   @default("general") // general, product_specific, location_specific
-  isActive    Boolean  @default(true)
-  priority    Int      @default(0)
-  audience    String?  // buyer, seller, all
-  createdBy   String
-  viewCount   Int      @default(0)
-  helpful     Int      @default(0)
-  notHelpful  Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid()) @map("_id")
+  title      String
+  content    String
+  category   String // first_meeting, public_spaces, safety_tips
+  type       String   @default("general") // general, product_specific, location_specific
+  isActive   Boolean  @default(true)
+  priority   Int      @default(0)
+  audience   String? // buyer, seller, all
+  createdBy  String
+  viewCount  Int      @default(0)
+  helpful    Int      @default(0)
+  notHelpful Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@map("meeting_guidelines")
 }
@@ -1808,13 +1833,13 @@ model MeetingGuidelines {
 model TrustMetric {
   id             String   @id @default(cuid()) @map("_id")
   userId         String
-  metricType     String   // transaction_history, response_time, completion_rate, etc.
+  metricType     String // transaction_history, response_time, completion_rate, etc.
   value          Float
   maxValue       Float    @default(100.0)
-  weight         Float    // importance in overall trust score
+  weight         Float // importance in overall trust score
   lastCalculated DateTime @default(now())
   period         String   @default("all_time") // all_time, last_30_days, last_year
-  metadata       String?  // JSON
+  metadata       String? // JSON
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -1827,15 +1852,15 @@ model TrustMetric {
 model PolicyViolation {
   id            String   @id @default(cuid()) @map("_id")
   userId        String
-  violationType String   // spam, fraud, harassment, fake_listing
-  severity      String   // minor, major, critical
+  violationType String // spam, fraud, harassment, fake_listing
+  severity      String // minor, major, critical
   status        String   @default("reported") // reported, investigating, confirmed, dismissed
-  description   String  
-  evidence      String?  // JSON
+  description   String
+  evidence      String? // JSON
   reportedBy    String?
   reviewedBy    String?
-  actionTaken   String?  // warning, suspension, ban, content_removal
-  appealStatus  String?  // none, pending, approved, rejected
+  actionTaken   String? // warning, suspension, ban, content_removal
+  appealStatus  String? // none, pending, approved, rejected
   detectedAt    DateTime @default(now())
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -1846,20 +1871,20 @@ model PolicyViolation {
 }
 
 model RiskAssessment {
-  id              String   @id @default(cuid()) @map("_id")
+  id              String    @id @default(cuid()) @map("_id")
   userId          String
-  riskType        String   // transaction, communication, meeting, identity
-  riskScore       Int      // 0-100
-  riskLevel       String   // low, medium, high, critical
-  overallRisk     String   // low, medium, high, critical (alternative field name)
-  factors         String   // JSON array of risk factors
-  riskFactors     String   // JSON array (alternative field name)
-  recommendations String?  // JSON array
-  assessedBy      String   // system, manual_review
+  riskType        String // transaction, communication, meeting, identity
+  riskScore       Int // 0-100
+  riskLevel       String // low, medium, high, critical
+  overallRisk     String // low, medium, high, critical (alternative field name)
+  factors         String // JSON array of risk factors
+  riskFactors     String // JSON array (alternative field name)
+  recommendations String? // JSON array
+  assessedBy      String // system, manual_review
   validUntil      DateTime?
-  notes           String? 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1869,17 +1894,17 @@ model RiskAssessment {
 model ReputationChange {
   id            String   @id @default(cuid()) @map("_id")
   userId        String
-  changeType    String   // positive_review, negative_review, violation, achievement
-  points        Int      // can be negative
+  changeType    String // positive_review, negative_review, violation, achievement
+  points        Int // can be negative
   previousScore Int      @default(0)
   newScore      Int      @default(0)
   delta         Int      @default(0)
-  reason        String  
-  source        String   // review, transaction, admin_action, system_calculation
-  relatedEntity String?  // order_id, review_id, etc.
+  reason        String
+  source        String // review, transaction, admin_action, system_calculation
+  relatedEntity String? // order_id, review_id, etc.
   triggeredBy   String?
   timestamp     DateTime @default(now())
-  metadata      String?  // JSON
+  metadata      String? // JSON
   createdBy     String?
   createdAt     DateTime @default(now())
 
@@ -1891,25 +1916,25 @@ model ReputationChange {
 // ==================== IDENTITY VERIFICATION MODELS ====================
 
 model IdentityVerification {
-  id                String   @id @default(cuid()) @map("_id")
-  userId            String
-  documentType      String   // passport, drivers_license, national_id, etc.
-  documentNumber    String?
-  documentImages    String   // JSON array of image URLs
-  selfieImage       String?
-  verificationMethod String  @default("manual") // manual, automated, hybrid
-  verificationType  String   @default("identity") // identity, address, phone
-  status            String   @default("pending") // pending, approved, rejected, expired
-  confidence        Float?   // 0.0 to 1.0 for automated checks
-  verifiedBy        String?
-  verifiedAt        DateTime?
-  expiresAt         DateTime?
-  submittedAt       DateTime @default(now())
-  rejectionReason   String? 
-  notes             String? 
-  metadata          String?  // JSON
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                 String    @id @default(cuid()) @map("_id")
+  userId             String
+  documentType       String // passport, drivers_license, national_id, etc.
+  documentNumber     String?
+  documentImages     String // JSON array of image URLs
+  selfieImage        String?
+  verificationMethod String    @default("manual") // manual, automated, hybrid
+  verificationType   String    @default("identity") // identity, address, phone
+  status             String    @default("pending") // pending, approved, rejected, expired
+  confidence         Float? // 0.0 to 1.0 for automated checks
+  verifiedBy         String?
+  verifiedAt         DateTime?
+  expiresAt          DateTime?
+  submittedAt        DateTime  @default(now())
+  rejectionReason    String?
+  notes              String?
+  metadata           String? // JSON
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1917,23 +1942,23 @@ model IdentityVerification {
 }
 
 model BackgroundCheck {
-  id            String   @id @default(cuid()) @map("_id")
-  userId        String
-  checkType     String   // criminal, credit, employment, reference
-  provider      String?  // third-party service provider
-  providerRef   String?
-  status        String   @default("pending") // pending, in_progress, completed, failed
-  result        String?  // clear, flagged, inconclusive
-  score         Int?     // 0-100
-  findings      String?  // JSON
-  requestedBy   String
-  requestedAt   DateTime @default(now())
-  completedAt   DateTime?
-  expiresAt     DateTime?
-  cost          Float?
-  notes         String? 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String    @id @default(cuid()) @map("_id")
+  userId      String
+  checkType   String // criminal, credit, employment, reference
+  provider    String? // third-party service provider
+  providerRef String?
+  status      String    @default("pending") // pending, in_progress, completed, failed
+  result      String? // clear, flagged, inconclusive
+  score       Int? // 0-100
+  findings    String? // JSON
+  requestedBy String
+  requestedAt DateTime  @default(now())
+  completedAt DateTime?
+  expiresAt   DateTime?
+  cost        Float?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1943,25 +1968,25 @@ model BackgroundCheck {
 // ==================== USER PROFILE MODEL ====================
 
 model UserProfile {
-  id              String   @id @default(cuid()) @map("_id")
-  userId          String   @unique
-  bio             String? 
-  website         String?
-  location        String?
-  dateOfBirth     DateTime?
-  gender          String?
-  interests       String?  // JSON array
-  languages       String?  // JSON array
-  timezone        String   @default("UTC")
-  profilePicture  String?
-  coverPicture    String?
-  socialLinks     String?  // JSON object
-  preferences     String?  // JSON object
-  isPublic        Boolean  @default(true)
-  lastActiveAt    DateTime?
-  verifiedDate    DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String    @id @default(cuid()) @map("_id")
+  userId         String    @unique
+  bio            String?
+  website        String?
+  location       String?
+  dateOfBirth    DateTime?
+  gender         String?
+  interests      String? // JSON array
+  languages      String? // JSON array
+  timezone       String    @default("UTC")
+  profilePicture String?
+  coverPicture   String?
+  socialLinks    String? // JSON object
+  preferences    String? // JSON object
+  isPublic       Boolean   @default(true)
+  lastActiveAt   DateTime?
+  verifiedDate   DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1971,20 +1996,20 @@ model UserProfile {
 // ==================== ADDITIONAL MISSING MODELS ====================
 
 model ContentItem {
-  id          String   @id @default(cuid()) @map("_id")
-  itemId      String   // External reference ID
-  contentType String   // product, review, message, listing
-  content     String  
-  title       String?
-  authorId    String
-  status      String   @default("pending") // pending, approved, rejected, flagged
-  autoModerationScore Float?
-  moderatedAt DateTime?
-  isRemoved   Boolean  @default(false)
-  isBlurred   Boolean  @default(false)
-  visibilityRestricted Boolean @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                   String    @id @default(cuid()) @map("_id")
+  itemId               String // External reference ID
+  contentType          String // product, review, message, listing
+  content              String
+  title                String?
+  authorId             String
+  status               String    @default("pending") // pending, approved, rejected, flagged
+  autoModerationScore  Float?
+  moderatedAt          DateTime?
+  isRemoved            Boolean   @default(false)
+  isBlurred            Boolean   @default(false)
+  visibilityRestricted Boolean   @default(false)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   flags           ContentFlag[]
   violations      ContentViolation[]
@@ -1994,19 +2019,19 @@ model ContentItem {
 }
 
 model ContentFlag {
-  id            String   @id @default(cuid()) @map("_id")
-  contentId     String   // Reference to content
-  contentItemId String   // Alternative reference field
+  id            String    @id @default(cuid()) @map("_id")
+  contentId     String // Reference to content
+  contentItemId String // Alternative reference field
   flaggedBy     String
   reason        String
-  severity      String   @default("medium")
-  status        String   @default("pending")
-  flagType      String   @default("inappropriate") // inappropriate, spam, fake, etc.
+  severity      String    @default("medium")
+  status        String    @default("pending")
+  flagType      String    @default("inappropriate") // inappropriate, spam, fake, etc.
   reviewedBy    String?
   reviewedAt    DateTime?
-  reviewNotes   String? 
-  description   String? 
-  flaggedAt     DateTime @default(now())
+  reviewNotes   String?
+  description   String?
+  flaggedAt     DateTime  @default(now())
 
   content ContentItem @relation(fields: [contentId], references: [id], onDelete: Cascade)
 
@@ -2014,14 +2039,14 @@ model ContentFlag {
 }
 
 model ContentViolation {
-  id           String   @id @default(cuid()) @map("_id")
-  contentId    String
+  id            String   @id @default(cuid()) @map("_id")
+  contentId     String
   violationType String
-  severity     String
-  confidence   Float?
-  description  String  
-  detectedAt   DateTime @default(now())
-  detectedBy   String   // system, user, moderator
+  severity      String
+  confidence    Float?
+  description   String
+  detectedAt    DateTime @default(now())
+  detectedBy    String // system, user, moderator
 
   content ContentItem @relation(fields: [contentId], references: [id], onDelete: Cascade)
 
@@ -2029,20 +2054,20 @@ model ContentViolation {
 }
 
 model ContentReview {
-  id           String   @id @default(cuid()) @map("_id")
-  contentId    String
+  id            String   @id @default(cuid()) @map("_id")
+  contentId     String
   contentItemId String? // Alternative field name
-  reviewerId   String
-  decision     String   // approve, reject, flag
-  confidence   String?  // high, medium, low
-  reasoning    String? 
-  actionsTaken String?  // JSON array
-  reviewTime   Int?     // time in seconds
-  qualityScore Float?
-  notes        String? 
-  reason       String?  // Alternative field name
-  reviewedAt   DateTime @default(now())
-  verifiedAt   DateTime @default(now())
+  reviewerId    String
+  decision      String // approve, reject, flag
+  confidence    String? // high, medium, low
+  reasoning     String?
+  actionsTaken  String? // JSON array
+  reviewTime    Int? // time in seconds
+  qualityScore  Float?
+  notes         String?
+  reason        String? // Alternative field name
+  reviewedAt    DateTime @default(now())
+  verifiedAt    DateTime @default(now())
 
   @@map("content_reviews")
 }
@@ -2053,22 +2078,22 @@ model DisputeEvidence {
   submittedBy  String
   evidenceType String
   title        String
-  description  String  
-  fileUrls     String   // JSON array
+  description  String
+  fileUrls     String // JSON array
   createdAt    DateTime @default(now())
 
   @@map("dispute_evidence")
 }
 
 model DisputeResolution {
-  id           String   @id @default(cuid()) @map("_id")
-  disputeId    String
-  resolvedBy   String
+  id             String   @id @default(cuid()) @map("_id")
+  disputeId      String
+  resolvedBy     String
   resolutionType String
-  outcome      String
-  description  String  
-  compensation String?  // JSON
-  resolvedAt   DateTime @default(now())
+  outcome        String
+  description    String
+  compensation   String? // JSON
+  resolvedAt     DateTime @default(now())
 
   dispute Dispute @relation(fields: [disputeId], references: [id], onDelete: Cascade)
 
@@ -2076,91 +2101,88 @@ model DisputeResolution {
 }
 
 model MediationSession {
-  id           String   @id @default(cuid()) @map("_id")
-  disputeId    String
-  mediatorId   String
-  scheduledAt  DateTime
-  duration     Int      // minutes
-  sessionType  String
-  location     String?
-  meetingLink  String?
-  status       String   @default("scheduled")
+  id          String   @id @default(cuid()) @map("_id")
+  disputeId   String
+  mediatorId  String
+  scheduledAt DateTime
+  duration    Int // minutes
+  sessionType String
+  location    String?
+  meetingLink String?
+  status      String   @default("scheduled")
 
   @@map("mediation_sessions")
 }
 
-
-
-
 model PushSubscription {
-  id           String   @id @default(cuid()) @map("_id")
-  userId       String
-  endpoint     String
-  p256dh       String?
-  auth         String?
-  isActive     Boolean  @default(true)
-  active       Boolean  @default(true)  // Alternative field name
-  userAgent    String? 
-  deviceInfo   String?  // JSON
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id         String   @id @default(cuid()) @map("_id")
+  userId     String
+  endpoint   String
+  p256dh     String?
+  auth       String?
+  isActive   Boolean  @default(true)
+  active     Boolean  @default(true) // Alternative field name
+  userAgent  String?
+  deviceInfo String? // JSON
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@unique([userId, endpoint])
   @@map("push_subscriptions")
 }
 
 model ScheduledNotification {
-  id           String   @id @default(cuid()) @map("_id")
+  id           String    @id @default(cuid()) @map("_id")
   userId       String
   type         String
-  category     String?  // order, payment, delivery, system
+  category     String? // order, payment, delivery, system
   title        String
-  message      String  
+  message      String
   scheduledFor DateTime
-  sent         Boolean  @default(false)
+  sent         Boolean   @default(false)
   sentAt       DateTime?
-  data         String?  // JSON
-  createdAt    DateTime @default(now())
+  data         String? // JSON
+  createdAt    DateTime  @default(now())
 
   @@map("scheduled_notifications")
 }
 
 model SafetyAlert {
-  id          String   @id @default(cuid()) @map("_id")
-  userId      String
-  alertType   String
-  type        String   // Alternative field name
-  title       String
-  message     String  
-  description String? 
-  severity    String   @default("medium")
-  source      String?  // system, manual, automated
-  status      String   @default("active")
-  acknowledged Boolean @default(false)
-  affectedCount Int    @default(1)
-  assignedTo  String?
-  dueDate     DateTime?
-  metadata    String?  // JSON
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String    @id @default(cuid()) @map("_id")
+  userId        String
+  alertType     String
+  type          String // Alternative field name
+  title         String
+  message       String
+  description   String?
+  severity      String    @default("medium")
+  source        String? // system, manual, automated
+  status        String    @default("active")
+  acknowledged  Boolean   @default(false)
+  affectedCount Int       @default(1)
+  assignedTo    String?
+  dueDate       DateTime?
+  metadata      String? // JSON
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@map("safety_alerts")
 }
 
 model SafetyAction {
-  id         String   @id @default(cuid()) @map("_id")
-  type       String   // action type
-  actionType String
-  target     String   // target entity
-  targetId   String
-  reason     String  
-  severity   String
-  executedBy String
+  id          String   @id @default(cuid()) @map("_id")
+  type        String // action type
+  actionType  String
+  target      String // target entity
+  targetId    String
+  reason      String
+  severity    String
+  executedBy  String
   performedBy String
-  executedAt DateTime @default(now())
-  status     String   @default("completed")
-  data       String?  // JSON
-  createdAt  DateTime @default(now())
+  executedAt  DateTime @default(now())
+  status      String   @default("completed")
+  data        String? // JSON
+  createdAt   DateTime @default(now())
 
   @@map("safety_actions")
 }
@@ -2168,45 +2190,44 @@ model SafetyAction {
 model ActivityLog {
   id        String   @id @default(cuid()) @map("_id")
   userId    String?
-  type      String?  // activity type
+  type      String? // activity type
   action    String
-  details   String  
-  metadata  String?  // JSON
+  details   String
+  metadata  String? // JSON
   ipAddress String?
-  userAgent String? 
+  userAgent String?
   timestamp DateTime @default(now())
   createdAt DateTime @default(now())
 
   @@map("activity_logs")
 }
 
-
 model ComplianceCheck {
-  id          String   @id @default(cuid()) @map("_id")
-  checkType   String   // gdpr, data_retention, security
-  status      String   @default("pending")
-  result      String?  // JSON
-  performedAt DateTime @default(now()) // Alternative field name
+  id          String    @id @default(cuid()) @map("_id")
+  checkType   String // gdpr, data_retention, security
+  status      String    @default("pending")
+  result      String? // JSON
+  performedAt DateTime  @default(now()) // Alternative field name
   scheduledAt DateTime
   completedAt DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 
   @@map("compliance_checks")
 }
 
 model FraudDetection {
-  id           String   @id @default(cuid()) @map("_id")
-  entityType   String   // user, transaction, listing
-  entityId     String
-  userId       String?  // For user-related fraud
-  fraudType    String?  // identity_theft, payment_fraud, listing_fraud
-  riskScore    Int      // 0-100
-  riskFactors  String   // JSON
-  status       String   @default("flagged")
-  reviewedBy   String?
-  reviewedAt   DateTime?
-  actionTaken  String?  // none, warn, suspend, ban
-  detectedAt   DateTime @default(now())
+  id          String    @id @default(cuid()) @map("_id")
+  entityType  String // user, transaction, listing
+  entityId    String
+  userId      String? // For user-related fraud
+  fraudType   String? // identity_theft, payment_fraud, listing_fraud
+  riskScore   Int // 0-100
+  riskFactors String // JSON
+  status      String    @default("flagged")
+  reviewedBy  String?
+  reviewedAt  DateTime?
+  actionTaken String? // none, warn, suspend, ban
+  detectedAt  DateTime  @default(now())
 
   @@map("fraud_detections")
 }
@@ -2214,8 +2235,8 @@ model FraudDetection {
 model UserWarning {
   id            String   @id @default(cuid()) @map("_id")
   userId        String
-  contentItemId String?  // Related content item
-  reason        String  
+  contentItemId String? // Related content item
+  reason        String
   severity      String   @default("medium")
   issuedBy      String
   issuedAt      DateTime @default(now())
@@ -2223,5 +2244,3 @@ model UserWarning {
 
   @@map("user_warnings")
 }
-
-

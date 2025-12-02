@@ -30,6 +30,8 @@ export const authenticateToken = async (
         firstName: true,
         lastName: true,
         role: true,
+        accountStatus: true,
+        jobSeeker: true,
         emailVerified: true,
         createdAt: true,
         updatedAt: true
@@ -44,7 +46,9 @@ export const authenticateToken = async (
       id: user.id,
       userId: user.id,
       email: user.email,
-      role: user.role
+      role: user.role,
+      accountStatus: user.accountStatus,
+      jobSeeker: user.jobSeeker
     };
 
     next();
@@ -94,6 +98,8 @@ export const optionalAuth = async (
           firstName: true,
           lastName: true,
           role: true,
+          accountStatus: true,
+          jobSeeker: true,
           emailVerified: true
         }
       });
@@ -103,7 +109,9 @@ export const optionalAuth = async (
           id: user.id,
           userId: user.id,
           email: user.email,
-          role: user.role
+          role: user.role,
+          accountStatus: user.accountStatus,
+          jobSeeker: user.jobSeeker
         };
       }
     }
@@ -138,5 +146,7 @@ export interface AuthRequest extends Request {
     userId: string;
     email: string;
     role: string;
+    accountStatus?: string;
+    jobSeeker?: boolean;
   };
 }

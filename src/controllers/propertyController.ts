@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 import { prisma } from '../lib/prisma';
+import { PROPERTY_PUBLISHER_ROLES } from '../middleware/accountStatus';
 
 // Interface for property creation request
 interface CreatePropertyRequest {
@@ -9,6 +10,7 @@ interface CreatePropertyRequest {
   type: 'sale' | 'lease' | 'rent';
   propertyType: 'house' | 'apartment' | 'commercial' | 'land';
   price: number;
+  currency?: string;
   bedrooms?: number;
   bathrooms?: number;
   area?: number;
@@ -20,6 +22,7 @@ interface CreatePropertyRequest {
   virtualTour?: string;
   amenities?: string[];
   agentId?: string;
+  verificationDocs?: string[];
 }
 
 // Get all properties with filters
@@ -205,6 +208,7 @@ export const getPropertyById = async (req: Request, res: Response) => {
 };
 
 // Create new property listing
+// Only users with roles: agent, owner, developer, admin AND accountStatus = 'active' can create
 export const createProperty = async (req: Request, res: Response) => {
   try {
     const errors = validationResult(req);
@@ -215,17 +219,34 @@ export const createProperty = async (req: Request, res: Response) => {
       });
     }
 
-    const userId = (req as any).user?.id;
-    if (!userId) {
+    const user = (req as any).user;
+    if (!user?.id) {
       return res.status(401).json({
         success: false,
         error: 'User not authenticated'
       });
     }
 
+    // Check if user role is allowed to publish properties
+    if (!PROPERTY_PUBLISHER_ROLES.includes(user.role)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Only agents, property owners, and developers can publish properties'
+      });
+    }
+
+    // Check if account is approved (admin bypass)
+    if (user.role !== 'admin' && user.accountStatus !== 'active') {
+      return res.status(403).json({
+        success: false,
+        error: 'Your account must be approved by admin before you can publish properties',
+        accountStatus: user.accountStatus
+      });
+    }
+
     const propertyData: CreatePropertyRequest = req.body;
 
-    // Create the property
+    // Create the property with status = 'pending' (requires admin approval)
     const newProperty = await prisma.property.create({
       data: {
         title: propertyData.title,
@@ -233,6 +254,7 @@ export const createProperty = async (req: Request, res: Response) => {
         type: propertyData.type,
         propertyType: propertyData.propertyType,
         price: propertyData.price,
+        currency: propertyData.currency || 'NGN',
         bedrooms: propertyData.bedrooms,
         bathrooms: propertyData.bathrooms,
         area: propertyData.area,
@@ -243,10 +265,11 @@ export const createProperty = async (req: Request, res: Response) => {
         images: JSON.stringify(propertyData.images || []),
         virtualTour: propertyData.virtualTour ? JSON.stringify({ url: propertyData.virtualTour }) : null,
         amenities: JSON.stringify(propertyData.amenities || []),
-        ownerId: userId,
+        verificationDocs: propertyData.verificationDocs ? JSON.stringify(propertyData.verificationDocs) : null,
+        ownerId: user.id,
         agentId: propertyData.agentId,
         featured: false,
-        status: 'available'
+        status: 'pending' // New listings require admin approval
       },
       include: {
         owner: {
@@ -263,7 +286,7 @@ export const createProperty = async (req: Request, res: Response) => {
 
     res.status(201).json({
       success: true,
-      message: 'Property created successfully',
+      message: 'Property created successfully. It will be visible after admin approval.',
       data: newProperty
     });
   } catch (error) {

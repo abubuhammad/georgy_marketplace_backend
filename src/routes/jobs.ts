@@ -1,42 +1,50 @@
 import { Router } from 'express';
 import { authenticateToken, optionalAuth } from '../middleware/auth';
+import { body } from 'express-validator';
+import {
+  getJobs,
+  getJobById,
+  createJob,
+  updateJob,
+  deleteJob,
+  getEmployerJobs,
+  applyForJob,
+  getMyApplications,
+  getJobApplications,
+  updateApplicationStatus,
+  toggleJobSeekerMode
+} from '../controllers/jobController';
 
 const router = Router();
 
-// Public routes
-router.get('/', optionalAuth, (req, res) => {
-  res.json({
-    success: true,
-    message: 'Jobs API endpoint',
-    data: { jobs: [] }
-  });
-});
+// Validation middleware for job creation
+const validateJob = [
+  body('title').notEmpty().withMessage('Title is required'),
+  body('description').notEmpty().withMessage('Description is required'),
+  body('companyName').notEmpty().withMessage('Company name is required'),
+  body('location').notEmpty().withMessage('Location is required'),
+  body('type').isIn(['full-time', 'part-time', 'contract', 'remote']).withMessage('Valid job type is required'),
+  body('requirements').notEmpty().withMessage('Requirements are required')
+];
 
-router.get('/:id', optionalAuth, (req, res) => {
-  res.json({
-    success: true,
-    message: 'Get job by ID',
-    data: { job: null }
-  });
-});
+// Public routes
+router.get('/', optionalAuth, getJobs);
+router.get('/:id', optionalAuth, getJobById);
 
 // Protected routes
 router.use(authenticateToken);
 
-router.post('/', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Create job posting',
-    data: { job: null }
-  });
-});
+// Job seeker routes
+router.post('/toggle-job-seeker', toggleJobSeekerMode);
+router.get('/my/applications', getMyApplications);
+router.post('/:id/apply', applyForJob);
 
-router.post('/:id/apply', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Apply for job',
-    data: { application: null }
-  });
-});
+// Employer routes
+router.get('/employer/listings', getEmployerJobs);
+router.post('/', validateJob, createJob);
+router.put('/:id', updateJob);
+router.delete('/:id', deleteJob);
+router.get('/:id/applications', getJobApplications);
+router.put('/:id/applications/:applicationId', updateApplicationStatus);
 
 export { router as jobRoutes };

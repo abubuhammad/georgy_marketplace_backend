@@ -30,6 +30,25 @@ import {
   getBankList,
   verifyBankAccount
 } from '../controllers/adminController';
+import {
+  // Account moderation
+  getPendingAccounts,
+  approveAccount,
+  rejectAccount,
+  suspendAccount,
+  // Property moderation
+  getPendingProperties,
+  approveProperty,
+  rejectProperty,
+  removeProperty,
+  // Job moderation
+  getPendingJobs,
+  approveJob,
+  rejectJob,
+  closeJob,
+  // Stats
+  getModerationStats
+} from '../controllers/adminModerationController';
 
 const router = Router();
 
@@ -93,5 +112,28 @@ router.put('/platform-settings', updatePlatformSettings as any);
 // Bank Utilities
 router.get('/banks', getBankList as any);
 router.post('/verify-bank', verifyBankAccount as any);
+
+// ==================== ACCOUNT/PROPERTY/JOB MODERATION ROUTES ====================
+
+// Moderation Stats
+router.get('/moderation/stats', getModerationStats as any);
+
+// Account Moderation
+router.get('/accounts/pending', getPendingAccounts as any);
+router.post('/accounts/:id/approve', approveAccount as any);
+router.post('/accounts/:id/reject', rejectAccount as any);
+router.post('/accounts/:id/suspend', suspendAccount as any);
+
+// Property Moderation
+router.get('/properties/pending', getPendingProperties as any);
+router.post('/properties/:id/approve', approveProperty as any);
+router.post('/properties/:id/reject', rejectProperty as any);
+router.post('/properties/:id/remove', removeProperty as any);
+
+// Job Moderation
+router.get('/jobs/pending', getPendingJobs as any);
+router.post('/jobs/:id/approve', approveJob as any);
+router.post('/jobs/:id/reject', rejectJob as any);
+router.post('/jobs/:id/close', closeJob as any);
 
 export { router as adminRoutes };

@@ -5,6 +5,7 @@ import * as jwt from 'jsonwebtoken';
 import { config } from '../config/config';
 import { prisma } from '../utils/prisma';
 import { asyncHandler, createError } from '../middleware/errorHandler';
+import { getInitialAccountStatus, roleRequiresApproval } from '../middleware/accountStatus';
 import '../types'; // Import type definitions
 
 // Generate JWT token
@@ -27,7 +28,7 @@ const generateRefreshToken = (userId: string): string => {
 
 // User registration
 export const register = asyncHandler(async (req: Request, res: Response) => {
-  const { email, password, firstName, lastName, role = 'customer' } = req.body;
+  const { email, password, firstName, lastName, role = 'customer', jobSeeker = false } = req.body;
 
   // Check if user already exists
   const existingUser = await prisma.user.findUnique({
@@ -41,6 +42,10 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   // Hash password
   const hashedPassword = await bcrypt.hash(password, config.bcrypt.saltRounds);
 
+  // Determine initial account status based on role
+  // Roles like agent, owner, developer, employer, seller require admin approval
+  const accountStatus = getInitialAccountStatus(role);
+
   // Create user
   const user = await prisma.user.create({
     data: {
@@ -49,6 +54,8 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
       firstName,
       lastName,
       role,
+      accountStatus,
+      jobSeeker: Boolean(jobSeeker),
       emailVerified: false
     },
     select: {
@@ -57,6 +64,8 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
       firstName: true,
       lastName: true,
       role: true,
+      accountStatus: true,
+      jobSeeker: true,
       avatar: true,
       emailVerified: true,
       createdAt: true,
@@ -68,15 +77,23 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   const token = generateToken(user.id);
   const refreshToken = generateRefreshToken(user.id);
 
+  // Build response message
+  let message = 'User registered successfully';
+  if (roleRequiresApproval(role)) {
+    message = 'Registration successful. Your account is pending admin approval. You will be notified once approved.';
+  }
+
   // TODO: Send verification email
+  // TODO: If role requires approval, notify admins
 
   res.status(201).json({
     success: true,
-    message: 'User registered successfully',
+    message,
     data: {
       user,
       token,
-      refreshToken
+      refreshToken,
+      requiresApproval: roleRequiresApproval(role)
     }
   });
 });
