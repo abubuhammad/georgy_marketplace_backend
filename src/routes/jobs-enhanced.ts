@@ -277,10 +277,11 @@ router.post('/', async (req, res) => {
       data: {
         title: validatedData.title,
         description: validatedData.description,
-        company: '', // This should be fetched from employer profile
+        companyName: validatedData.company || '',
         location: JSON.stringify(validatedData.location),
         type: validatedData.jobType,
-        salary: validatedData.salary?.min || null,
+        salaryMin: validatedData.salary?.min || null,
+        salaryMax: validatedData.salary?.max || null,
         salaryType: validatedData.salary?.period || null,
         requirements: JSON.stringify(validatedData.requirements),
         benefits: JSON.stringify(validatedData.benefits || []),
@@ -407,7 +408,7 @@ router.post('/:id/apply', async (req, res) => {
         job: {
           select: {
             title: true,
-            company: true,
+            companyName: true,
           },
         },
         applicant: {
@@ -567,7 +568,7 @@ router.put('/applications/:applicationId/status', async (req, res) => {
         job: {
           select: {
             title: true,
-            company: true,
+            companyName: true,
           },
         },
       },

@@ -103,9 +103,7 @@ async function handleChargeSuccess(data: any) {
         amount: amountInNaira,
         platformCut,
         sellerNet,
-        paidAt: new Date(),
-        paymentChannel: data.channel,
-        gatewayResponse: data.gateway_response
+        paidAt: new Date()
       },
       create: {
         reference,
@@ -115,12 +113,11 @@ async function handleChargeSuccess(data: any) {
         currency: data.currency || 'NGN',
         status: 'completed',
         method: data.channel,
+        provider: 'paystack',
         platformCut,
         sellerNet,
         paidAt: new Date(),
-        paymentChannel: data.channel,
-        gatewayResponse: data.gateway_response,
-        metadata: JSON.stringify(metadata)
+        metadata: JSON.stringify({ ...metadata, channel: data.channel, gatewayResponse: data.gateway_response })
       }
     });
 
@@ -130,8 +127,7 @@ async function handleChargeSuccess(data: any) {
         where: { id: metadata.orderId },
         data: {
           status: 'paid',
-          paymentStatus: 'completed',
-          paymentId: payment.id
+          paymentStatus: 'completed'
         }
       }).catch(err => {
         console.warn(`Failed to update order ${metadata.orderId}:`, err);
@@ -160,10 +156,10 @@ async function handleTransferSuccess(data: any) {
 
   try {
     await prisma.payout.updateMany({
-      where: { reference },
+      where: { providerRef: reference },
       data: {
         status: 'completed',
-        completedAt: new Date()
+        processedAt: new Date()
       }
     });
 
@@ -180,7 +176,7 @@ async function handleTransferFailed(data: any) {
 
   try {
     await prisma.payout.updateMany({
-      where: { reference },
+      where: { providerRef: reference },
       data: {
         status: 'failed',
         failureReason: reason
@@ -199,12 +195,12 @@ async function handleRefundProcessed(data: any) {
   const { transaction_reference, amount, status } = data;
 
   try {
-    // Update refund record
-    await prisma.refund.updateMany({
-      where: { paymentReference: transaction_reference },
+    // Update PaymentRefund record using providerRef
+    await prisma.paymentRefund.updateMany({
+      where: { providerRef: transaction_reference },
       data: {
         status: status === 'processed' ? 'completed' : 'failed',
-        processedAt: new Date()
+        completedAt: new Date()
       }
     });
 
