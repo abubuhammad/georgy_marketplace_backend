@@ -1,7 +1,11 @@
 import { Request, Response } from 'express';
 import { PaymentService } from '../services/paymentService';
+import { PaystackService } from '../services/paystack.service';
 import { asyncHandler } from '../middleware/errorHandler';
 import '../types';
+
+// Initialize Paystack service
+const paystackService = new PaystackService();
 
 // Define payment methods enum
 enum PaymentMethod {
@@ -13,14 +17,15 @@ enum PaymentMethod {
   bank = 'bank'
 }
 
-// Initialize payment
+// Initialize payment with Paystack
 export const initiatePayment = asyncHandler(async (req: Request, res: Response) => {
   const {
     orderId,
     serviceRequestId,
     amount,
+    email,
     currency = 'NGN',
-    method,
+    method = 'card',
     description,
     escrow = false,
     metadata
@@ -34,35 +39,65 @@ export const initiatePayment = asyncHandler(async (req: Request, res: Response) 
     });
   }
 
-  if (!method || !Object.values(PaymentMethod).includes(method)) {
+  if (!email) {
     return res.status(400).json({
       success: false,
-      error: 'Valid payment method is required'
+      error: 'Email is required for payment'
     });
   }
 
-  // Optional: Get seller ID from order or service request
-  let sellerId: string | undefined;
-  // TODO: Fetch sellerId based on orderId or serviceRequestId
+  try {
+    // Generate unique reference
+    const reference = `GMP_${Date.now()}_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    
+    // Amount in kobo (multiply by 100)
+    const amountInKobo = Math.round(parseFloat(amount) * 100);
 
-  const result = await PaymentService.initiatePayment({
-    userId: req.user!.id,
-    sellerId,
-    orderId,
-    serviceRequestId,
-    amount: parseFloat(amount),
-    currency,
-    method,
-    description,
-    escrow,
-    metadata
-  });
+    // Initialize with Paystack
+    const paystackResponse = await paystackService.initializePayment({
+      amount: amountInKobo,
+      email,
+      reference,
+      callback_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/order-success`,
+      metadata: {
+        orderId,
+        serviceRequestId,
+        userId: req.user?.id,
+        custom_fields: [
+          {
+            display_name: 'Order ID',
+            variable_name: 'order_id',
+            value: orderId || 'N/A'
+          }
+        ],
+        ...metadata
+      }
+    });
 
-  if (!result.success) {
-    return res.status(400).json(result);
+    if (!paystackResponse.status) {
+      return res.status(400).json({
+        success: false,
+        error: paystackResponse.message || 'Failed to initialize payment with Paystack'
+      });
+    }
+
+    // Return Paystack authorization URL and reference
+    res.status(201).json({
+      success: true,
+      data: {
+        authorization_url: paystackResponse.data.authorization_url,
+        access_code: paystackResponse.data.access_code,
+        reference: paystackResponse.data.reference
+      }
+    });
+
+  } catch (error: any) {
+    console.error('Payment initialization error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to initialize payment'
+    });
   }
-
-  res.status(201).json(result);
 });
 
 // Get payment by reference
@@ -301,13 +336,39 @@ export const calculatePayment = asyncHandler(async (req: Request, res: Response)
 export const verifyPayment = asyncHandler(async (req: Request, res: Response) => {
   const { reference } = req.params;
   
-  // This would integrate with payment provider to verify payment status
-  const verification = await PaymentService.verifyPaymentStatus(reference);
-  
-  res.json({
-    success: true,
-    data: verification
-  });
+  try {
+    // Verify with Paystack
+    const verification = await paystackService.verifyPayment(reference);
+    
+    if (verification.success) {
+      res.json({
+        success: true,
+        data: {
+          status: verification.data.status,
+          reference: verification.data.reference,
+          amount: verification.data.amount / 100, // Convert from kobo to naira
+          currency: verification.data.currency,
+          paid_at: verification.data.paid_at,
+          channel: verification.data.channel,
+          customer: verification.data.customer
+        }
+      });
+    } else {
+      res.json({
+        success: false,
+        data: {
+          status: 'failed',
+          reference
+        }
+      });
+    }
+  } catch (error: any) {
+    console.error('Payment verification error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Payment verification failed'
+    });
+  }
 });
 
 export const getPaymentHistory = asyncHandler(async (req: Request, res: Response) => {
