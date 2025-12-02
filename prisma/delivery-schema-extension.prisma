@@ -1,0 +1,256 @@
+// ==================== MAKURDI DELIVERY SYSTEM SCHEMA EXTENSIONS ====================
+// Add these models to your existing schema.prisma file
+
+// Makurdi Delivery Zones
+model MakurdiDeliveryZone {
+  id              String   @id @default(cuid()) @map("_id")
+  name            String   // e.g., "North Bank", "Wurukum"
+  code            String   @unique // e.g., "MKD-NB", "MKD-WK"
+  description     String?
+  
+  // Geographic boundaries (GeoJSON polygon)
+  boundaries      String   // JSON GeoJSON polygon
+  centerPoint     String   // JSON: { lat, lng }
+  
+  // Pricing
+  baseFee         Float    // Base delivery fee within zone
+  perKmFee        Float    @default(50) // Additional fee per km
+  minFee          Float    @default(300) // Minimum delivery fee
+  maxFee          Float?   // Maximum delivery fee cap
+  
+  // Cross-zone pricing
+  crossZoneFees   String?  // JSON: { "MKD-WK": 200, "MKD-LG": 300 }
+  
+  // Operational
+  isActive        Boolean  @default(true)
+  priority        Int      @default(0) // Higher = more important
+  estimatedTime   Int      @default(45) // Minutes for standard delivery
+  
+  // Coverage hours
+  operatingHours  String?  // JSON: { start: "08:00", end: "20:00" }
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("makurdi_delivery_zones")
+}
+
+// Delivery Pricing Rules (Admin configurable)
+model DeliveryPricingRule {
+  id              String   @id @default(cuid()) @map("_id")
+  name            String
+  description     String?
+  
+  // Rule type
+  ruleType        String   // base, distance, weight, time, surge, promo
+  
+  // Conditions (JSON)
+  conditions      String   // { minDistance: 0, maxDistance: 5, zones: [], timeRange: {} }
+  
+  // Pricing
+  feeType         String   // fixed, percentage, per_unit
+  feeValue        Float
+  
+  // Applicability
+  priority        Int      @default(0)
+  isActive        Boolean  @default(true)
+  validFrom       DateTime?
+  validTo         DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("delivery_pricing_rules")
+}
+
+// Delivery Earnings (Agent payouts)
+model DeliveryEarning {
+  id              String   @id @default(cuid()) @map("_id")
+  agentId         String
+  shipmentId      String?
+  
+  // Earning details
+  type            String   // delivery, bonus, tip, adjustment, penalty
+  amount          Float
+  description     String?
+  
+  // Status
+  status          String   @default("pending") // pending, approved, paid, cancelled
+  
+  // Payment
+  paymentMethod   String?
+  paymentRef      String?
+  paidAt          DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  agent           DeliveryAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@map("delivery_earnings")
+}
+
+// Delivery Reviews (Customer feedback)
+model DeliveryReview {
+  id              String   @id @default(cuid()) @map("_id")
+  shipmentId      String   @unique
+  agentId         String
+  customerId      String
+  
+  // Ratings (1-5)
+  overallRating   Int
+  punctualityRating Int?
+  professionalismRating Int?
+  packageConditionRating Int?
+  
+  // Feedback
+  comment         String?
+  tags            String?  // JSON array: ["fast", "polite", "careful"]
+  
+  // Response
+  agentResponse   String?
+  respondedAt     DateTime?
+  
+  // Moderation
+  isVisible       Boolean  @default(true)
+  flagged         Boolean  @default(false)
+  flagReason      String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  agent           DeliveryAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@map("delivery_reviews")
+}
+
+// Agent Violations (For accountability)
+model AgentViolation {
+  id              String   @id @default(cuid()) @map("_id")
+  agentId         String
+  
+  // Violation details
+  type            String   // late_delivery, package_damage, misconduct, fraud, no_show
+  severity        String   // minor, moderate, major, critical
+  description     String
+  evidence        String?  // JSON array of evidence URLs
+  
+  // Related
+  shipmentId      String?
+  reportedBy      String?  // customer ID or "system"
+  
+  // Resolution
+  status          String   @default("pending") // pending, investigating, resolved, dismissed
+  resolution      String?
+  resolvedBy      String?
+  resolvedAt      DateTime?
+  
+  // Penalty
+  penaltyType     String?  // warning, fine, suspension, termination
+  penaltyAmount   Float?
+  penaltyApplied  Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  agent           DeliveryAgent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@map("agent_violations")
+}
+
+// Shipment Status History (For audit trail)
+model ShipmentStatusHistory {
+  id              String   @id @default(cuid()) @map("_id")
+  shipmentId      String
+  
+  // Status change
+  fromStatus      String?
+  toStatus        String
+  
+  // Context
+  changedBy       String   // user ID or "system"
+  changedByRole   String   // customer, seller, agent, admin, system
+  reason          String?
+  notes           String?
+  
+  // Location at time of change
+  location        String?  // JSON: { lat, lng, address }
+  
+  createdAt       DateTime @default(now())
+
+  @@map("shipment_status_history")
+}
+
+// Global Delivery Settings
+model DeliverySettings {
+  id                    String   @id @default(cuid()) @map("_id")
+  key                   String   @unique
+  value                 String   // JSON value
+  description           String?
+  updatedBy             String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("delivery_settings")
+}
+
+// ==================== UPDATES TO EXISTING DeliveryAgent MODEL ====================
+// Add these fields to your existing DeliveryAgent model:
+
+/*
+  // Additional Personal Information
+  dateOfBirth       DateTime?
+  gender            String?
+  address           String?  // JSON: street, area, landmark
+  
+  // Enhanced Vehicle Information
+  vehicleMake       String?
+  vehicleModel      String?
+  vehicleYear       Int?
+  vehicleColor      String?
+  
+  // Verification Documents
+  licenseExpiry     DateTime?
+  ninNumber         String?  // National ID
+  guarantorInfo     String?  // JSON: name, phone, address, relationship
+  documents         String?  // JSON array of document URLs
+  
+  // Contact
+  alternatePhone    String?
+  
+  // Service Configuration
+  serviceAreas      String?  // JSON array of zone IDs
+  maxDeliveryRadius Float    @default(15) // km
+  workingHours      String?  // JSON: { mon: {start, end}, tue: ... }
+  
+  // Enhanced Availability & Status
+  verificationStatus String  @default("pending") // pending, under_review, approved, rejected
+  verificationNotes String?
+  verifiedAt        DateTime?
+  verifiedBy        String?
+  isOnline          Boolean  @default(false)
+  lastLocationUpdate DateTime?
+  
+  // Performance Metrics
+  totalRatings      Int      @default(0)
+  completedDeliveries Int    @default(0)
+  cancelledDeliveries Int    @default(0)
+  failedDeliveries  Int      @default(0)
+  onTimeRate        Float    @default(100)
+  acceptanceRate    Float    @default(100)
+  
+  // Earnings
+  pendingEarnings   Float    @default(0)
+  withdrawnEarnings Float    @default(0)
+  currentBalance    Float    @default(0)
+  
+  // Status
+  suspensionReason  String?
+  suspendedAt       DateTime?
+  suspendedUntil    DateTime?
+  
+  // Relations to new models
+  earnings          DeliveryEarning[]
+  reviews           DeliveryReview[]
+  violations        AgentViolation[]
+*/

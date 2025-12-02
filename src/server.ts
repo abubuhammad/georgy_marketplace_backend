@@ -18,6 +18,7 @@ import { userRoutes } from './routes/users';
 import { paymentRoutes } from './routes/payments';
 import { deliveryRoutes } from './routes/delivery';
 import deliveryAnalyticsRoutes from './routes/deliveryAnalytics';
+import { makurdiDeliveryRoutes } from './routes/makurdiDelivery';
 import { adminRoutes } from './routes/adminRoutes';
 import { notificationRoutes } from './routes/notifications';
 import { chatRoutes } from './routes/chat';
@@ -84,6 +85,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/delivery', deliveryRoutes);
 app.use('/api/delivery-analytics', deliveryAnalyticsRoutes);
+app.use('/api/makurdi-delivery', makurdiDeliveryRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/chat', chatRoutes);
@@ -132,6 +134,7 @@ app.get('/api', (req, res) => {
       payments: '/api/payments',
       delivery: '/api/delivery',
       deliveryAnalytics: '/api/delivery-analytics',
+      makurdiDelivery: '/api/makurdi-delivery',
       admin: '/api/admin',
       notifications: '/api/notifications',
       chat: '/api/chat',
