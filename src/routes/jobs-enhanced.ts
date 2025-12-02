@@ -38,6 +38,7 @@ const upload = multer({
 const JobPostingSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters'),
   description: z.string().min(100, 'Description must be at least 100 characters'),
+  company: z.string().min(2, 'Company name is required').optional(),
   requirements: z.array(z.string()).min(1, 'At least one requirement is needed'),
   responsibilities: z.array(z.string()).min(1, 'At least one responsibility is needed'),
   benefits: z.array(z.string()).default([]),
@@ -106,19 +107,17 @@ router.get('/', optionalAuth, async (req, res) => {
       where.OR = [
         { title: { contains: query as string, mode: 'insensitive' } },
         { description: { contains: query as string, mode: 'insensitive' } },
-        { company: { contains: query as string, mode: 'insensitive' } },
+        { companyName: { contains: query as string, mode: 'insensitive' } },
       ];
     }
 
-    if (category) where.category = { contains: category as string, mode: 'insensitive' };
     if (jobType) where.type = jobType;
-    if (company) where.company = { contains: company as string, mode: 'insensitive' };
+    if (company) where.companyName = { contains: company as string, mode: 'insensitive' };
     if (location) where.location = { contains: location as string, mode: 'insensitive' };
 
     if (salaryMin || salaryMax) {
-      where.salary = {};
-      if (salaryMin) where.salary.gte = parseFloat(salaryMin as string);
-      if (salaryMax) where.salary.lte = parseFloat(salaryMax as string);
+      if (salaryMin) where.salaryMin = { gte: parseFloat(salaryMin as string) };
+      if (salaryMax) where.salaryMax = { lte: parseFloat(salaryMax as string) };
     }
 
     if (postedWithin) {
@@ -132,10 +131,10 @@ router.get('/', optionalAuth, async (req, res) => {
     const orderBy: any = {};
     switch (sortBy) {
       case 'salary':
-        orderBy.salary = sortOrder;
+        orderBy.salaryMin = sortOrder;
         break;
       case 'company':
-        orderBy.company = sortOrder;
+        orderBy.companyName = sortOrder;
         break;
       default:
         orderBy.createdAt = sortOrder;
