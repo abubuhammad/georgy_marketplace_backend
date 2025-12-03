@@ -247,20 +247,23 @@ export function determineZone(lat: number, lng: number): ZoneConfig | null {
 export function getCrossZoneFee(fromZone: string, toZone: string): number {
   if (fromZone === toZone) return 0;
   
-  const crossZoneFees = benueZonesData.cross_zone_fees as Record<string, Record<string, number>>;
+  const crossZoneFees = benueZonesData.cross_zone_fees as Record<string, Record<string, number> | number>;
+  const defaultFee = typeof crossZoneFees.default === 'number' ? crossZoneFees.default : DEFAULTS.default_cross_zone_fee;
   
   // Direct lookup
-  if (crossZoneFees[fromZone]?.[toZone]) {
-    return crossZoneFees[fromZone][toZone];
+  const fromZoneFees = crossZoneFees[fromZone];
+  if (fromZoneFees && typeof fromZoneFees === 'object' && fromZoneFees[toZone]) {
+    return fromZoneFees[toZone];
   }
   
   // Reverse lookup
-  if (crossZoneFees[toZone]?.[fromZone]) {
-    return crossZoneFees[toZone][fromZone];
+  const toZoneFees = crossZoneFees[toZone];
+  if (toZoneFees && typeof toZoneFees === 'object' && toZoneFees[fromZone]) {
+    return toZoneFees[fromZone];
   }
   
   // Default
-  return crossZoneFees.default || DEFAULTS.default_cross_zone_fee;
+  return defaultFee;
 }
 
 /**
