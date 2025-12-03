@@ -175,9 +175,31 @@ export class AdminDeliveryService {
   
   /**
    * Suspend a delivery zone
+   * Saves to zone_suspensions collection which overrides seed data
    */
   static async suspendZone(code: string, reason: string): Promise<any> {
-    const result = await prisma.$runCommandRaw({
+    // Save to zone_suspensions collection (this overrides seed data)
+    await prisma.$runCommandRaw({
+      update: 'zone_suspensions',
+      updates: [
+        {
+          q: { zone_code: code },
+          u: {
+            $set: {
+              zone_code: code,
+              is_suspended: true,
+              reason: reason,
+              suspended_at: new Date(),
+              updatedAt: new Date()
+            }
+          },
+          upsert: true
+        }
+      ]
+    });
+    
+    // Also try to update in the zone collections (if they exist)
+    await prisma.$runCommandRaw({
       update: 'benue_lga_zones',
       updates: [
         {
@@ -194,7 +216,6 @@ export class AdminDeliveryService {
       ]
     });
     
-    // Also update Makurdi zones if applicable
     if (code.startsWith('MKD-')) {
       await prisma.$runCommandRaw({
         update: 'makurdi_delivery_zones',
@@ -214,14 +235,37 @@ export class AdminDeliveryService {
       });
     }
     
+    console.log(`🚫 Zone ${code} suspended: ${reason}`);
     return { success: true, zone: code, suspended: true, reason };
   }
   
   /**
    * Resume a suspended zone
+   * Removes from zone_suspensions collection
    */
   static async resumeZone(code: string): Promise<any> {
-    const result = await prisma.$runCommandRaw({
+    // Update zone_suspensions collection
+    await prisma.$runCommandRaw({
+      update: 'zone_suspensions',
+      updates: [
+        {
+          q: { zone_code: code },
+          u: {
+            $set: {
+              zone_code: code,
+              is_suspended: false,
+              reason: null,
+              resumed_at: new Date(),
+              updatedAt: new Date()
+            }
+          },
+          upsert: true
+        }
+      ]
+    });
+    
+    // Also try to update in the zone collections (if they exist)
+    await prisma.$runCommandRaw({
       update: 'benue_lga_zones',
       updates: [
         {
@@ -241,7 +285,6 @@ export class AdminDeliveryService {
       ]
     });
     
-    // Also update Makurdi zones if applicable
     if (code.startsWith('MKD-')) {
       await prisma.$runCommandRaw({
         update: 'makurdi_delivery_zones',
@@ -264,31 +307,74 @@ export class AdminDeliveryService {
       });
     }
     
+    console.log(`✅ Zone ${code} resumed`);
     return { success: true, zone: code, resumed: true };
   }
   
   /**
    * Get all zones (with optional filter for suspended)
+   * Falls back to seed data if MongoDB collections are empty
    */
   static async getZones(includeSuspended: boolean = false): Promise<any[]> {
     const filter = includeSuspended ? {} : { is_suspended: { $ne: true } };
     
-    const makurdiZones = await prisma.$runCommandRaw({
+    // Try to get zones from MongoDB first
+    const makurdiZonesResult = await prisma.$runCommandRaw({
       find: 'makurdi_delivery_zones',
       filter
     }) as any;
     
-    const lgaZones = await prisma.$runCommandRaw({
+    const lgaZonesResult = await prisma.$runCommandRaw({
       find: 'benue_lga_zones',
       filter
     }) as any;
     
-    const zones = [
-      ...(makurdiZones?.cursor?.firstBatch || []),
-      ...(lgaZones?.cursor?.firstBatch || [])
-    ];
+    const dbMakurdiZones = makurdiZonesResult?.cursor?.firstBatch || [];
+    const dbLgaZones = lgaZonesResult?.cursor?.firstBatch || [];
     
-    return zones;
+    // If we have zones in DB, use them
+    if (dbMakurdiZones.length > 0 || dbLgaZones.length > 0) {
+      return [...dbMakurdiZones, ...dbLgaZones];
+    }
+    
+    // Fall back to seed data
+    try {
+      const seedData = require('../../data/benue-lgas-seed.json');
+      const allZones = [
+        ...(seedData.makurdi_zones || []),
+        ...(seedData.benue_lgas || [])
+      ];
+      
+      // Get suspension overrides from DB
+      const suspensionOverrides = await prisma.$runCommandRaw({
+        find: 'zone_suspensions',
+        filter: {}
+      }) as any;
+      const suspensions = new Map<string, { is_suspended: boolean; reason?: string }>();
+      (suspensionOverrides?.cursor?.firstBatch || []).forEach((s: any) => {
+        suspensions.set(s.zone_code, { is_suspended: s.is_suspended, reason: s.reason });
+      });
+      
+      // Merge seed data with suspension status
+      const zonesWithStatus = allZones.map(zone => {
+        const override = suspensions.get(zone.code);
+        return {
+          ...zone,
+          is_suspended: override?.is_suspended ?? zone.is_suspended ?? false,
+          suspension_reason: override?.reason ?? zone.suspension_reason
+        };
+      });
+      
+      // Filter if not including suspended
+      if (!includeSuspended) {
+        return zonesWithStatus.filter(z => !z.is_suspended);
+      }
+      
+      return zonesWithStatus;
+    } catch (error) {
+      console.error('Error loading seed data:', error);
+      return [];
+    }
   }
   
   /**
