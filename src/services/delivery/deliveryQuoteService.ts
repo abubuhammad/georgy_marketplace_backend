@@ -143,21 +143,22 @@ const PEAK_HOURS = [
 ];
 
 // Default settings (overridden by database values)
+// These are reasonable defaults for Makurdi local delivery
 let DEFAULTS = {
-  free_distance_km: 0,
-  per_km_rate_ngn: 50,
-  base_fee_ngn: 300,
-  weight_free_limit_kg: 5,
-  weight_surcharge_per_kg: 100,
-  platform_commission_percent: 15,
+  free_distance_km: 2,          // First 2km free
+  per_km_rate_ngn: 30,          // ₦30 per km after free distance
+  base_fee_ngn: 200,            // ₦200 base fee
+  weight_free_limit_kg: 5,      // First 5kg free
+  weight_surcharge_per_kg: 50,  // ₦50 per kg over 5kg
+  platform_commission_percent: 10, // 10% platform cut (included, not added)
   insurance_threshold_ngn: 50000,
   insurance_rate_percent: 1,
   cod_surcharge_percent: 2,
-  default_cross_zone_fee: 150,
+  default_cross_zone_fee: 100,  // ₦100 for inter-LGA only
   delivery_type_multipliers: {
     standard: 1.0,
-    express: 1.3,
-    same_day: 1.5
+    express: 1.2,
+    same_day: 1.4
   }
 };
 
@@ -483,9 +484,10 @@ export async function calculateShipmentFee(
     appliedRules.push('weight_surcharge');
   }
   
-  // Cross-zone fee
+  // Cross-zone fee (only for inter-LGA deliveries, not within Makurdi zones)
   let crossZoneFee = 0;
-  if (pickupZone && deliveryZone && pickupZone.code !== deliveryZone.code) {
+  const isWithinMakurdi = pickupZone?.code.startsWith('MKD-') && deliveryZone?.code.startsWith('MKD-');
+  if (pickupZone && deliveryZone && pickupZone.code !== deliveryZone.code && !isWithinMakurdi) {
     crossZoneFee = getCrossZoneFee(pickupZone.code, deliveryZone.code);
     breakdown.push({ name: 'Cross-Zone Fee', amount: Math.round(crossZoneFee) });
     appliedRules.push('cross_zone_fee');
@@ -525,16 +527,18 @@ export async function calculateShipmentFee(
     appliedRules.push('cod_surcharge');
   }
   
-  // Platform fee
+  // Platform fee is INCLUDED in the delivery fee (not added on top)
+  // This is the platform's cut from the delivery fee, not an extra charge to customers
+  // We show it in the breakdown for transparency but don't add it to the total
   const platformFee = subtotal * (globalSettings.platform_commission_percent / 100);
   breakdown.push({ 
-    name: `Platform Fee (${globalSettings.platform_commission_percent}%)`, 
+    name: `Platform Fee (included, ${globalSettings.platform_commission_percent}%)`, 
     amount: Math.round(platformFee) 
   });
-  appliedRules.push('platform_fee');
+  appliedRules.push('platform_fee_included');
   
-  // Calculate total
-  let total = subtotal + insuranceFee + codFee + platformFee;
+  // Calculate total - platform fee is NOT added (it's taken from the subtotal)
+  let total = subtotal + insuranceFee + codFee;
   
   // Apply min/max caps
   total = Math.max(total, minFee);
