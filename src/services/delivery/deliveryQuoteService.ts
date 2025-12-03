@@ -142,17 +142,74 @@ const PEAK_HOURS = [
   { start: 16, end: 19 }  // Evening rush
 ];
 
-const DEFAULTS = {
+// Default settings (overridden by database values)
+let DEFAULTS = {
   free_distance_km: 0,
   per_km_rate_ngn: 50,
+  base_fee_ngn: 300,
   weight_free_limit_kg: 5,
   weight_surcharge_per_kg: 100,
   platform_commission_percent: 15,
   insurance_threshold_ngn: 50000,
   insurance_rate_percent: 1,
   cod_surcharge_percent: 2,
-  default_cross_zone_fee: 150
+  default_cross_zone_fee: 150,
+  delivery_type_multipliers: {
+    standard: 1.0,
+    express: 1.3,
+    same_day: 1.5
+  }
 };
+
+// Cache for global settings
+let cachedSettings: typeof DEFAULTS | null = null;
+let settingsCacheTime: number = 0;
+const SETTINGS_CACHE_TTL = 60000; // 1 minute cache
+
+/**
+ * Load global delivery settings from database
+ */
+async function loadGlobalSettings(): Promise<typeof DEFAULTS> {
+  const now = Date.now();
+  
+  // Return cached settings if still valid
+  if (cachedSettings && (now - settingsCacheTime) < SETTINGS_CACHE_TTL) {
+    return cachedSettings;
+  }
+  
+  try {
+    const result = await prisma.$runCommandRaw({
+      find: 'delivery_settings',
+      filter: { id: 'global' },
+      limit: 1
+    }) as any;
+    
+    const settings = result?.cursor?.firstBatch?.[0];
+    
+    if (settings) {
+      cachedSettings = {
+        free_distance_km: settings.free_distance_km ?? DEFAULTS.free_distance_km,
+        per_km_rate_ngn: settings.per_km_rate_ngn ?? DEFAULTS.per_km_rate_ngn,
+        base_fee_ngn: settings.base_fee_ngn ?? DEFAULTS.base_fee_ngn,
+        weight_free_limit_kg: DEFAULTS.weight_free_limit_kg,
+        weight_surcharge_per_kg: settings.weight_surcharge_per_kg ?? DEFAULTS.weight_surcharge_per_kg,
+        platform_commission_percent: settings.platform_commission_percent ?? DEFAULTS.platform_commission_percent,
+        insurance_threshold_ngn: settings.min_insurance_threshold ?? DEFAULTS.insurance_threshold_ngn,
+        insurance_rate_percent: settings.insurance_rate_percent ?? DEFAULTS.insurance_rate_percent,
+        cod_surcharge_percent: DEFAULTS.cod_surcharge_percent,
+        default_cross_zone_fee: DEFAULTS.default_cross_zone_fee,
+        delivery_type_multipliers: settings.delivery_type_multipliers ?? DEFAULTS.delivery_type_multipliers
+      };
+      settingsCacheTime = now;
+      console.log('📦 Loaded delivery settings from database');
+      return cachedSettings;
+    }
+  } catch (error) {
+    console.warn('Failed to load delivery settings, using defaults:', error);
+  }
+  
+  return DEFAULTS;
+}
 
 // ============== CORE FUNCTIONS ==============
 
@@ -352,15 +409,18 @@ export function calculateETA(
 /**
  * Calculate delivery fee for a single shipment
  */
-export function calculateShipmentFee(
+export async function calculateShipmentFee(
   pickupCoords: { lat: number; lng: number },
   deliveryCoords: { lat: number; lng: number },
   effectiveWeightKg: number,
   packageValueNgn: number,
   deliveryType: string,
   paymentMethod: string,
-  isMakurdi: boolean
-): { breakdown: PriceBreakdownItem[]; subtotal: number; appliedRules: string[] } {
+  isMakurdi: boolean,
+  settings?: typeof DEFAULTS
+): Promise<{ breakdown: PriceBreakdownItem[]; subtotal: number; appliedRules: string[] }> {
+  // Load settings if not provided
+  const globalSettings = settings || await loadGlobalSettings();
   const appliedRules: string[] = [];
   const breakdown: PriceBreakdownItem[] = [];
   
@@ -382,17 +442,19 @@ export function calculateShipmentFee(
   let freeDistanceKm: number = 0;
   
   if (deliveryZone) {
-    baseFee = deliveryZone.pricing.base_fee_ngn;
-    perKmRate = deliveryZone.pricing.per_km_rate_ngn;
-    minFee = deliveryZone.pricing.min_fee_ngn;
-    maxFee = deliveryZone.pricing.max_fee_ngn;
-    freeDistanceKm = deliveryZone.pricing.free_distance_km;
+    // Use zone-specific pricing, but fall back to global settings if zone pricing is 0
+    baseFee = deliveryZone.pricing.base_fee_ngn || globalSettings.base_fee_ngn;
+    perKmRate = deliveryZone.pricing.per_km_rate_ngn || globalSettings.per_km_rate_ngn;
+    minFee = deliveryZone.pricing.min_fee_ngn || 300;
+    maxFee = deliveryZone.pricing.max_fee_ngn || 10000;
+    freeDistanceKm = deliveryZone.pricing.free_distance_km ?? globalSettings.free_distance_km;
     appliedRules.push(`zone_${deliveryZone.code}_base`);
   } else {
-    // Benue-wide fallback
-    baseFee = Math.max(500, distanceKm * 50);
-    perKmRate = DEFAULTS.per_km_rate_ngn;
-    minFee = 500;
+    // Benue-wide fallback using global settings
+    baseFee = globalSettings.base_fee_ngn;
+    perKmRate = globalSettings.per_km_rate_ngn;
+    freeDistanceKm = globalSettings.free_distance_km;
+    minFee = 300;
     maxFee = 10000;
     appliedRules.push('benue_fallback');
   }
@@ -410,12 +472,12 @@ export function calculateShipmentFee(
     appliedRules.push('distance_fee');
   }
   
-  // Weight fee (free up to 5kg, then N100/kg)
+  // Weight fee (free up to 5kg, then per-kg surcharge)
   let weightFee = 0;
-  if (effectiveWeightKg > DEFAULTS.weight_free_limit_kg) {
-    weightFee = (effectiveWeightKg - DEFAULTS.weight_free_limit_kg) * DEFAULTS.weight_surcharge_per_kg;
+  if (effectiveWeightKg > globalSettings.weight_free_limit_kg) {
+    weightFee = (effectiveWeightKg - globalSettings.weight_free_limit_kg) * globalSettings.weight_surcharge_per_kg;
     breakdown.push({ 
-      name: `Weight Surcharge (${(effectiveWeightKg - DEFAULTS.weight_free_limit_kg).toFixed(1)}kg)`, 
+      name: `Weight Surcharge (${(effectiveWeightKg - globalSettings.weight_free_limit_kg).toFixed(1)}kg)`, 
       amount: Math.round(weightFee) 
     });
     appliedRules.push('weight_surcharge');
@@ -432,9 +494,10 @@ export function calculateShipmentFee(
   // Calculate subtotal before multipliers
   let subtotal = baseFee + distanceFee + weightFee + crossZoneFee;
   
-  // Apply delivery type multiplier
-  const multipliers = isMakurdi ? DELIVERY_TYPE_MULTIPLIERS_MAKURDI : DELIVERY_TYPE_MULTIPLIERS_GENERAL;
-  const typeMultiplier = multipliers[deliveryType] || 1.0;
+  // Apply delivery type multiplier from global settings or defaults
+  const typeMultiplier = globalSettings.delivery_type_multipliers[deliveryType as keyof typeof globalSettings.delivery_type_multipliers] 
+    || (isMakurdi ? DELIVERY_TYPE_MULTIPLIERS_MAKURDI : DELIVERY_TYPE_MULTIPLIERS_GENERAL)[deliveryType] 
+    || 1.0;
   
   if (typeMultiplier !== 1.0) {
     const multiplierFee = subtotal * (typeMultiplier - 1);
@@ -446,26 +509,26 @@ export function calculateShipmentFee(
     appliedRules.push(`multiplier_${deliveryType}`);
   }
   
-  // Insurance fee (1% for packages > N50,000)
+  // Insurance fee for high-value packages
   let insuranceFee = 0;
-  if (packageValueNgn > DEFAULTS.insurance_threshold_ngn) {
-    insuranceFee = packageValueNgn * (DEFAULTS.insurance_rate_percent / 100);
-    breakdown.push({ name: 'Insurance (1%)', amount: Math.round(insuranceFee) });
+  if (packageValueNgn > globalSettings.insurance_threshold_ngn) {
+    insuranceFee = packageValueNgn * (globalSettings.insurance_rate_percent / 100);
+    breakdown.push({ name: `Insurance (${globalSettings.insurance_rate_percent}%)`, amount: Math.round(insuranceFee) });
     appliedRules.push('insurance');
   }
   
-  // COD surcharge (2% for General Backend only)
+  // COD surcharge (for General Backend only)
   let codFee = 0;
   if (!isMakurdi && paymentMethod === 'cod') {
-    codFee = packageValueNgn * (DEFAULTS.cod_surcharge_percent / 100);
-    breakdown.push({ name: 'COD Surcharge (2%)', amount: Math.round(codFee) });
+    codFee = packageValueNgn * (globalSettings.cod_surcharge_percent / 100);
+    breakdown.push({ name: `COD Surcharge (${globalSettings.cod_surcharge_percent}%)`, amount: Math.round(codFee) });
     appliedRules.push('cod_surcharge');
   }
   
-  // Platform fee (15%)
-  const platformFee = subtotal * (DEFAULTS.platform_commission_percent / 100);
+  // Platform fee
+  const platformFee = subtotal * (globalSettings.platform_commission_percent / 100);
   breakdown.push({ 
-    name: `Platform Fee (${DEFAULTS.platform_commission_percent}%)`, 
+    name: `Platform Fee (${globalSettings.platform_commission_percent}%)`, 
     amount: Math.round(platformFee) 
   });
   appliedRules.push('platform_fee');
@@ -554,8 +617,8 @@ export async function getDeliveryQuote(request: DeliveryQuoteRequest): Promise<D
     );
     totalDistance += distanceKm;
     
-    // Calculate fees
-    const { breakdown, subtotal, appliedRules } = calculateShipmentFee(
+    // Calculate fees (now async to load global settings)
+    const { breakdown, subtotal, appliedRules } = await calculateShipmentFee(
       pickupCoords,
       delivery_coords,
       groupWeight,
