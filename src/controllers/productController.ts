@@ -159,6 +159,8 @@ export const getProducts = async (req: Request, res: Response) => {
     if (category) {
       // Support filtering by both category ID and category slug
       // First, try to find the category by slug to get the actual ID
+      console.log('🔍 Category filter received:', category);
+      
       const categoryRecord = await prisma.category.findFirst({
         where: {
           OR: [
@@ -168,12 +170,16 @@ export const getProducts = async (req: Request, res: Response) => {
         }
       });
       
+      console.log('📂 Category record found:', categoryRecord ? { id: categoryRecord.id, slug: categoryRecord.slug, name: categoryRecord.name } : 'NOT FOUND');
+      
       if (categoryRecord) {
         // Filter by the actual category ID
         whereClause.categoryId = categoryRecord.id;
+        console.log('✅ Filtering by categoryId:', categoryRecord.id);
       } else {
         // If no category found, still use the provided value (might be a direct ID)
         whereClause.categoryId = String(category);
+        console.log('⚠️ Category not found in DB, using raw value:', category);
       }
     }
 
