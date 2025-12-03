@@ -22,9 +22,10 @@ const validateProduct = [
   body('price').isNumeric().withMessage('Price must be a number').isFloat({ min: 0.01 }).withMessage('Price must be greater than 0')
 ];
 
-// Public routes
-router.get('/debug', getProductsDebug); // Debug endpoint - must be before /:id
-router.post('/fix-untitled', fixUntitledProducts); // One-time fix for untitled products
+// Public routes - specific paths MUST come before /:id to avoid being caught as ID param
+router.get('/debug', getProductsDebug);
+router.post('/fix-untitled', fixUntitledProducts);
+router.get('/seller/my-products', authenticateToken, getSellerProducts);
 router.get('/', optionalAuth, getProducts);
 router.get('/:id', optionalAuth, getProductById);
 
@@ -35,6 +36,5 @@ router.post('/', validateProduct, createProduct);
 router.put('/:id', updateProduct);
 router.put('/:id/inventory', updateProductStock);
 router.delete('/:id', deleteProduct);
-router.get('/seller/my-products', getSellerProducts);
 
 export { router as productRoutes };
