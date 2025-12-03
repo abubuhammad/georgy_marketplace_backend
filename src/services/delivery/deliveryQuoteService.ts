@@ -717,7 +717,7 @@ export async function getDeliveryQuote(request: DeliveryQuoteRequest): Promise<D
   const alternativeTypes = ['standard', 'express', 'same_day'].filter(t => t !== delivery_type);
   for (const altType of alternativeTypes) {
     if (deliveryZone?.delivery_types.includes(altType) ?? true) {
-      const { breakdown, subtotal } = calculateShipmentFee(
+      const { breakdown, subtotal } = await calculateShipmentFee(
         request.pickup_coords || { lat: 7.7333, lng: 8.5333 },
         delivery_coords,
         effectiveWeightKg,
