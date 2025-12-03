@@ -202,8 +202,10 @@ async function loadGlobalSettings(): Promise<typeof DEFAULTS> {
         delivery_type_multipliers: settings.delivery_type_multipliers ?? DEFAULTS.delivery_type_multipliers
       };
       settingsCacheTime = now;
-      console.log('📦 Loaded delivery settings from database');
+      console.log('📦 Loaded delivery settings from database:', JSON.stringify(cachedSettings));
       return cachedSettings;
+    } else {
+      console.log('📦 No delivery settings in database, using defaults:', JSON.stringify(DEFAULTS));
     }
   } catch (error) {
     console.warn('Failed to load delivery settings, using defaults:', error);
@@ -442,23 +444,22 @@ export async function calculateShipmentFee(
   let maxFee: number;
   let freeDistanceKm: number = 0;
   
+  // ALWAYS use global settings from admin panel - these override zone-specific pricing
+  // Zone-specific pricing in seed data is now just for reference/fallback
+  baseFee = globalSettings.base_fee_ngn;
+  perKmRate = globalSettings.per_km_rate_ngn;
+  freeDistanceKm = globalSettings.free_distance_km;
+  minFee = 100; // Reasonable minimum
+  maxFee = 15000; // Reasonable maximum
+  
   if (deliveryZone) {
-    // Use zone-specific pricing, but fall back to global settings if zone pricing is 0
-    baseFee = deliveryZone.pricing.base_fee_ngn || globalSettings.base_fee_ngn;
-    perKmRate = deliveryZone.pricing.per_km_rate_ngn || globalSettings.per_km_rate_ngn;
-    minFee = deliveryZone.pricing.min_fee_ngn || 300;
-    maxFee = deliveryZone.pricing.max_fee_ngn || 10000;
-    freeDistanceKm = deliveryZone.pricing.free_distance_km ?? globalSettings.free_distance_km;
-    appliedRules.push(`zone_${deliveryZone.code}_base`);
+    appliedRules.push(`zone_${deliveryZone.code}`);
   } else {
-    // Benue-wide fallback using global settings
-    baseFee = globalSettings.base_fee_ngn;
-    perKmRate = globalSettings.per_km_rate_ngn;
-    freeDistanceKm = globalSettings.free_distance_km;
-    minFee = 300;
-    maxFee = 10000;
     appliedRules.push('benue_fallback');
   }
+  
+  // Log fee calculation inputs for debugging
+  console.log(`📊 Fee calc: distance=${distanceKm.toFixed(2)}km, base=₦${baseFee}, perKm=₦${perKmRate}, freeKm=${freeDistanceKm}`);
   
   breakdown.push({ name: 'Base Fee', amount: Math.round(baseFee) });
   
@@ -496,10 +497,14 @@ export async function calculateShipmentFee(
   // Calculate subtotal before multipliers
   let subtotal = baseFee + distanceFee + weightFee + crossZoneFee;
   
-  // Apply delivery type multiplier from global settings or defaults
-  const typeMultiplier = globalSettings.delivery_type_multipliers[deliveryType as keyof typeof globalSettings.delivery_type_multipliers] 
-    || (isMakurdi ? DELIVERY_TYPE_MULTIPLIERS_MAKURDI : DELIVERY_TYPE_MULTIPLIERS_GENERAL)[deliveryType] 
-    || 1.0;
+  // Apply delivery type multiplier from global settings
+  // For 'standard' delivery, multiplier should be 1.0 (no extra charge)
+  let typeMultiplier = 1.0;
+  if (deliveryType !== 'standard') {
+    typeMultiplier = globalSettings.delivery_type_multipliers[deliveryType as keyof typeof globalSettings.delivery_type_multipliers] 
+      || (isMakurdi ? DELIVERY_TYPE_MULTIPLIERS_MAKURDI : DELIVERY_TYPE_MULTIPLIERS_GENERAL)[deliveryType] 
+      || 1.0;
+  }
   
   if (typeMultiplier !== 1.0) {
     const multiplierFee = subtotal * (typeMultiplier - 1);
