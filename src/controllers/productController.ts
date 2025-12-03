@@ -157,7 +157,24 @@ export const getProducts = async (req: Request, res: Response) => {
     }
 
     if (category) {
-      whereClause.categoryId = String(category);
+      // Support filtering by both category ID and category slug
+      // First, try to find the category by slug to get the actual ID
+      const categoryRecord = await prisma.category.findFirst({
+        where: {
+          OR: [
+            { id: String(category) },
+            { slug: String(category) }
+          ]
+        }
+      });
+      
+      if (categoryRecord) {
+        // Filter by the actual category ID
+        whereClause.categoryId = categoryRecord.id;
+      } else {
+        // If no category found, still use the provided value (might be a direct ID)
+        whereClause.categoryId = String(category);
+      }
     }
 
     if (minPrice) {
