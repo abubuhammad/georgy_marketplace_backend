@@ -896,11 +896,7 @@ export const fixUntitledProducts = async (req: Request, res: Response) => {
     // Find all products with "Untitled" in the title
     const untitledProducts = await prisma.product.findMany({
       where: {
-        OR: [
-          { title: { contains: 'Untitled', mode: 'insensitive' } },
-          { title: null },
-          { title: '' }
-        ]
+        title: { contains: 'Untitled', mode: 'insensitive' }
       }
     });
 
