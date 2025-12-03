@@ -8,7 +8,8 @@ import {
   getSubcategories,
   createCategory,
   updateCategory,
-  deleteCategory
+  deleteCategory,
+  seedCategories
 } from '../controllers/categoryController';
 import { body } from 'express-validator';
 
@@ -27,6 +28,9 @@ router.get('/main', getMainCategories);
 router.get('/slug/:slug', getCategoryBySlug);
 router.get('/:id', getCategoryById);
 router.get('/:parentId/subcategories', getSubcategories);
+
+// Seed endpoint (one-time setup - call POST /api/categories/seed)
+router.post('/seed', seedCategories);
 
 // Admin routes (protected)
 router.post('/', authenticateToken, requireAdmin, validateCategory, createCategory);
