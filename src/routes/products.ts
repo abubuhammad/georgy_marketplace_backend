@@ -8,7 +8,8 @@ import {
   deleteProduct, 
   getSellerProducts,
   getProductsDebug,
-  updateProductStock
+  updateProductStock,
+  fixUntitledProducts
 } from '../controllers/productController';
 import { body } from 'express-validator';
 
@@ -23,6 +24,7 @@ const validateProduct = [
 
 // Public routes
 router.get('/debug', getProductsDebug); // Debug endpoint - must be before /:id
+router.post('/fix-untitled', fixUntitledProducts); // One-time fix for untitled products
 router.get('/', optionalAuth, getProducts);
 router.get('/:id', optionalAuth, getProductById);
 

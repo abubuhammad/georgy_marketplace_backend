@@ -889,3 +889,101 @@ export const updateProductStock = async (req: Request, res: Response) => {
     });
   }
 };
+
+// Fix untitled products by generating titles from their data
+export const fixUntitledProducts = async (req: Request, res: Response) => {
+  try {
+    // Find all products with "Untitled" in the title
+    const untitledProducts = await prisma.product.findMany({
+      where: {
+        OR: [
+          { title: { contains: 'Untitled', mode: 'insensitive' } },
+          { title: null },
+          { title: '' }
+        ]
+      }
+    });
+
+    console.log(`🔧 Found ${untitledProducts.length} untitled products to fix`);
+
+    const results = { fixed: 0, skipped: 0, errors: [] as string[] };
+
+    for (const product of untitledProducts) {
+      try {
+        let newTitle = '';
+        
+        // Parse dynamicFields
+        let dynamicData: any = {};
+        if (product.dynamicFields) {
+          try {
+            dynamicData = typeof product.dynamicFields === 'string'
+              ? JSON.parse(product.dynamicFields)
+              : product.dynamicFields;
+          } catch (e) {
+            dynamicData = {};
+          }
+        }
+
+        // Look up category to determine type
+        let categorySlug = product.categoryId;
+        try {
+          const categoryRecord = await prisma.category.findFirst({
+            where: {
+              OR: [
+                { id: product.categoryId },
+                { slug: product.categoryId }
+              ]
+            }
+          });
+          if (categoryRecord) {
+            categorySlug = categoryRecord.slug;
+          }
+        } catch (e) {
+          // Use categoryId as-is
+        }
+
+        // Generate title based on category
+        if (categorySlug === 'vehicles') {
+          const make = dynamicData.make || '';
+          const model = dynamicData.model || '';
+          const year = dynamicData.yearOfManufacture || '';
+          newTitle = [year, make, model].filter(Boolean).join(' ').trim();
+        } else if (categorySlug === 'groceries') {
+          newTitle = product.productName || dynamicData.productName || '';
+        } else if (categorySlug === 'electronics') {
+          const brand = product.brand || dynamicData.brand || '';
+          const model = dynamicData.model || '';
+          newTitle = [brand, model].filter(Boolean).join(' ').trim();
+        }
+
+        // If we generated a new title, update the product
+        if (newTitle && newTitle !== product.title) {
+          await prisma.product.update({
+            where: { id: product.id },
+            data: { title: newTitle }
+          });
+          console.log(`✅ Fixed product ${product.id}: "${product.title}" → "${newTitle}"`);
+          results.fixed++;
+        } else {
+          console.log(`⏭️ Skipped product ${product.id}: No better title available`);
+          results.skipped++;
+        }
+      } catch (err: any) {
+        results.errors.push(`${product.id}: ${err.message}`);
+        console.error(`❌ Error fixing product ${product.id}:`, err);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Untitled products fix completed',
+      results
+    });
+  } catch (error) {
+    console.error('Error fixing untitled products:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fix untitled products'
+    });
+  }
+};
