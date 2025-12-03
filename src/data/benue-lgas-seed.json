@@ -1,0 +1,854 @@
+{
+  "version": "2.0",
+  "generated_at": "2025-12-03T00:00:00Z",
+  "description": "Benue State LGAs with Makurdi zones and centroid-based fallback zones",
+  "defaults": {
+    "free_distance_km": 0,
+    "per_km_rate_ngn": 50,
+    "weight_free_limit_kg": 5,
+    "weight_surcharge_per_kg": 100,
+    "platform_commission_percent": 15,
+    "insurance_threshold_ngn": 50000,
+    "insurance_rate_percent": 1
+  },
+  "delivery_type_multipliers": {
+    "makurdi": {
+      "standard": 1.0,
+      "express": 1.3,
+      "same_day": 1.5,
+      "scheduled": 1.0
+    },
+    "general": {
+      "standard": 1.0,
+      "express": 1.5,
+      "same_day": 2.0,
+      "scheduled": 1.0
+    }
+  },
+  "travel_profiles": {
+    "urban": { "per_km_minutes": 2.5, "description": "Dense urban areas" },
+    "inner_city": { "per_km_minutes": 3.0, "description": "City centers" },
+    "suburban": { "per_km_minutes": 3.5, "description": "Suburban areas" },
+    "rural": { "per_km_minutes": 5.0, "description": "Rural areas" }
+  },
+  "makurdi_zones": [
+    {
+      "code": "MKD-MM",
+      "name": "Modern Market Area",
+      "lga": "Makurdi",
+      "type": "polygon",
+      "center": { "lat": 7.7250, "lng": 8.5250 },
+      "areas": ["Modern Market", "Railway", "Gaadi", "Clerk Quarters"],
+      "pricing": {
+        "base_fee_ngn": 300,
+        "per_km_rate_ngn": 45,
+        "min_fee_ngn": 300,
+        "max_fee_ngn": 2000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 20,
+        "travel_profile": "urban",
+        "congestion_factor": 0.35,
+        "operational_buffer_percent": 0.15,
+        "pickup_handling_minutes": { "min": 3, "max": 8 }
+      },
+      "delivery_types": ["standard", "express", "same_day", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "MKD-WK",
+      "name": "Wurukum",
+      "lga": "Makurdi",
+      "type": "polygon",
+      "center": { "lat": 7.7333, "lng": 8.5333 },
+      "areas": ["Wurukum", "Modern Market", "High Level", "Old GRA"],
+      "pricing": {
+        "base_fee_ngn": 350,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 350,
+        "max_fee_ngn": 2500,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 25,
+        "travel_profile": "urban",
+        "congestion_factor": 0.30,
+        "operational_buffer_percent": 0.15,
+        "pickup_handling_minutes": { "min": 3, "max": 10 }
+      },
+      "delivery_types": ["standard", "express", "same_day", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "MKD-WD",
+      "name": "Wadata",
+      "lga": "Makurdi",
+      "type": "polygon",
+      "center": { "lat": 7.7400, "lng": 8.5200 },
+      "areas": ["Wadata", "Ankpa Quarters", "Judges Quarters"],
+      "pricing": {
+        "base_fee_ngn": 350,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 350,
+        "max_fee_ngn": 2500,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 25,
+        "travel_profile": "inner_city",
+        "congestion_factor": 0.25,
+        "operational_buffer_percent": 0.15,
+        "pickup_handling_minutes": { "min": 3, "max": 10 }
+      },
+      "delivery_types": ["standard", "express", "same_day", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "MKD-HL",
+      "name": "High Level",
+      "lga": "Makurdi",
+      "type": "polygon",
+      "center": { "lat": 7.7350, "lng": 8.5100 },
+      "areas": ["High Level", "New GRA", "Government House Area"],
+      "pricing": {
+        "base_fee_ngn": 350,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 350,
+        "max_fee_ngn": 2500,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 30,
+        "travel_profile": "suburban",
+        "congestion_factor": 0.20,
+        "operational_buffer_percent": 0.15,
+        "pickup_handling_minutes": { "min": 5, "max": 12 }
+      },
+      "delivery_types": ["standard", "express", "same_day", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "MKD-NB",
+      "name": "North Bank",
+      "lga": "Makurdi",
+      "type": "polygon",
+      "center": { "lat": 7.7500, "lng": 8.5167 },
+      "areas": ["North Bank", "Gyado Villa", "Behind CBN", "Welfare Quarters"],
+      "pricing": {
+        "base_fee_ngn": 400,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 400,
+        "max_fee_ngn": 3000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 30,
+        "travel_profile": "inner_city",
+        "congestion_factor": 0.30,
+        "operational_buffer_percent": 0.15,
+        "pickup_handling_minutes": { "min": 5, "max": 10 }
+      },
+      "delivery_types": ["standard", "express", "same_day", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "MKD-LG",
+      "name": "Logo/Kanshio",
+      "lga": "Makurdi",
+      "type": "polygon",
+      "center": { "lat": 7.7200, "lng": 8.5400 },
+      "areas": ["Logo I", "Logo II", "Kanshio", "Naka Road", "Federal Housing"],
+      "pricing": {
+        "base_fee_ngn": 400,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 400,
+        "max_fee_ngn": 3000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 35,
+        "travel_profile": "suburban",
+        "congestion_factor": 0.25,
+        "operational_buffer_percent": 0.15,
+        "pickup_handling_minutes": { "min": 5, "max": 12 }
+      },
+      "delivery_types": ["standard", "express", "same_day", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "MKD-IL",
+      "name": "Industrial Layout",
+      "lga": "Makurdi",
+      "type": "polygon",
+      "center": { "lat": 7.7100, "lng": 8.5100 },
+      "areas": ["Industrial Layout", "BIPC", "Brewery"],
+      "pricing": {
+        "base_fee_ngn": 450,
+        "per_km_rate_ngn": 55,
+        "min_fee_ngn": 450,
+        "max_fee_ngn": 3500,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 40,
+        "travel_profile": "suburban",
+        "congestion_factor": 0.20,
+        "operational_buffer_percent": 0.18,
+        "pickup_handling_minutes": { "min": 5, "max": 15 }
+      },
+      "delivery_types": ["standard", "express", "same_day", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "MKD-UA",
+      "name": "UAM Area",
+      "lga": "Makurdi",
+      "type": "polygon",
+      "center": { "lat": 7.7800, "lng": 8.5600 },
+      "areas": ["University of Agriculture", "Agbadu", "Single Quarters", "Staff Quarters"],
+      "pricing": {
+        "base_fee_ngn": 500,
+        "per_km_rate_ngn": 60,
+        "min_fee_ngn": 500,
+        "max_fee_ngn": 4000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 45,
+        "travel_profile": "suburban",
+        "congestion_factor": 0.15,
+        "operational_buffer_percent": 0.20,
+        "pickup_handling_minutes": { "min": 5, "max": 15 }
+      },
+      "delivery_types": ["standard", "express", "same_day", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    }
+  ],
+  "cross_zone_fees": {
+    "MKD-NB": { "MKD-UA": 300, "MKD-IL": 250, "MKD-LG": 200 },
+    "MKD-WK": { "MKD-UA": 250, "MKD-NB": 200, "MKD-IL": 150 },
+    "MKD-UA": { "MKD-MM": 350, "MKD-WD": 300, "MKD-IL": 300 },
+    "MKD-IL": { "MKD-UA": 300, "MKD-NB": 250, "MKD-LG": 200 },
+    "default": 150
+  },
+  "benue_lgas": [
+    {
+      "code": "BN-ADO",
+      "name": "Ado",
+      "state": "Benue",
+      "type": "centroid-fallback",
+      "center": { "lat": 7.2500, "lng": 7.6500 },
+      "radius_km": 15,
+      "headquarters": "Igumale",
+      "pricing": {
+        "base_fee_ngn": 500,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 500,
+        "max_fee_ngn": 10000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 60,
+        "travel_profile": "rural",
+        "congestion_factor": 0.10,
+        "operational_buffer_percent": 0.25,
+        "pickup_handling_minutes": { "min": 10, "max": 20 }
+      },
+      "delivery_types": ["standard", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "BN-AGT",
+      "name": "Agatu",
+      "state": "Benue",
+      "type": "centroid-fallback",
+      "center": { "lat": 7.9333, "lng": 7.7833 },
+      "radius_km": 18,
+      "headquarters": "Obagaji",
+      "pricing": {
+        "base_fee_ngn": 500,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 500,
+        "max_fee_ngn": 10000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 75,
+        "travel_profile": "rural",
+        "congestion_factor": 0.10,
+        "operational_buffer_percent": 0.25,
+        "pickup_handling_minutes": { "min": 10, "max": 25 }
+      },
+      "delivery_types": ["standard", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "BN-APA",
+      "name": "Apa",
+      "state": "Benue",
+      "type": "centroid-fallback",
+      "center": { "lat": 7.8833, "lng": 7.9167 },
+      "radius_km": 20,
+      "headquarters": "Ugbokpo",
+      "pricing": {
+        "base_fee_ngn": 500,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 500,
+        "max_fee_ngn": 10000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 70,
+        "travel_profile": "rural",
+        "congestion_factor": 0.10,
+        "operational_buffer_percent": 0.25,
+        "pickup_handling_minutes": { "min": 10, "max": 20 }
+      },
+      "delivery_types": ["standard", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "BN-BUR",
+      "name": "Buruku",
+      "state": "Benue",
+      "type": "centroid-fallback",
+      "center": { "lat": 7.5000, "lng": 9.2333 },
+      "radius_km": 22,
+      "headquarters": "Buruku",
+      "pricing": {
+        "base_fee_ngn": 500,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 500,
+        "max_fee_ngn": 10000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 80,
+        "travel_profile": "rural",
+        "congestion_factor": 0.10,
+        "operational_buffer_percent": 0.25,
+        "pickup_handling_minutes": { "min": 10, "max": 25 }
+      },
+      "delivery_types": ["standard", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "BN-GBS",
+      "name": "Gboko",
+      "state": "Benue",
+      "type": "centroid-fallback",
+      "center": { "lat": 7.3167, "lng": 9.0000 },
+      "radius_km": 18,
+      "headquarters": "Gboko",
+      "pricing": {
+        "base_fee_ngn": 450,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 450,
+        "max_fee_ngn": 8000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 50,
+        "travel_profile": "suburban",
+        "congestion_factor": 0.20,
+        "operational_buffer_percent": 0.20,
+        "pickup_handling_minutes": { "min": 8, "max": 15 }
+      },
+      "delivery_types": ["standard", "express", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "BN-GUM",
+      "name": "Guma",
+      "state": "Benue",
+      "type": "centroid-fallback",
+      "center": { "lat": 7.8500, "lng": 8.5500 },
+      "radius_km": 20,
+      "headquarters": "Gbajimba",
+      "pricing": {
+        "base_fee_ngn": 500,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 500,
+        "max_fee_ngn": 10000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 55,
+        "travel_profile": "rural",
+        "congestion_factor": 0.15,
+        "operational_buffer_percent": 0.22,
+        "pickup_handling_minutes": { "min": 8, "max": 18 }
+      },
+      "delivery_types": ["standard", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "BN-GWR",
+      "name": "Gwer East",
+      "state": "Benue",
+      "type": "centroid-fallback",
+      "center": { "lat": 7.5167, "lng": 8.7500 },
+      "radius_km": 18,
+      "headquarters": "Aliade",
+      "pricing": {
+        "base_fee_ngn": 500,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 500,
+        "max_fee_ngn": 10000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 55,
+        "travel_profile": "suburban",
+        "congestion_factor": 0.18,
+        "operational_buffer_percent": 0.20,
+        "pickup_handling_minutes": { "min": 8, "max": 15 }
+      },
+      "delivery_types": ["standard", "express", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "BN-GWW",
+      "name": "Gwer West",
+      "state": "Benue",
+      "type": "centroid-fallback",
+      "center": { "lat": 7.5500, "lng": 8.4500 },
+      "radius_km": 18,
+      "headquarters": "Naka",
+      "pricing": {
+        "base_fee_ngn": 500,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 500,
+        "max_fee_ngn": 10000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 50,
+        "travel_profile": "suburban",
+        "congestion_factor": 0.18,
+        "operational_buffer_percent": 0.20,
+        "pickup_handling_minutes": { "min": 8, "max": 15 }
+      },
+      "delivery_types": ["standard", "express", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "BN-KTN",
+      "name": "Katsina-Ala",
+      "state": "Benue",
+      "type": "centroid-fallback",
+      "center": { "lat": 7.1667, "lng": 9.2833 },
+      "radius_km": 20,
+      "headquarters": "Katsina-Ala",
+      "pricing": {
+        "base_fee_ngn": 500,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 500,
+        "max_fee_ngn": 10000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 65,
+        "travel_profile": "suburban",
+        "congestion_factor": 0.20,
+        "operational_buffer_percent": 0.22,
+        "pickup_handling_minutes": { "min": 10, "max": 18 }
+      },
+      "delivery_types": ["standard", "express", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "BN-KNS",
+      "name": "Konshisha",
+      "state": "Benue",
+      "type": "centroid-fallback",
+      "center": { "lat": 7.0833, "lng": 9.0667 },
+      "radius_km": 22,
+      "headquarters": "Tse-Agberagba",
+      "pricing": {
+        "base_fee_ngn": 500,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 500,
+        "max_fee_ngn": 10000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 70,
+        "travel_profile": "rural",
+        "congestion_factor": 0.12,
+        "operational_buffer_percent": 0.25,
+        "pickup_handling_minutes": { "min": 10, "max": 22 }
+      },
+      "delivery_types": ["standard", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "BN-KWD",
+      "name": "Kwande",
+      "state": "Benue",
+      "type": "centroid-fallback",
+      "center": { "lat": 6.9000, "lng": 9.1667 },
+      "radius_km": 25,
+      "headquarters": "Adikpo",
+      "pricing": {
+        "base_fee_ngn": 500,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 500,
+        "max_fee_ngn": 10000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 75,
+        "travel_profile": "rural",
+        "congestion_factor": 0.12,
+        "operational_buffer_percent": 0.25,
+        "pickup_handling_minutes": { "min": 10, "max": 22 }
+      },
+      "delivery_types": ["standard", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "BN-LOG",
+      "name": "Logo",
+      "state": "Benue",
+      "type": "centroid-fallback",
+      "center": { "lat": 7.0333, "lng": 9.4500 },
+      "radius_km": 22,
+      "headquarters": "Ugba",
+      "pricing": {
+        "base_fee_ngn": 500,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 500,
+        "max_fee_ngn": 10000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 80,
+        "travel_profile": "rural",
+        "congestion_factor": 0.10,
+        "operational_buffer_percent": 0.25,
+        "pickup_handling_minutes": { "min": 12, "max": 25 }
+      },
+      "delivery_types": ["standard", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "BN-MKD",
+      "name": "Makurdi",
+      "state": "Benue",
+      "type": "polygon",
+      "center": { "lat": 7.7333, "lng": 8.5333 },
+      "radius_km": 12,
+      "headquarters": "Makurdi",
+      "note": "Contains 8 sub-zones (MKD-*)",
+      "pricing": {
+        "base_fee_ngn": 350,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 300,
+        "max_fee_ngn": 4000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 25,
+        "travel_profile": "urban",
+        "congestion_factor": 0.30,
+        "operational_buffer_percent": 0.15,
+        "pickup_handling_minutes": { "min": 3, "max": 10 }
+      },
+      "delivery_types": ["standard", "express", "same_day", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "BN-OBI",
+      "name": "Obi",
+      "state": "Benue",
+      "type": "centroid-fallback",
+      "center": { "lat": 7.4833, "lng": 8.3167 },
+      "radius_km": 20,
+      "headquarters": "Obarike-Ito",
+      "pricing": {
+        "base_fee_ngn": 500,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 500,
+        "max_fee_ngn": 10000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 65,
+        "travel_profile": "rural",
+        "congestion_factor": 0.12,
+        "operational_buffer_percent": 0.25,
+        "pickup_handling_minutes": { "min": 10, "max": 20 }
+      },
+      "delivery_types": ["standard", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "BN-OGB",
+      "name": "Ogbadibo",
+      "state": "Benue",
+      "type": "centroid-fallback",
+      "center": { "lat": 7.1667, "lng": 7.8500 },
+      "radius_km": 18,
+      "headquarters": "Otukpa",
+      "pricing": {
+        "base_fee_ngn": 500,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 500,
+        "max_fee_ngn": 10000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 70,
+        "travel_profile": "rural",
+        "congestion_factor": 0.12,
+        "operational_buffer_percent": 0.25,
+        "pickup_handling_minutes": { "min": 10, "max": 20 }
+      },
+      "delivery_types": ["standard", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "BN-OHM",
+      "name": "Ohimini",
+      "state": "Benue",
+      "type": "centroid-fallback",
+      "center": { "lat": 7.6333, "lng": 8.0167 },
+      "radius_km": 16,
+      "headquarters": "Idekpa",
+      "pricing": {
+        "base_fee_ngn": 500,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 500,
+        "max_fee_ngn": 10000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 65,
+        "travel_profile": "rural",
+        "congestion_factor": 0.12,
+        "operational_buffer_percent": 0.25,
+        "pickup_handling_minutes": { "min": 10, "max": 20 }
+      },
+      "delivery_types": ["standard", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "BN-OJU",
+      "name": "Oju",
+      "state": "Benue",
+      "type": "centroid-fallback",
+      "center": { "lat": 7.0833, "lng": 8.4167 },
+      "radius_km": 22,
+      "headquarters": "Oju",
+      "pricing": {
+        "base_fee_ngn": 500,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 500,
+        "max_fee_ngn": 10000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 75,
+        "travel_profile": "rural",
+        "congestion_factor": 0.10,
+        "operational_buffer_percent": 0.25,
+        "pickup_handling_minutes": { "min": 12, "max": 25 }
+      },
+      "delivery_types": ["standard", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "BN-OKP",
+      "name": "Okpokwu",
+      "state": "Benue",
+      "type": "centroid-fallback",
+      "center": { "lat": 7.0500, "lng": 7.9833 },
+      "radius_km": 20,
+      "headquarters": "Okpoga",
+      "pricing": {
+        "base_fee_ngn": 500,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 500,
+        "max_fee_ngn": 10000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 70,
+        "travel_profile": "rural",
+        "congestion_factor": 0.12,
+        "operational_buffer_percent": 0.25,
+        "pickup_handling_minutes": { "min": 10, "max": 22 }
+      },
+      "delivery_types": ["standard", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "BN-OTK",
+      "name": "Otukpo",
+      "state": "Benue",
+      "type": "centroid-fallback",
+      "center": { "lat": 7.1833, "lng": 8.1333 },
+      "radius_km": 18,
+      "headquarters": "Otukpo",
+      "pricing": {
+        "base_fee_ngn": 450,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 450,
+        "max_fee_ngn": 8000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 50,
+        "travel_profile": "suburban",
+        "congestion_factor": 0.20,
+        "operational_buffer_percent": 0.20,
+        "pickup_handling_minutes": { "min": 8, "max": 15 }
+      },
+      "delivery_types": ["standard", "express", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "BN-TAR",
+      "name": "Tarka",
+      "state": "Benue",
+      "type": "centroid-fallback",
+      "center": { "lat": 7.5167, "lng": 8.9333 },
+      "radius_km": 18,
+      "headquarters": "Wannune",
+      "pricing": {
+        "base_fee_ngn": 500,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 500,
+        "max_fee_ngn": 10000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 60,
+        "travel_profile": "rural",
+        "congestion_factor": 0.15,
+        "operational_buffer_percent": 0.22,
+        "pickup_handling_minutes": { "min": 10, "max": 18 }
+      },
+      "delivery_types": ["standard", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "BN-UKM",
+      "name": "Ukum",
+      "state": "Benue",
+      "type": "centroid-fallback",
+      "center": { "lat": 6.9500, "lng": 9.3500 },
+      "radius_km": 25,
+      "headquarters": "Sankera",
+      "pricing": {
+        "base_fee_ngn": 500,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 500,
+        "max_fee_ngn": 10000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 85,
+        "travel_profile": "rural",
+        "congestion_factor": 0.10,
+        "operational_buffer_percent": 0.28,
+        "pickup_handling_minutes": { "min": 12, "max": 28 }
+      },
+      "delivery_types": ["standard", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "BN-USH",
+      "name": "Ushongo",
+      "state": "Benue",
+      "type": "centroid-fallback",
+      "center": { "lat": 7.1833, "lng": 9.1500 },
+      "radius_km": 20,
+      "headquarters": "Lessel",
+      "pricing": {
+        "base_fee_ngn": 500,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 500,
+        "max_fee_ngn": 10000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 70,
+        "travel_profile": "rural",
+        "congestion_factor": 0.12,
+        "operational_buffer_percent": 0.25,
+        "pickup_handling_minutes": { "min": 10, "max": 22 }
+      },
+      "delivery_types": ["standard", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    },
+    {
+      "code": "BN-VDY",
+      "name": "Vandeikya",
+      "state": "Benue",
+      "type": "centroid-fallback",
+      "center": { "lat": 6.7833, "lng": 9.0833 },
+      "radius_km": 22,
+      "headquarters": "Vandeikya",
+      "pricing": {
+        "base_fee_ngn": 500,
+        "per_km_rate_ngn": 50,
+        "min_fee_ngn": 500,
+        "max_fee_ngn": 10000,
+        "free_distance_km": 0
+      },
+      "eta": {
+        "base_dispatch_minutes": 80,
+        "travel_profile": "rural",
+        "congestion_factor": 0.12,
+        "operational_buffer_percent": 0.25,
+        "pickup_handling_minutes": { "min": 10, "max": 22 }
+      },
+      "delivery_types": ["standard", "scheduled"],
+      "is_active": true,
+      "is_suspended": false
+    }
+  ],
+  "operational_config": {
+    "peak_hours": [
+      { "start": "07:00", "end": "09:00", "label": "morning_rush" },
+      { "start": "16:00", "end": "19:00", "label": "evening_rush" }
+    ],
+    "default_rider_availability": {
+      "active_riders": 5,
+      "queued_jobs": 3
+    }
+  }
+}
