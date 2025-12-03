@@ -158,7 +158,7 @@ export const getProducts = async (req: Request, res: Response) => {
 
     if (category) {
       // Support filtering by both category ID and category slug
-      // First, try to find the category by slug to get the actual ID
+      // Products might have categoryId stored as either the actual ID or the slug
       console.log('🔍 Category filter received:', category);
       
       const categoryRecord = await prisma.category.findFirst({
@@ -173,9 +173,12 @@ export const getProducts = async (req: Request, res: Response) => {
       console.log('📂 Category record found:', categoryRecord ? { id: categoryRecord.id, slug: categoryRecord.slug, name: categoryRecord.name } : 'NOT FOUND');
       
       if (categoryRecord) {
-        // Filter by the actual category ID
-        whereClause.categoryId = categoryRecord.id;
-        console.log('✅ Filtering by categoryId:', categoryRecord.id);
+        // Filter by BOTH the category ID AND the slug, since products may have either stored
+        // Use 'in' operator to match either value
+        whereClause.categoryId = {
+          in: [categoryRecord.id, categoryRecord.slug]
+        };
+        console.log('✅ Filtering by categoryId IN:', [categoryRecord.id, categoryRecord.slug]);
       } else {
         // If no category found, still use the provided value (might be a direct ID)
         whereClause.categoryId = String(category);
