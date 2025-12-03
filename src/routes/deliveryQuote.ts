@@ -402,6 +402,79 @@ router.delete('/admin/pricing-rules/:id', async (req: Request, res: Response) =>
   }
 });
 
+// ============== GLOBAL SETTINGS ==============
+
+/**
+ * GET /admin/settings
+ * Get global delivery settings
+ */
+router.get('/admin/settings', async (req: Request, res: Response) => {
+  try {
+    const settings = await AdminDeliveryService.getGlobalSettings();
+    res.json({ success: true, data: settings });
+  } catch (error: any) {
+    console.error('Error fetching settings:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * PUT /admin/settings
+ * Update global delivery settings
+ */
+router.put('/admin/settings', async (req: Request, res: Response) => {
+  try {
+    const result = await AdminDeliveryService.updateGlobalSettings(req.body);
+    res.json(result);
+  } catch (error: any) {
+    console.error('Error updating settings:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /admin/zones/:code/suspend
+ * Suspend a specific zone
+ */
+router.post('/admin/zones/:code/suspend', async (req: Request, res: Response) => {
+  try {
+    const { reason } = req.body;
+    const result = await AdminDeliveryService.suspendZone(req.params.code, reason || 'Admin suspended');
+    res.json(result);
+  } catch (error: any) {
+    console.error('Error suspending zone:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * POST /admin/zones/:code/resume
+ * Resume a suspended zone
+ */
+router.post('/admin/zones/:code/resume', async (req: Request, res: Response) => {
+  try {
+    const result = await AdminDeliveryService.resumeZone(req.params.code);
+    res.json(result);
+  } catch (error: any) {
+    console.error('Error resuming zone:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+/**
+ * PUT /admin/zones/:code
+ * Update a zone (PUT version for frontend compatibility)
+ */
+router.put('/admin/zones/:code', async (req: Request, res: Response) => {
+  try {
+    const result = await AdminDeliveryService.updateZone(req.params.code, req.body);
+    res.json(result);
+  } catch (error: any) {
+    console.error('Error updating zone:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // ============== ZONE CONFIGURATION ==============
 
 /**

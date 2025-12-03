@@ -770,4 +770,114 @@ export class AdminDeliveryService {
   }
 }
 
+  // ============== GLOBAL SETTINGS ==============
+  
+  /**
+   * Get global delivery settings
+   */
+  static async getGlobalSettings(): Promise<any> {
+    try {
+      // Try to get from database
+      const result = await prisma.$runCommandRaw({
+        find: 'delivery_settings',
+        filter: { id: 'global' },
+        limit: 1
+      }) as any;
+      
+      const settings = result?.cursor?.firstBatch?.[0];
+      
+      if (settings) {
+        return {
+          base_fee_ngn: settings.base_fee_ngn || 300,
+          per_km_rate_ngn: settings.per_km_rate_ngn || 50,
+          free_distance_km: settings.free_distance_km || 0,
+          platform_commission_percent: settings.platform_commission_percent || 15,
+          weight_surcharge_per_kg: settings.weight_surcharge_per_kg || 100,
+          volumetric_divisor: settings.volumetric_divisor || 5000,
+          insurance_rate_percent: settings.insurance_rate_percent || 1,
+          min_insurance_threshold: settings.min_insurance_threshold || 50000,
+          delivery_type_multipliers: settings.delivery_type_multipliers || {
+            standard: 1.0,
+            express: 1.3,
+            same_day: 1.5
+          }
+        };
+      }
+      
+      // Return defaults if no settings exist
+      return {
+        base_fee_ngn: 300,
+        per_km_rate_ngn: 50,
+        free_distance_km: 0,
+        platform_commission_percent: 15,
+        weight_surcharge_per_kg: 100,
+        volumetric_divisor: 5000,
+        insurance_rate_percent: 1,
+        min_insurance_threshold: 50000,
+        delivery_type_multipliers: {
+          standard: 1.0,
+          express: 1.3,
+          same_day: 1.5
+        }
+      };
+    } catch (error) {
+      console.error('Error getting global settings:', error);
+      // Return defaults on error
+      return {
+        base_fee_ngn: 300,
+        per_km_rate_ngn: 50,
+        free_distance_km: 0,
+        platform_commission_percent: 15,
+        weight_surcharge_per_kg: 100,
+        volumetric_divisor: 5000,
+        insurance_rate_percent: 1,
+        min_insurance_threshold: 50000,
+        delivery_type_multipliers: {
+          standard: 1.0,
+          express: 1.3,
+          same_day: 1.5
+        }
+      };
+    }
+  }
+  
+  /**
+   * Update global delivery settings
+   */
+  static async updateGlobalSettings(settings: any): Promise<any> {
+    try {
+      const updateData = {
+        id: 'global',
+        base_fee_ngn: settings.base_fee_ngn,
+        per_km_rate_ngn: settings.per_km_rate_ngn,
+        free_distance_km: settings.free_distance_km,
+        platform_commission_percent: settings.platform_commission_percent,
+        weight_surcharge_per_kg: settings.weight_surcharge_per_kg,
+        volumetric_divisor: settings.volumetric_divisor,
+        insurance_rate_percent: settings.insurance_rate_percent,
+        min_insurance_threshold: settings.min_insurance_threshold,
+        delivery_type_multipliers: settings.delivery_type_multipliers,
+        updated_at: new Date()
+      };
+      
+      // Upsert the settings
+      await prisma.$runCommandRaw({
+        update: 'delivery_settings',
+        updates: [
+          {
+            q: { id: 'global' },
+            u: { $set: updateData },
+            upsert: true
+          }
+        ]
+      });
+      
+      return { success: true, settings: updateData };
+    } catch (error: any) {
+      console.error('Error updating global settings:', error);
+      return { success: false, error: error.message };
+    }
+  }
+}
+
 export default AdminDeliveryService;
