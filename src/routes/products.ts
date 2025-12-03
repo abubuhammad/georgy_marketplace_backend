@@ -7,7 +7,8 @@ import {
   updateProduct, 
   deleteProduct, 
   getSellerProducts,
-  getProductsDebug
+  getProductsDebug,
+  updateProductStock
 } from '../controllers/productController';
 import { body } from 'express-validator';
 
@@ -30,6 +31,7 @@ router.use(authenticateToken);
 
 router.post('/', validateProduct, createProduct);
 router.put('/:id', updateProduct);
+router.put('/:id/inventory', updateProductStock);
 router.delete('/:id', deleteProduct);
 router.get('/seller/my-products', getSellerProducts);
 

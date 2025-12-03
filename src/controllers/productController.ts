@@ -738,15 +738,123 @@ export const getSellerProducts = async (req: Request, res: Response) => {
       }
     });
 
+    // Parse dynamicFields to extract stockQuantity for each product
+    const formattedProducts = products.map(product => {
+      let parsedImages: string[] = [];
+      let stockQuantity = 0;
+      
+      // Parse images
+      try {
+        if (product.images) {
+          parsedImages = typeof product.images === 'string' 
+            ? JSON.parse(product.images) 
+            : product.images;
+        }
+      } catch (e) {
+        parsedImages = [];
+      }
+      
+      // Extract stockQuantity from dynamicFields
+      try {
+        if (product.dynamicFields) {
+          const dynamicData = typeof product.dynamicFields === 'string'
+            ? JSON.parse(product.dynamicFields)
+            : product.dynamicFields;
+          stockQuantity = parseInt(dynamicData.stockQuantity) || 0;
+        }
+      } catch (e) {
+        console.error('Error parsing dynamicFields for product', product.id, e);
+      }
+      
+      return {
+        ...product,
+        images: parsedImages,
+        stockQuantity,
+        inStock: stockQuantity > 0
+      };
+    });
+
     res.json({
       success: true,
-      data: products
+      data: formattedProducts
     });
   } catch (error) {
     console.error('Error fetching seller products:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to fetch seller products'
+    });
+  }
+};
+
+// Update product stock/inventory
+export const updateProductStock = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = (req as any).user?.id;
+    const { quantity, reason } = req.body;
+
+    if (quantity === undefined || quantity < 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'Valid quantity is required'
+      });
+    }
+
+    // Verify product exists and belongs to user
+    const existingProduct = await prisma.product.findFirst({
+      where: {
+        id,
+        seller: {
+          userId
+        }
+      }
+    });
+
+    if (!existingProduct) {
+      return res.status(404).json({
+        success: false,
+        error: 'Product not found or you do not have permission to update it'
+      });
+    }
+
+    // Parse existing dynamicFields and update stockQuantity
+    let dynamicFields: any = {};
+    try {
+      if (existingProduct.dynamicFields) {
+        dynamicFields = typeof existingProduct.dynamicFields === 'string'
+          ? JSON.parse(existingProduct.dynamicFields)
+          : existingProduct.dynamicFields;
+      }
+    } catch (e) {
+      dynamicFields = {};
+    }
+
+    dynamicFields.stockQuantity = quantity;
+
+    const updatedProduct = await prisma.product.update({
+      where: { id },
+      data: {
+        dynamicFields: JSON.stringify(dynamicFields)
+      }
+    });
+
+    console.log(`📦 Stock updated for product ${id}: ${quantity} units. Reason: ${reason || 'No reason provided'}`);
+
+    res.json({
+      success: true,
+      message: 'Stock updated successfully',
+      data: {
+        ...updatedProduct,
+        stockQuantity: quantity,
+        inStock: quantity > 0
+      }
+    });
+  } catch (error) {
+    console.error('Error updating product stock:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update product stock'
     });
   }
 };
