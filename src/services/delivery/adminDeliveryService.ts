@@ -768,7 +768,6 @@ export class AdminDeliveryService {
     
     return { success: true, zone: zoneCode, delivery_types: deliveryTypes };
   }
-}
 
   // ============== GLOBAL SETTINGS ==============
   
