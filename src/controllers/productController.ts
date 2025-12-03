@@ -439,7 +439,38 @@ export const createProduct = async (req: Request, res: Response) => {
     }
 
     // Prepare product data for database
-    const productTitle = productData.title || productData.productName || 'Untitled Product';
+    // Look up category to get its slug for auto-title generation
+    let categorySlug = productData.categoryId;
+    try {
+      const categoryRecord = await prisma.category.findFirst({
+        where: {
+          OR: [
+            { id: productData.categoryId },
+            { slug: productData.categoryId }
+          ]
+        }
+      });
+      if (categoryRecord) {
+        categorySlug = categoryRecord.slug;
+      }
+    } catch (e) {
+      // Ignore lookup errors, use categoryId as-is
+    }
+    
+    // Generate title based on category type if not provided
+    let productTitle = productData.title || productData.productName;
+    
+    if (!productTitle) {
+      // For vehicles, generate title from make, model, and year
+      if (categorySlug === 'vehicles') {
+        const make = productData.make || '';
+        const model = productData.model || '';
+        const year = productData.yearOfManufacture || '';
+        productTitle = [year, make, model].filter(Boolean).join(' ').trim() || 'Untitled Vehicle';
+      } else {
+        productTitle = 'Untitled Product';
+      }
+    }
     
     // Parse location if provided as combined string (e.g., "Lagos, Lagos State")
     let locationCity = productData.locationCity;
